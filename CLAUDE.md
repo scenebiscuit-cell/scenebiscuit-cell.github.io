@@ -16,7 +16,9 @@ Nick Lax's portfolio home page, served by GitHub Pages at https://scenebiscuit-c
 - No handwriting fonts and no portrait. Small, purposeful motion only: hero fade-up, highlight wipe behind "show their work", scroll fade-ins, card lift on hover, pulsing status dots, and a tumbleweed after 3 idle seconds.
 - Pharos comes before the cannabis project; cannabis should not be the first thing visitors see.
 
+## Screenshots
+- `img/*-light.webp` show in light mode, `img/*-dark.webp` in dark mode. 1200px wide, WebP. Frames crop to 2:1 from the top-left.
+
 ## Open items
-- Real screenshots for the two project frames (`img/pharos.png`, `img/coa.png`).
 - `Nick-Lax-Resume.pdf` (update the resume's demo-link placeholders first).
 - LinkedIn button in the contact section once Nick provides the URL.
