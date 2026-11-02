@@ -2,12 +2,12 @@
    Colors live in the custom properties below; dark mode swaps them. */
 
 :root {
-  --bg: #F2F0EB;
-  --surface: #FBFAF7;
+  --bg: #EEE7D8;
+  --surface: #F7F2E7;
   --ink: #17171A;
   --muted: #55555C;
-  --line: #D6D2C8;
-  --hatch: #E2DED3;
+  --line: #D8CFBC;
+  --hatch: #E0D7C4;
   --accent: #1F3FD8;
   --on-accent: #FFFFFF;
   --hl: #D9E0FF;
