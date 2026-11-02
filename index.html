@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nick Lax · Support ops, compliance and AI evaluation</title>
+  <meta name="description" content="Nick Lax builds tools that verify claims and cite their sources. Over a decade in regulatory compliance, enterprise SaaS support and communication design. Austin, TX.">
+  <meta property="og:title" content="Nick Lax · Support ops, compliance and AI evaluation">
+  <meta property="og:description" content="I build tools that verify claims and cite their sources.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://scenebiscuit-cell.github.io/">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+
+  <!-- Set the theme before the page paints, so there's no light/dark flash -->
+  <script>
+    (function () {
+      var root = document.documentElement;
+      root.classList.add('js');
+      var saved = null;
+      try { saved = localStorage.getItem('nl-theme'); } catch (e) {}
+      var dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      root.setAttribute('data-theme', dark ? 'dark' : 'light');
+    })();
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="css/style.css?v=2026-11-02">
+  <script src="js/main.js?v=2026-11-02" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="site-header wrap">
+    <a href="#top" class="brand ul">Nick Lax</a>
+    <nav class="nav" aria-label="Main">
+      <ul class="nav-links">
+        <li><a href="#work" class="ul">Work</a></li>
+        <li><a href="#building" class="ul">Building</a></li>
+        <li><a href="#experience" class="ul">Experience</a></li>
+        <li><a href="#contact" class="ul">Contact</a></li>
+      </ul>
+      <button type="button" class="theme-btn" id="theme-btn" aria-label="Switch to dark mode">
+        <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+        <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6"/></svg>
+      </button>
+    </nav>
+  </header>
+
+  <main id="main">
+    <span id="top"></span>
+
+    <!-- Hero -->
+    <section class="hero wrap">
+      <p class="eyebrow rise r1">Austin, TX · Support ops · Compliance · AI evaluation</p>
+      <h1 class="hero-title rise r2">I build tools that <span class="hl">verify claims</span> and cite their sources.</h1>
+      <p class="hero-lede rise r3">Over a decade in regulatory compliance, enterprise SaaS support and communication design. Now I build AI tools, and I measure whether they're right.</p>
+      <div class="btn-row rise r4">
+        <a href="#work" class="btn btn-solid">See the work
+          <svg class="swirl" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3.5 C 9 2.5, 14 4, 14 7.5 C 14 10.5, 9.5 11, 9 8.5 C 8.5 6, 12.5 5.5, 13.5 8.5 C 14.3 11.5, 13 15, 12 20"/><path d="M8.3 16.8 L12 20.6 L15.6 16.9"/></svg>
+        </a>
+        <a href="mailto:nlaxatx@gmail.com" class="btn">Email me
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 6.5 12 13l8.5-6.5"/></svg>
+        </a>
+        <a href="Nick-Lax-Resume.pdf" class="btn" download>Download resume
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M12 11v6M9.5 14.5 12 17l2.5-2.5"/></svg>
+        </a>
+      </div>
+    </section>
+
+    <!-- Featured work -->
+    <section id="work" class="section wrap" aria-labelledby="work-title">
+      <div class="section-head section-head--split reveal">
+        <div>
+          <p class="section-num">01 — Featured work</p>
+          <h2 id="work-title" class="section-title section-title--lg">Two tools, measured results</h2>
+        </div>
+        <p class="section-aside">Each one is live, open source and honest about where it falls short.</p>
+      </div>
+
+      <!-- Pharos -->
+      <article class="case">
+        <div class="case-media reveal">
+          <div class="frame lift">
+            <div class="frame-bar">
+              <span class="frame-dot" aria-hidden="true"></span>
+              <span class="frame-dot" aria-hidden="true"></span>
+              <span class="frame-dot" aria-hidden="true"></span>
+              <span class="frame-url">scenebiscuit-cell.github.io/support-desk-repo-1</span>
+            </div>
+            <div class="frame-body">
+              <p class="frame-placeholder">[Screenshot: agent desk with AI triage panel]</p>
+            </div>
+          </div>
+          <p class="tag-note"><span class="tag-dot" aria-hidden="true"></span>Safety net: suspicious logins always reach a person</p>
+        </div>
+
+        <div class="case-text reveal">
+          <p class="case-kicker">AI support operations</p>
+          <h3 class="case-title">Pharos Support Desk</h3>
+          <p><strong>The problem:</strong> AI help chats sound confident even when they're wrong, and support teams can't see why a ticket was routed where it was.</p>
+          <p><strong>What I built:</strong> both sides of support for a fictional app. A help chat that answers only from 12 articles and cites them, a customer portal, and an agent desk with AI triage, drafted replies and SLA clocks.</p>
+          <dl class="stats">
+            <div><dt>category accuracy</dt><dd class="accent">89%</dd></div>
+            <div><dt>priority accuracy</dt><dd>83%</dd></div>
+            <div><dt>unseen, hand-labeled tickets</dt><dd>36</dd></div>
+          </dl>
+          <div class="btn-row btn-row--sm">
+            <a href="https://scenebiscuit-cell.github.io/support-desk-repo-1/" class="btn btn-solid btn-sm">Live demo</a>
+            <a href="https://scenebiscuit-cell.github.io/support-desk-repo-1/portal/" class="btn btn-sm">Customer portal</a>
+            <a href="https://github.com/scenebiscuit-cell/support-desk-repo-1" class="btn btn-sm">Code</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- COA tools -->
+      <article class="case case--flip">
+        <div class="case-media reveal">
+          <div class="frame lift">
+            <div class="frame-bar">
+              <span class="frame-dot" aria-hidden="true"></span>
+              <span class="frame-dot" aria-hidden="true"></span>
+              <span class="frame-dot" aria-hidden="true"></span>
+              <span class="frame-url">scenebiscuit-cell.github.io/coa-crosscheck</span>
+            </div>
+            <div class="frame-body">
+              <p class="frame-placeholder">[Screenshot: trichome header and a Review verdict with citations]</p>
+            </div>
+          </div>
+          <p class="tag-note"><span class="tag-dot" aria-hidden="true"></span>Every finding cites the rule it's based on</p>
+        </div>
+
+        <div class="case-text reveal">
+          <p class="case-kicker">Cannabis compliance</p>
+          <h3 class="case-title">COA Crosscheck + TCUP COA Checker</h3>
+          <p><strong>The problem:</strong> lab certificates of analysis come in dozens of layouts, and checking one against state rules by hand is slow and easy to get wrong.</p>
+          <p><strong>What I built:</strong> two browser tools that read a COA and check it against state rules. Each one returns Clear, Review or Hold, with a citation on every finding. Plain HTML, CSS and JavaScript, with no build step.</p>
+          <dl class="stats">
+            <div><dt>automated tests passing</dt><dd class="accent">88</dd></div>
+            <div><dt>states plus federal hemp</dt><dd>5 + 1</dd></div>
+            <div><dt>WCAG 2.2, light and dark</dt><dd>AA</dd></div>
+          </dl>
+          <div class="btn-row btn-row--sm">
+            <a href="https://scenebiscuit-cell.github.io/coa-crosscheck/" class="btn btn-solid btn-sm">COA Crosscheck</a>
+            <a href="https://scenebiscuit-cell.github.io/tcup-coa-checker/" class="btn btn-sm">TCUP checker</a>
+            <a href="https://github.com/scenebiscuit-cell/coa-crosscheck" class="btn btn-sm">Code</a>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- Currently building -->
+    <section id="building" class="section wrap" aria-labelledby="building-title">
+      <div class="section-head reveal">
+        <p class="section-num">02 — Currently building</p>
+        <h2 id="building-title" class="section-title">On the workbench</h2>
+      </div>
+      <div class="cards">
+        <div class="card lift reveal">
+          <p class="card-status"><span class="dot" aria-hidden="true"></span>Designed · build starting</p>
+          <h3 class="card-title">QRTZ</h3>
+          <p class="muted">Live visuals for DJ sets in TouchDesigner. A lit crystal on the booth becomes the controller: spin it, gesture over it, and the screens follow the beat.</p>
+        </div>
+        <div class="card lift reveal">
+          <p class="card-status"><span class="dot" aria-hidden="true"></span>Designed · build starting</p>
+          <h3 class="card-title">ASSET ZERO</h3>
+          <p class="muted">A Raptor-style roguelite shoot 'em up in Godot 4, built around a jet made of liquid metal that reshapes itself mid-fight.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Experience -->
+    <section id="experience" class="section wrap" aria-labelledby="experience-title">
+      <div class="section-head section-head--split reveal">
+        <div>
+          <p class="section-num">03 — Experience</p>
+          <h2 id="experience-title" class="section-title">Where the rules meet real people</h2>
+        </div>
+        <p class="section-num">The short version of my resume</p>
+      </div>
+      <ol class="jobs">
+        <li class="job reveal">
+          <p class="job-years">2025</p>
+          <div class="job-body">
+            <h3 class="job-role">Project Specialist, Division of Cannabis Regulation</h3>
+            <p class="job-org">Missouri Dept. of Health and Senior Services</p>
+            <p class="muted">First employee of a new compliance pilot program. Owned chain-of-custody compliance across statewide facility audits in METRC.</p>
+          </div>
+        </li>
+        <li class="job reveal">
+          <p class="job-years">2022 – 2024</p>
+          <div class="job-body">
+            <h3 class="job-role">Owner &amp; Operations Manager</h3>
+            <p class="job-org">The Strand LLC · Tijeras, NM</p>
+            <p class="muted">Founded and licensed a regulated small business from the ground up, and wrote its safety, compliance and operations SOPs.</p>
+          </div>
+        </li>
+        <li class="job reveal">
+          <p class="job-years">2020 – 2021</p>
+          <div class="job-body">
+            <h3 class="job-role">Enterprise Support Specialist</h3>
+            <p class="job-org">Loom · Austin</p>
+            <p class="muted">Technical support and rollout strategy for enterprise SaaS customers.</p>
+          </div>
+        </li>
+        <li class="job reveal">
+          <p class="job-years">2017 – 2020</p>
+          <div class="job-body">
+            <h3 class="job-role">Multimedia Designer &amp; Project Manager</h3>
+            <p class="job-org">Nick Lax Designs · Austin</p>
+            <p class="muted">Client design and video projects end to end, including a 200+ video pipeline for a live-music YouTube channel.</p>
+          </div>
+        </li>
+        <li class="job reveal">
+          <p class="job-years">2014 – 2017</p>
+          <div class="job-body">
+            <h3 class="job-role">Product Advocate &amp; Customer Success Advocate</h3>
+            <p class="job-org">Atlassian · Austin</p>
+            <p class="muted">Resolved thousands of customer inquiries by phone, email and chat, and helped design the team training program.</p>
+          </div>
+        </li>
+      </ol>
+      <p class="edu reveal">B.A. Communication Design, Texas State University · Web Developer Specialist certificate, Austin Community College</p>
+    </section>
+
+    <!-- About -->
+    <section id="about" class="section wrap" aria-labelledby="about-title">
+      <div class="about reveal">
+        <div class="about-head">
+          <p class="section-num">04 — About</p>
+          <h2 id="about-title" class="section-title">Hi, I'm Nick.</h2>
+        </div>
+        <div class="about-body">
+          <p>I've spent my career where rules meet real people: enforcing cannabis regulations, supporting enterprise software customers and designing for clients.</p>
+          <p class="muted">The common thread is checking claims against the source and explaining what I found in plain language. These days I put that to work building and testing AI tools, and publishing how accurate they really are.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="section wrap" aria-labelledby="contact-title">
+      <div class="contact reveal">
+        <h2 id="contact-title" class="contact-title">Hiring? Let's chat.</h2>
+        <a href="mailto:nlaxatx@gmail.com" class="contact-email ul">nlaxatx@gmail.com</a>
+        <div class="btn-row">
+          <a href="https://github.com/scenebiscuit-cell" class="btn btn-sm">GitHub</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer wrap">
+    <p>Created by Nick Lax · Austin, TX</p>
+    <p class="mono">Plain HTML and CSS on GitHub Pages</p>
+  </footer>
+</body>
+</html>
