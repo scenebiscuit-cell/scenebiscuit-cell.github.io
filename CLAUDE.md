@@ -13,7 +13,7 @@ Nick Lax's portfolio home page, served by GitHub Pages at https://scenebiscuit-c
 ## Design
 - Eggshell/cream page (`#EEE7D8`), near-black ink, one accent: ballpoint blue `#1F3FD8` (`#93A5FF` in dark mode).
 - Bricolage Grotesque for headings, IBM Plex Sans for body, IBM Plex Mono for small labels.
-- No handwriting fonts and no portrait. Small, purposeful motion only: hero fade-up, highlight wipe behind "verify claims", scroll fade-ins, card lift on hover, pulsing status dots, and a tumbleweed after 3 idle seconds.
+- No handwriting fonts and no portrait. Small, purposeful motion only: hero fade-up, highlight wipe behind "show their work", scroll fade-ins, card lift on hover, pulsing status dots, and a tumbleweed after 3 idle seconds.
 - Pharos comes before the cannabis project; cannabis should not be the first thing visitors see.
 
 ## Open items

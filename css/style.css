@@ -232,7 +232,8 @@ h1, h2, h3 { margin: 0; }
   font-size: clamp(24px, 3vw, 40px); letter-spacing: -0.02em; color: var(--accent);
   word-break: break-word;
 }
-.contact .btn-row { margin-top: 36px; }
+.contact-line { margin-top: 20px; max-width: 560px; font-size: 17px; }
+.contact .btn-row { margin-top: 32px; }
 .site-footer {
   display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px;
   padding-top: 48px; padding-bottom: 72px; font-size: 14px; color: var(--muted);

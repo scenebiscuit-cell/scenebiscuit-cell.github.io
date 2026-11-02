@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Nick Lax · Support ops, compliance and AI evaluation</title>
-  <meta name="description" content="Nick Lax builds tools that verify claims and cite their sources. Over a decade in regulatory compliance, enterprise SaaS support and communication design. Austin, TX.">
+  <meta name="description" content="Nick Lax builds AI tools that show their work. More than ten years across enterprise software support, cannabis compliance and design. Austin, TX.">
   <meta property="og:title" content="Nick Lax · Support ops, compliance and AI evaluation">
-  <meta property="og:description" content="I build tools that verify claims and cite their sources.">
+  <meta property="og:description" content="I build AI tools that show their work.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://scenebiscuit-cell.github.io/">
   <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
@@ -26,8 +26,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=2026-11-02b">
-  <script src="js/main.js?v=2026-11-02b" defer></script>
+  <link rel="stylesheet" href="css/style.css?v=2026-11-02c">
+  <script src="js/main.js?v=2026-11-02c" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -53,9 +53,9 @@
 
     <!-- Hero -->
     <section class="hero wrap">
-      <p class="eyebrow rise r1">Austin, TX · Support ops · Compliance · AI evaluation</p>
-      <h1 class="hero-title rise r2">I build tools that <span class="hl">verify claims</span> and cite their sources.</h1>
-      <p class="hero-lede rise r3">Over a decade in regulatory compliance, enterprise SaaS support and communication design. Now I build AI tools, and I measure whether they're right.</p>
+      <p class="eyebrow rise r1">Austin, TX · Support operations · Compliance · AI evaluation</p>
+      <h1 class="hero-title rise r2">I build AI tools that <span class="hl">show their work.</span></h1>
+      <p class="hero-lede rise r3">More than ten years across enterprise software support, cannabis compliance and design, most of it spent checking claims against the source. Now I build AI tools the same way, and I publish how often they're right.</p>
       <div class="btn-row rise r4">
         <a href="#work" class="btn btn-solid">See the work
           <svg class="swirl" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 3.5 C 9 2.5, 14 4, 14 7.5 C 14 10.5, 9.5 11, 9 8.5 C 8.5 6, 12.5 5.5, 13.5 8.5 C 14.3 11.5, 13 15, 12 20"/><path d="M8.3 16.8 L12 20.6 L15.6 16.9"/></svg>
@@ -74,9 +74,9 @@
       <div class="section-head section-head--split reveal">
         <div>
           <p class="section-num">01 — Featured work</p>
-          <h2 id="work-title" class="section-title section-title--lg">Two tools, measured results</h2>
+          <h2 id="work-title" class="section-title section-title--lg">Two tools, and the numbers behind them</h2>
         </div>
-        <p class="section-aside">Each one is live, open source and honest about where it falls short.</p>
+        <p class="section-aside">Both are live and open source. The scores are from tests I'm happy to show you.</p>
       </div>
 
       <!-- Pharos -->
@@ -93,14 +93,15 @@
               <p class="frame-placeholder">[Screenshot: agent desk with AI triage panel]</p>
             </div>
           </div>
-          <p class="tag-note"><span class="tag-dot" aria-hidden="true"></span>Safety net: suspicious logins always reach a person</p>
+          <p class="tag-note"><span class="tag-dot" aria-hidden="true"></span>Suspicious-login reports always go to a person, whatever the AI says</p>
         </div>
 
         <div class="case-text reveal">
           <p class="case-kicker">AI support operations</p>
           <h3 class="case-title">Pharos Support Desk</h3>
-          <p><strong>The problem:</strong> AI help chats sound confident even when they're wrong, and support teams can't see why a ticket was routed where it was.</p>
-          <p><strong>What I built:</strong> both sides of support for a fictional app. A help chat that answers only from 12 articles and cites them, a customer portal, and an agent desk with AI triage, drafted replies and SLA clocks.</p>
+          <p><strong>The problem:</strong> AI help chats answer confidently even when they're wrong, and nobody can see why a ticket landed where it did.</p>
+          <p><strong>What I built:</strong> A support setup for a fictional project-management app, from both sides. Customers get a help chat that answers only from the help articles and cites them, plus a portal to track their requests. Agents get a desk with AI triage, drafted replies and SLA timers.</p>
+          <p><strong>The result:</strong> On 36 tickets the AI had never seen, triage picked the right category 89% of the time and the right priority 83%. The misses are in the README too.</p>
           <dl class="stats">
             <div><dt>category accuracy</dt><dd class="accent">89%</dd></div>
             <div><dt>priority accuracy</dt><dd>83%</dd></div>
@@ -128,14 +129,15 @@
               <p class="frame-placeholder">[Screenshot: trichome header and a Review verdict with citations]</p>
             </div>
           </div>
-          <p class="tag-note"><span class="tag-dot" aria-hidden="true"></span>Every finding cites the rule it's based on</p>
+          <p class="tag-note"><span class="tag-dot" aria-hidden="true"></span>Every finding links to the rule behind it</p>
         </div>
 
         <div class="case-text reveal">
           <p class="case-kicker">Cannabis compliance</p>
           <h3 class="case-title">COA Crosscheck + TCUP COA Checker</h3>
-          <p><strong>The problem:</strong> lab certificates of analysis come in dozens of layouts, and checking one against state rules by hand is slow and easy to get wrong.</p>
-          <p><strong>What I built:</strong> two browser tools that read a COA and check it against state rules. Each one returns Clear, Review or Hold, with a citation on every finding. Plain HTML, CSS and JavaScript, with no build step.</p>
+          <p><strong>The problem:</strong> Every lab formats its certificate of analysis differently, so checking one against state limits by hand is slow, and it's easy to miss a number.</p>
+          <p><strong>What I built:</strong> Two browser tools that read a COA and check it against the rules for Texas, Missouri, Colorado, California and federal hemp. Each result is Clear, Review or Hold, and every finding links to the regulation behind it. When a rule is unclear, the tool flags it for review instead of guessing.</p>
+          <p><strong>The result:</strong> 88 automated tests, run on every change. Accessible to WCAG 2.2 AA in light and dark mode.</p>
           <dl class="stats">
             <div><dt>automated tests passing</dt><dd class="accent">88</dd></div>
             <div><dt>states plus federal hemp</dt><dd>5 + 1</dd></div>
@@ -158,14 +160,14 @@
       </div>
       <div class="cards">
         <div class="card lift reveal">
-          <p class="card-status"><span class="dot" aria-hidden="true"></span>Designed · build starting</p>
+          <p class="card-status"><span class="dot" aria-hidden="true"></span>Design done · build starting</p>
           <h3 class="card-title">QRTZ</h3>
-          <p class="muted">Live visuals for DJ sets in TouchDesigner. A lit crystal on the booth becomes the controller: spin it, gesture over it, and the screens follow the beat.</p>
+          <p class="muted">Live visuals for DJ sets, built in TouchDesigner. A small lit crystal on the booth is the controller: spin it or gesture over it, and the screens change with the beat.</p>
         </div>
         <div class="card lift reveal">
-          <p class="card-status"><span class="dot" aria-hidden="true"></span>Designed · build starting</p>
+          <p class="card-status"><span class="dot" aria-hidden="true"></span>Design done · build starting</p>
           <h3 class="card-title">ASSET ZERO</h3>
-          <p class="muted">A Raptor-style roguelite shoot 'em up in Godot 4, built around a jet made of liquid metal that reshapes itself mid-fight.</p>
+          <p class="muted">A roguelite shoot 'em up in Godot 4, in the spirit of Raptor (1994). You fly a jet made of liquid metal that changes shape mid-fight.</p>
         </div>
       </div>
     </section>
@@ -175,9 +177,9 @@
       <div class="section-head section-head--split reveal">
         <div>
           <p class="section-num">03 — Experience</p>
-          <h2 id="experience-title" class="section-title">Where the rules meet real people</h2>
+          <h2 id="experience-title" class="section-title">Support, compliance and design</h2>
         </div>
-        <p class="section-num">The short version of my resume</p>
+        <p class="section-num">The short version. The full resume is the download button at the top.</p>
       </div>
       <ol class="jobs">
         <li class="job reveal">
@@ -185,7 +187,7 @@
           <div class="job-body">
             <h3 class="job-role">Project Specialist, Division of Cannabis Regulation</h3>
             <p class="job-org">Missouri Dept. of Health and Senior Services</p>
-            <p class="muted">First employee of a new compliance pilot program. Owned chain-of-custody compliance across statewide facility audits in METRC.</p>
+            <p class="muted">First hire on a new compliance pilot program. Designed its regulatory workflows and owned chain-of-custody compliance across statewide facility audits in METRC.</p>
           </div>
         </li>
         <li class="job reveal">
@@ -193,7 +195,7 @@
           <div class="job-body">
             <h3 class="job-role">Owner &amp; Operations Manager</h3>
             <p class="job-org">The Strand LLC · Tijeras, NM</p>
-            <p class="muted">Founded and licensed a regulated small business from the ground up, and wrote its safety, compliance and operations SOPs.</p>
+            <p class="muted">Founded and licensed a regulated small business, and wrote the safety, compliance and operations SOPs it ran on.</p>
           </div>
         </li>
         <li class="job reveal">
@@ -201,7 +203,7 @@
           <div class="job-body">
             <h3 class="job-role">Enterprise Support Specialist</h3>
             <p class="job-org">Loom · Austin</p>
-            <p class="muted">Technical support and rollout strategy for enterprise SaaS customers.</p>
+            <p class="muted">Technical support for enterprise customers and rollout plans for large organizations.</p>
           </div>
         </li>
         <li class="job reveal">
@@ -209,15 +211,15 @@
           <div class="job-body">
             <h3 class="job-role">Multimedia Designer &amp; Project Manager</h3>
             <p class="job-org">Nick Lax Designs · Austin</p>
-            <p class="muted">Client design and video projects end to end, including a 200+ video pipeline for a live-music YouTube channel.</p>
+            <p class="muted">Design and video projects for clients, start to finish, including a 200-plus video pipeline for a live-music YouTube channel.</p>
           </div>
         </li>
         <li class="job reveal">
           <p class="job-years">2014 – 2017</p>
           <div class="job-body">
-            <h3 class="job-role">Product Advocate &amp; Customer Success Advocate</h3>
+            <h3 class="job-role">Customer Success Advocate, then Product Advocate</h3>
             <p class="job-org">Atlassian · Austin</p>
-            <p class="muted">Resolved thousands of customer inquiries by phone, email and chat, and helped design the team training program.</p>
+            <p class="muted">Resolved thousands of customer inquiries by phone, email and chat, helped design the team's training program, and was promoted in 2016.</p>
           </div>
         </li>
       </ol>
@@ -232,8 +234,8 @@
           <h2 id="about-title" class="section-title">Hi, I'm Nick.</h2>
         </div>
         <div class="about-body">
-          <p>I've spent my career where rules meet real people: enforcing cannabis regulations, supporting enterprise software customers and designing for clients.</p>
-          <p class="muted">The common thread is checking claims against the source and explaining what I found in plain language. These days I put that to work building and testing AI tools, and publishing how accurate they really are.</p>
+          <p>I've been an enterprise support specialist at Atlassian, a state cannabis regulator, a small-business owner and a freelance designer. Different jobs, same habit: read the rule, check the claim against the document, and write down what I found so the next person doesn't have to redo it.</p>
+          <p class="muted">That's how I build with AI, too. I'm not a career developer. I build these tools with Claude Code and test them the way an auditor would, and I'd rather publish a real accuracy score than a demo that only works on the examples it was built from.</p>
         </div>
       </div>
     </section>
@@ -243,6 +245,7 @@
       <div class="contact reveal">
         <h2 id="contact-title" class="contact-title">Hiring? Let's chat.</h2>
         <a href="mailto:nlaxatx@gmail.com" class="contact-email ul">nlaxatx@gmail.com</a>
+        <p class="contact-line muted">Looking for support operations, customer success, compliance or AI evaluation roles in Austin or remote.</p>
         <div class="btn-row">
           <a href="https://github.com/scenebiscuit-cell" class="btn btn-sm">GitHub</a>
         </div>
