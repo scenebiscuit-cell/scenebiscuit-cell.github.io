@@ -43,14 +43,20 @@
     revealEls.forEach(function (el) { observer.observe(el); });
   }
 
-  /* ---------- 3. Idle tumbleweed ---------- */
-  var IDLE_MS = 3000;
+  /* ---------- 3. Idle tumbleweed ----------
+     First roll after 10 seconds with no mouse, keyboard, scroll or touch
+     activity. While the visitor stays idle, it comes back 5 seconds after
+     each roll finishes. Any activity resets the wait to 10 seconds. */
+  var FIRST_IDLE_MS = 10000;
+  var REPEAT_IDLE_MS = 5000;
   var idleTimer = null;
   var rolling = false;
+  var activeDuringRoll = false;
 
   function rollTumbleweed() {
     if (rolling || reduceMotion.matches || document.hidden) { return; }
     rolling = true;
+    activeDuringRoll = false;
 
     var weed = document.createElement('div');
     weed.className = 'tumbleweed';
@@ -61,21 +67,25 @@
       if (event.target !== weed) { return; } // ignore the inner spin/hop loops
       weed.remove();
       rolling = false;
-      armIdle();
+      if (activeDuringRoll) { return; } // visitor moved mid-roll: the 10-second wait already started
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(rollTumbleweed, REPEAT_IDLE_MS);
     });
 
     document.body.appendChild(weed);
   }
 
-  function armIdle() {
+  function onActivity() {
+    if (rolling) { activeDuringRoll = true; }
     clearTimeout(idleTimer);
-    if (rolling) { return; }
-    idleTimer = setTimeout(rollTumbleweed, IDLE_MS);
+    idleTimer = setTimeout(rollTumbleweed, FIRST_IDLE_MS);
   }
 
   ['mousemove', 'pointerdown', 'keydown', 'wheel', 'scroll', 'touchstart'].forEach(function (type) {
-    window.addEventListener(type, armIdle, { passive: true });
+    window.addEventListener(type, onActivity, { passive: true });
   });
-  document.addEventListener('visibilitychange', armIdle);
-  armIdle();
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { clearTimeout(idleTimer); } else { onActivity(); }
+  });
+  onActivity();
 })();

@@ -31,7 +31,7 @@ Nick Lax's portfolio home page, live at https://scenebiscuit-cell.github.io/ sin
 ## Design
 - Eggshell/cream page (`#EEE7D8`), cards `#F7F2E7`, near-black ink, one accent: ballpoint blue `#1F3FD8` (`#93A5FF` in dark mode).
 - Bricolage Grotesque for headings, IBM Plex Sans for body, IBM Plex Mono for small labels.
-- No handwriting fonts, no portrait, no art/painting mentions. Small, purposeful motion only: hero fade-up, highlight wipe behind "show their work", scroll fade-ins, card lift on hover, pulsing status dots, and a tumbleweed after 3 idle seconds.
+- No handwriting fonts, no portrait, no art/painting mentions. Small, purposeful motion only: hero fade-up, highlight wipe behind "show their work", scroll fade-ins, card lift on hover, pulsing status dots, and a tumbleweed that first rolls after 10 idle seconds, then comes back 5 seconds after each roll while the visitor stays idle (any activity resets it to 10).
 - Hero buttons each have an icon after the label: looped down arrow (See the work), envelope (Email me), page with down arrow (Download resume).
 
 ## Screenshots
