@@ -19,6 +19,5 @@ Nick Lax's portfolio home page, served by GitHub Pages at https://scenebiscuit-c
 ## Screenshots
 - `img/*-light.webp` show in light mode, `img/*-dark.webp` in dark mode. 1200px wide, WebP. Frames crop to 2:1 from the top-left.
 
-## Open items
-- `Nick-Lax-Resume.pdf` (update the resume's demo-link placeholders first).
-- LinkedIn button in the contact section once Nick provides the URL.
+## Resume
+- `Nick-Lax-Resume.pdf` is the public version: no phone number, on purpose. Keep it that way when replacing the file.
