@@ -43,14 +43,19 @@
     revealEls.forEach(function (el) { observer.observe(el); });
   }
 
-  /* ---------- 3. Idle tumbleweed ---------- */
-  var IDLE_MS = 3000;
+  /* ---------- 3. Idle tumbleweed ----------
+     Rolls by once after 10 seconds with no mouse, keyboard, scroll or
+     touch activity. It won't roll again until the visitor does something
+     and then goes idle again, so a page left open doesn't loop it. */
+  var IDLE_MS = 10000;
   var idleTimer = null;
   var rolling = false;
+  var rolledThisIdle = false;
 
   function rollTumbleweed() {
-    if (rolling || reduceMotion.matches || document.hidden) { return; }
+    if (rolling || rolledThisIdle || reduceMotion.matches || document.hidden) { return; }
     rolling = true;
+    rolledThisIdle = true;
 
     var weed = document.createElement('div');
     weed.className = 'tumbleweed';
@@ -61,21 +66,22 @@
       if (event.target !== weed) { return; } // ignore the inner spin/hop loops
       weed.remove();
       rolling = false;
-      armIdle();
     });
 
     document.body.appendChild(weed);
   }
 
-  function armIdle() {
+  function onActivity() {
+    rolledThisIdle = false;
     clearTimeout(idleTimer);
-    if (rolling) { return; }
     idleTimer = setTimeout(rollTumbleweed, IDLE_MS);
   }
 
   ['mousemove', 'pointerdown', 'keydown', 'wheel', 'scroll', 'touchstart'].forEach(function (type) {
-    window.addEventListener(type, armIdle, { passive: true });
+    window.addEventListener(type, onActivity, { passive: true });
   });
-  document.addEventListener('visibilitychange', armIdle);
-  armIdle();
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { clearTimeout(idleTimer); } else { onActivity(); }
+  });
+  onActivity();
 })();
