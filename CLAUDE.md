@@ -16,7 +16,7 @@ Nick Lax's portfolio home page, live at https://scenebiscuit-cell.github.io/ sin
 | `index.html` | All page content |
 | `css/style.css` | Layout, light/dark colors, animations |
 | `js/main.js` | Theme toggle (saved in browser storage as `nl-theme`), scroll fade-ins, idle tumbleweed |
-| `img/` | `favicon.svg`, `tumbleweed.png` (Nick's drawing), project screenshots |
+| `img/` | Favicon (`favicon.svg`, `favicon-32.png`, `apple-touch-icon.png`: a white document with a blue check), `tumbleweed.png` (Nick's drawing), project screenshots |
 | `Nick-Lax-Resume.pdf` | Public resume behind the Download resume button |
 | `.nojekyll` | Tells GitHub Pages to serve files as-is |
 
