@@ -44,18 +44,19 @@
   }
 
   /* ---------- 3. Idle tumbleweed ----------
-     Rolls by once after 10 seconds with no mouse, keyboard, scroll or
-     touch activity. It won't roll again until the visitor does something
-     and then goes idle again, so a page left open doesn't loop it. */
-  var IDLE_MS = 10000;
+     First roll after 10 seconds with no mouse, keyboard, scroll or touch
+     activity. While the visitor stays idle, it comes back 5 seconds after
+     each roll finishes. Any activity resets the wait to 10 seconds. */
+  var FIRST_IDLE_MS = 10000;
+  var REPEAT_IDLE_MS = 5000;
   var idleTimer = null;
   var rolling = false;
-  var rolledThisIdle = false;
+  var activeDuringRoll = false;
 
   function rollTumbleweed() {
-    if (rolling || rolledThisIdle || reduceMotion.matches || document.hidden) { return; }
+    if (rolling || reduceMotion.matches || document.hidden) { return; }
     rolling = true;
-    rolledThisIdle = true;
+    activeDuringRoll = false;
 
     var weed = document.createElement('div');
     weed.className = 'tumbleweed';
@@ -66,15 +67,18 @@
       if (event.target !== weed) { return; } // ignore the inner spin/hop loops
       weed.remove();
       rolling = false;
+      if (activeDuringRoll) { return; } // visitor moved mid-roll: the 10-second wait already started
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(rollTumbleweed, REPEAT_IDLE_MS);
     });
 
     document.body.appendChild(weed);
   }
 
   function onActivity() {
-    rolledThisIdle = false;
+    if (rolling) { activeDuringRoll = true; }
     clearTimeout(idleTimer);
-    idleTimer = setTimeout(rollTumbleweed, IDLE_MS);
+    idleTimer = setTimeout(rollTumbleweed, FIRST_IDLE_MS);
   }
 
   ['mousemove', 'pointerdown', 'keydown', 'wheel', 'scroll', 'touchstart'].forEach(function (type) {
