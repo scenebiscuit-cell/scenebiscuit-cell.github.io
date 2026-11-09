@@ -6,7 +6,8 @@ Nick Lax's portfolio home page, live at https://scenebiscuit-cell.github.io/ sin
 1. Plain HTML, CSS and vanilla JS. No build step, no frameworks, no npm dependencies. The only external resource is Google Fonts.
 2. Work on a branch and open a pull request. Never push to `main`. Merge only when Nick says "merge".
 3. When `css/style.css` or `js/main.js` changes, bump the `?v=YYYY-MM-DD` on their tags in `index.html`.
-4. Keep it accessible: real links and buttons, visible focus, 4.5:1 text contrast in light and dark, and respect `prefers-reduced-motion` for every animation.
+4. Keep it accessible: real links and buttons, visible focus, 4.5:1 text contrast in light and dark, tap targets at least 44px tall, and respect `prefers-reduced-motion` for every animation.
+7. Responsive: one breakpoint at 760px (nav collapses, columns stack). Check 320, 390, 768, 1024, 1440 and 1920px for sideways scroll before merging layout changes.
 5. No invented numbers. Every stat on the page must match the project's README (Pharos: 89% / 83% on 36 unseen tickets; COA tools: 88 tests).
 6. Nick is on Windows with PowerShell. Start command blocks with `cd C:\Projects\scenebiscuit-cell.github.io`. One small, testable step at a time, ending with how to check it worked.
 
