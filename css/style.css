@@ -88,6 +88,7 @@ h1, h2, h3 { margin: 0; }
 }
 .nav { display: flex; align-items: center; gap: 28px; }
 .nav-links { display: flex; gap: 28px; list-style: none; margin: 0; padding: 0; font-size: 15px; font-weight: 500; }
+.nav-links a, .brand { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; }
 .theme-btn {
   width: 44px; height: 44px; padding: 0; border-radius: 50%;
   border: 1.5px solid var(--ink); background: transparent; color: var(--ink);
@@ -108,7 +109,7 @@ h1, h2, h3 { margin: 0; }
 .hero-title {
   max-width: 15ch;
   font-family: var(--font-display); font-weight: 800;
-  font-size: clamp(44px, 6.4vw, 92px); line-height: .98; letter-spacing: -0.035em;
+  font-size: clamp(38px, 6.4vw, 92px); line-height: .98; letter-spacing: -0.035em;
 }
 .hl { position: relative; isolation: isolate; display: inline-block; white-space: nowrap; padding: 0 .08em; color: var(--accent); }
 .hl::before {
@@ -235,6 +236,7 @@ h1, h2, h3 { margin: 0; }
   font-size: clamp(48px, 8vw, 120px); line-height: .95; letter-spacing: -0.04em;
 }
 .contact-email {
+  display: inline-block; padding: 8px 0;
   font-family: var(--font-display); font-weight: 700;
   font-size: clamp(24px, 3vw, 40px); letter-spacing: -0.02em; color: var(--accent);
   word-break: break-word;
@@ -284,6 +286,9 @@ h1, h2, h3 { margin: 0; }
 /* ---------- Small screens ---------- */
 @media (max-width: 760px) {
   .nav-links { display: none; }
+  /* Let the highlighted phrase wrap on narrow screens; paint the highlight per line */
+  .hl { white-space: normal; background: var(--hl); -webkit-box-decoration-break: clone; box-decoration-break: clone; border-radius: 4px; }
+  .hl::before { display: none; }
   .hero { padding-top: 40px; padding-bottom: 72px; }
   .case { gap: 32px; margin-bottom: 80px; }
   .case--flip .case-media { order: 0; }
