@@ -1,6 +1,6 @@
 # CLAUDE.md — portfolio site
 
-Nick Lax's portfolio home page, live at https://scenebiscuit-cell.github.io/ since November 3, 2026. GitHub Pages serves it straight from `main`; a merge goes live in a minute or two. Local clone: `C:\Projects\scenebiscuit-cell.github.io`.
+Nick Lax's portfolio home page, live since November 3, 2026, at https://scenebiscuit.com/ (custom domain from November 10; `scenebiscuit-cell.github.io` redirects there). GitHub Pages serves it straight from `main`; a merge goes live in a minute or two. Local clone: `C:\Projects\scenebiscuit-cell.github.io`.
 
 ## Rules
 1. Plain HTML, CSS and vanilla JS. No build step, no frameworks, no npm dependencies. The only external resource is Google Fonts.
@@ -20,6 +20,7 @@ Nick Lax's portfolio home page, live at https://scenebiscuit-cell.github.io/ sin
 | `img/` | Favicon (`favicon.svg`, `favicon-32.png`, `apple-touch-icon.png`: a white document with a blue check), `tumbleweed.png` (Nick's drawing), project screenshots |
 | `Nick-Lax-Resume.pdf` | Public resume behind the Download resume button |
 | `.nojekyll` | Tells GitHub Pages to serve files as-is |
+| `CNAME` | Custom domain (`scenebiscuit.com`). DNS is on Cloudflare: four A records to GitHub Pages and `www` CNAME to `scenebiscuit-cell.github.io`, all DNS-only (grey cloud). Don't delete this file. |
 
 ## Copy
 - Headline: "I make sure the answer is right, and show where it came from." (The earlier "I build AI tools…" read as a developer pitch; Nick is applying for support, compliance and AI-evaluation roles, not dev roles.)
@@ -46,4 +47,3 @@ Nick Lax's portfolio home page, live at https://scenebiscuit-cell.github.io/ sin
 
 ## Ideas for later
 - A "Writing" section once these exist: an AI evaluation sample (rubric plus rated responses), a compliance writing sample, a one-page Pharos postmortem on the safety-net miss.
-- Optional custom domain.
