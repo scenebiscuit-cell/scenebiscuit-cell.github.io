@@ -1,6 +1,6 @@
 # Nick Lax — portfolio
 
-My portfolio home page: **https://scenebiscuit-cell.github.io/**
+My portfolio home page: **https://scenebiscuit.com/**
 
 It links my projects together (Pharos Support Desk, COA Crosscheck and the TCUP COA Checker) and gives a short version of my resume.
 
