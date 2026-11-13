@@ -1,0 +1,8 @@
+{
+ "name": "Marble bust",
+ "grid": 96,
+ "span": 1.1,
+ "width": 960,
+ "height": 960,
+ "source": "Poly Haven marble_bust_01 (CC0), cast by scripts/model_cast.py"
+}
