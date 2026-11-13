@@ -209,6 +209,7 @@ h1, h2, h3 { margin: 0; }
   display: flex; align-items: center; gap: 10px; margin-bottom: 16px;
   font-family: var(--font-mono); font-size: 13px; color: var(--muted);
 }
+.card .btn-row { margin-top: 24px; }
 .card-title { margin-bottom: 10px; font-family: var(--font-display); font-weight: 700; font-size: 28px; letter-spacing: -0.02em; }
 .dot { position: relative; display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
 .dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--accent); animation: ping 1.8s ease-out infinite; }

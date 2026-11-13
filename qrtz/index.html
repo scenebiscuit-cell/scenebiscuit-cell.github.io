@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QRTZ · a music visualizer, light through a crystal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<style>
+  /* The operator panel's look (docs/operator-panel.md): one meaning per colour. Red is what's
+     live now, green is working, amber is changing or waiting; none of them is decoration. */
+  :root {
+    --ground: #0B0C10;
+    --card: #14161C; --card-border: #22252E; --card-radius: 14px; --card-pad: 14px;
+    --button: #1B1E26; --button-border: #2A2E39; --button-radius: 10px;
+    --chip: #14161C; --chip-border: #262A34;
+    --text: #ECEAE4; --text-2: #C9CBD2; --muted: #9CA0AB; --faint: #6E7380;
+    --live: #D93A3A; --live-dot: #F0524F; --live-frame: #E04848;
+    --ok: #2FB36B; --wait: #F2A541;
+    --bass: #E8603C; --mids: #2FB36B; --treble: #4C8DF0; --meter-track: #22252E; --peak: #ECEAE4;
+    --link: #8FB8FF; --link-hover: #C2D8FF;
+    --log: #0F1116; --log-border: #1C1F27; --off: #343846;
+    --sans: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+    --gap: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--ground); color: var(--text); font: 14px/1.45 var(--sans); }
+  body { min-height: 100vh; }
+  .mono { font-family: var(--mono); }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { color: var(--link-hover); text-decoration: underline; }
+  :focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  input[type=file] { display: none; }
+
+  .page { max-width: 1392px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: var(--gap); }
+
+  /* Header */
+  .top { display: flex; align-items: center; gap: var(--gap); flex-wrap: wrap; }
+  .brand { display: flex; align-items: baseline; gap: 10px; }
+  .wordmark { font: 700 26px/1 "Space Grotesk", var(--sans); letter-spacing: 0.06em; }
+  .brand .sub { color: var(--muted); }
+  .chips { flex: 1 1 auto; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .chip { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 999px;
+          background: var(--chip); border: 1px solid var(--chip-border); color: var(--text-2); white-space: nowrap; }
+  .chip b { color: var(--text); font-weight: 600; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+  .dot.red { background: var(--live-dot); } .dot.green { background: var(--ok); } .dot.amber { background: var(--wait); }
+  .beats { gap: 5px; }
+  .beats i { width: 10px; height: 10px; border-radius: 2px; background: var(--off); }
+  .beats i.on { background: var(--peak); }
+  nav { display: flex; gap: 8px; }
+  nav a, nav button { display: inline-flex; font: inherit; color: var(--link); cursor: pointer; align-items: center; height: 36px; padding: 0 14px; border-radius: 10px; background: var(--chip); border: 1px solid var(--chip-border); }
+
+  /* Main row */
+  .main { display: flex; flex-wrap: wrap; gap: var(--gap); align-items: flex-start; }
+  .stage-col { flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: var(--gap); }
+  .side { flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: var(--gap); }
+  .stage-box { min-width: 0; }
+
+  /* Laptop and desktop: the whole panel fits the window, with no scrolling. The page is exactly
+     the window's height; the stage takes whatever room the cards leave, at 16:9 (its box is a
+     size container, so its width can follow the box's height); and on a window too short for
+     one column of cards, they sit in two. A window too small even for that scrolls rather
+     than overlapping. */
+  @media (min-width: 1100px) {
+    .page { min-height: 100vh; padding: 16px 24px; display: grid; grid-template-rows: auto auto auto; align-content: start; }
+    /* The row is as tall as the cards (align-content: start), and the picture column stretches to
+       it, so the bottom of the play bar lines up with the bottom of the Inputs card (owner's
+       request): the picture takes the height the play bar leaves, whatever its shape (about 16:10
+       on a laptop), and covers it, so nothing is stretched. */
+    /* One grid for the picture column and the cards (the side's own box steps aside), so the
+       picture column can end exactly at the bottom of the Inputs card. */
+    .main { display: grid; align-items: stretch; align-content: start; min-height: 0;
+            grid-template-columns: minmax(0, 1fr) minmax(250px, 290px) minmax(250px, 290px);
+            grid-template-areas: "stage scene colours" "stage crystal colours" "stage inputs colours" "stage inputs quick"; }
+    .side { display: contents; }
+    .stage-col { grid-area: stage; min-height: 0; }
+    .stage-box { flex: 1 1 0; min-height: 220px; display: flex; }
+    .stage { width: 100%; height: 100%; aspect-ratio: auto; }
+    .c-scene { grid-area: scene; } .c-crystal { grid-area: crystal; } .c-colours { grid-area: colours; }
+    .c-inputs { grid-area: inputs; } .c-quick { grid-area: quick; align-self: start; }
+    .grid.four .btn { padding: 0 4px; font-size: 13px; }
+  }
+  /* A window tall enough for one column of cards (about 1180 px of them with the header and log):
+     the picture column runs to the bottom of Inputs, and Quick actions sits below it. */
+  @media (min-width: 1100px) and (min-height: 1200px) {
+    .main { grid-template-columns: minmax(0, 1fr) 340px;
+            grid-template-areas: "stage scene" "stage crystal" "stage colours" "stage inputs" ". quick"; }
+    .grid.four .btn { padding: 0 8px; font-size: 14px; }
+  }
+
+  .card { background: var(--card); border: 1px solid var(--card-border); border-radius: var(--card-radius); padding: var(--card-pad); }
+  .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0 0 10px; }
+  .card-head h2 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .card-head .note { font-size: 12px; color: var(--muted); }
+  .card-head .note.wait { color: var(--wait); }
+
+  /* Buttons */
+  .btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 14px;
+         background: var(--button); border: 1px solid var(--button-border); border-radius: var(--button-radius);
+         color: var(--text); font: 500 14px/1.2 var(--sans); cursor: pointer; text-align: center; }
+  .btn:hover:not(:disabled) { border-color: #3A3F4D; }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .btn.icon { width: 44px; padding: 0; flex: none; }
+  .btn.icon svg { width: 16px; height: 16px; fill: currentColor; }
+  .btn.primary { background: var(--live); border-color: var(--live); color: #fff; font-weight: 700; }
+  .btn.primary:hover { border-color: #fff; }
+  .btn.dashed { border-style: dashed; color: var(--text-2); width: 100%; margin-top: 10px; }
+  /* What's live: a red dot in the corner (and aria-pressed, for anything that can't see it). */
+  .choice[aria-pressed=true]::after { content: ""; position: absolute; top: 5px; right: 5px; width: 6px; height: 6px; border-radius: 50%; background: var(--live-dot); }
+  /* On its way: the shape melting in. */
+  .choice.coming { outline: 2px solid var(--wait); outline-offset: -2px; }
+  .choice.coming:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; box-shadow: inset 0 0 0 2px var(--wait); }
+  .grid { display: grid; gap: 8px; }
+  .grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid .btn { min-height: 48px; padding: 0 8px; }
+  .palette { flex-direction: column; gap: 6px; padding: 14px 8px 8px; }  /* room above the strip for the live dot */
+  .palette .strip { display: flex; width: 100%; height: 8px; border-radius: 4px; overflow: hidden; background: var(--meter-track); }
+  .palette .strip i { flex: 1; }
+  .subhead { margin: 12px 0 8px; font-size: 12px; color: var(--muted); }
+  .pic { flex-direction: column; gap: 6px; padding: 14px 6px 6px; }
+  .pic img { display: block; width: 100%; height: 34px; object-fit: cover; border-radius: 6px; }
+
+  /* Stage */
+  .stage { position: relative; aspect-ratio: 16 / 9; background: #000; border-radius: var(--card-radius); overflow: hidden;
+           border: 2px solid var(--live-frame); }
+  .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; transition: opacity 0.4s; }
+  .stage.idle { border: 1px solid var(--button-border); }
+  .stage.standby canvas { opacity: 0.28; }
+  .tag { position: absolute; top: 12px; left: 12px; height: 26px; display: inline-flex; align-items: center; gap: 6px; padding: 0 10px;
+         border-radius: 6px; font: 600 12px/1 var(--sans); letter-spacing: 0.08em; background: var(--live); color: #fff; }
+  .stage.idle .tag { background: rgba(20, 22, 28, 0.85); color: var(--text-2); border: 1px solid var(--button-border); }
+  .fs { position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center;
+        background: rgba(11, 12, 16, 0.6); border: 1px solid rgba(236, 234, 228, 0.18); border-radius: 8px; color: var(--text); cursor: pointer; z-index: 2; }
+  .fs:hover { background: rgba(11, 12, 16, 0.85); }
+  .fs svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+  /* Full screen: the picture alone, filling the screen (Esc or the button brings the panel back). */
+  .stage:fullscreen { width: 100vw !important; height: 100vh; aspect-ratio: auto; border: 0; border-radius: 0; }
+  .stage:-webkit-full-screen { width: 100vw !important; height: 100vh; aspect-ratio: auto; border: 0; border-radius: 0; }
+  /* Nothing over the picture in full screen: no tag, no caption, and the button and pointer
+     fade away while the mouse is still (moving it brings them back). */
+  .stage:fullscreen .tag, .stage:fullscreen .caption { display: none; }
+  .stage:-webkit-full-screen .tag, .stage:-webkit-full-screen .caption { display: none; }
+  .fs { transition: opacity 0.4s; }
+  .stage.still { cursor: none; }
+  .stage.still .fs { opacity: 0; pointer-events: none; }
+  .stage.still .fs:focus-visible { opacity: 1; }
+  .caption { position: absolute; left: 12px; bottom: 12px; max-width: calc(100% - 24px); padding: 4px 10px; border-radius: 6px;
+             background: rgba(11, 12, 16, 0.72); color: var(--text-2); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .start { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .start .card { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; text-align: center; }
+  .start h2 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; color: var(--muted); }
+  .start p { margin: 0; color: var(--text-2); }
+  .start .btn.primary { min-height: 56px; font-size: 16px; }
+  .start .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .start .small { font-size: 12px; color: var(--muted); }
+
+  /* Transport */
+  .transport { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .track { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+  .trackline { display: flex; justify-content: space-between; gap: 10px; }
+  .trackline span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+  .trackline .mono { color: var(--text-2); font-size: 13px; flex: none; }
+  .progress { position: relative; height: 4px; border-radius: 2px; background: var(--meter-track); }
+  .progress i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 2px; background: var(--live-dot); }
+  .progress b { position: absolute; top: 50%; left: 0; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--peak); }
+  .transport .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  /* Inputs */
+  .tempo { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .bpm { font: 600 26px/1 var(--mono); min-width: 3.2ch; }
+  .bpm.none { color: var(--faint); }
+  .tempo .what { color: var(--text-2); flex: 1; }
+  .beatlight { width: 14px; height: 14px; border-radius: 3px; background: var(--off); flex: none; }
+  .beatlight.on { background: var(--peak); }
+  .meter-row { display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 10px; margin-top: 8px; color: var(--text-2); }
+  .meter { position: relative; height: 8px; border-radius: 4px; background: var(--meter-track); overflow: hidden; }
+  .meter i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; }
+  .meter b { position: absolute; top: 0; bottom: 0; width: 2px; left: 0; background: var(--peak); display: none; }
+  .meter.on b { display: block; }
+  .m-bass i { background: var(--bass); } .m-mids i { background: var(--mids); } .m-treble i { background: var(--treble); }
+  .fps { margin-top: 10px; font-size: 12px; color: var(--muted); }
+
+  .quick { display: flex; flex-wrap: wrap; gap: 8px; }
+  .quick .btn { flex: 1 1 140px; }
+
+  /* Log */
+  .log { display: flex; align-items: baseline; gap: 14px; background: var(--log); border: 1px solid var(--log-border); border-radius: 10px; padding: 10px 14px; }
+  .log h2 { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; color: var(--muted); flex: none; }
+  .log ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 22px; min-width: 0; font: 12px/1.5 var(--mono); }
+  .log li { color: var(--muted); }
+  .log li:first-child { color: var(--text); }
+  .log time { margin-right: 8px; }
+
+
+  @media (max-width: 700px) {
+    .page { padding: 16px; }
+    .wordmark { font-size: 22px; }
+    .main { flex-direction: column; align-items: stretch; }
+    .stage-col, .side { flex: none; width: 100%; }
+    .chips { justify-content: flex-start; }
+    /* Before any sound the start card needs more room than a 16:9 strip gives on a phone. */
+    .stage.standby { aspect-ratio: auto; min-height: 400px; }
+    .transport .actions { flex: 1 1 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .transport .actions .btn { padding: 0 6px; }
+    .log { flex-direction: column; gap: 6px; }
+    .log ol { flex-direction: column; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <div class="brand"><span class="wordmark">QRTZ</span><span class="sub">web demo</span></div>
+    <div class="chips" aria-live="polite">
+      <span class="chip" id="chip_wait"><i class="dot amber"></i>No sound yet</span>
+      <span class="chip" id="chip_scene" hidden><i class="dot red"></i>Scene: <b id="chip_scene_name">Crystal</b></span>
+      <span class="chip" id="chip_tempo" hidden><i class="dot amber" id="tempo_dot"></i><span><span class="mono" id="chip_bpm">---</span> BPM · <span id="chip_source">demo track</span></span></span>
+      <span class="chip beats" id="chip_beats" hidden role="img" aria-label="Beat counter"><i></i><i></i><i></i><i></i></span>
+    </div>
+    <nav>
+      <a href="how.html" target="qrtz_how" id="how_link">How it works</a>
+    </nav>
+  </header>
+
+  <div class="main">
+    <section class="stage-col" aria-label="The picture">
+      <div class="stage-box">
+      <div class="stage idle standby" id="stage">
+        <canvas id="canvas"></canvas>
+        <span class="tag" id="tag">STANDBY</span>
+        <button class="fs" id="fullscreen" aria-label="Full screen" title="Full screen" hidden>
+          <svg viewBox="0 0 16 16" id="icon_fs"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>
+          <svg viewBox="0 0 16 16" id="icon_fs_exit" hidden><path d="M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4"/></svg>
+        </button>
+        <span class="caption" id="caption">Crystal · Brilliant · Dusk</span>
+        <div class="start" id="start">
+          <div class="card">
+            <h2>START</h2>
+            <p>Give the crystal some sound and it starts to move.</p>
+            <button class="btn primary" id="demo_track">Play the demo track</button>
+            <div class="pair">
+              <button class="btn" data-open="track">Open a track</button>
+              <button class="btn" data-mic>Use the microphone</button>
+            </div>
+            <p class="small">Sound stays in your browser. Nothing is uploaded.</p>
+          </div>
+        </div>
+      </div>
+      </div>
+      <div class="card transport">
+        <button class="btn icon" id="playpause" aria-label="Pause" title="Pause" disabled>
+          <svg viewBox="0 0 16 16" id="icon_pause"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg>
+          <svg viewBox="0 0 16 16" id="icon_play" hidden><path d="M3 2l11 6-11 6z"/></svg>
+        </button>
+        <button class="btn icon" id="stop" aria-label="Stop" title="Stop" disabled><svg viewBox="0 0 16 16"><path d="M3 3h10v10H3z"/></svg></button>
+        <div class="track">
+          <div class="trackline"><span id="track_name">No track yet</span><span class="mono" id="time">0:00 / 0:00</span></div>
+          <div class="progress" id="progress" role="progressbar" aria-label="Track position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="progress_fill"></i><b id="progress_thumb"></b></div>
+        </div>
+        <div class="actions">
+          <button class="btn" id="demo_again">Demo track</button>
+          <button class="btn" data-open="track">Open a track</button>
+          <button class="btn" data-mic>Microphone</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="side">
+      <section class="card c-scene" aria-labelledby="h_scene">
+        <div class="card-head"><h2 id="h_scene">Scene</h2></div>
+        <div class="grid four" id="scenes"></div>
+      </section>
+      <section class="card c-crystal" aria-labelledby="h_crystal">
+        <div class="card-head"><h2 id="h_crystal">Crystal</h2><span class="note wait" id="melting" aria-live="polite"></span></div>
+        <div class="grid two" id="shapes"></div>
+      </section>
+      <section class="card c-colours" aria-labelledby="h_colours">
+        <div class="card-head"><h2 id="h_colours">Colours</h2></div>
+        <div class="grid two" id="palettes"></div>
+        <div class="subhead">Demo pictures</div>
+        <div class="grid two" id="pictures"></div>
+        <button class="btn dashed" data-open="picture">Open a picture to take colours from it</button>
+      </section>
+      <section class="card c-inputs" aria-labelledby="h_inputs">
+        <div class="card-head"><h2 id="h_inputs">Inputs</h2><span class="note mono" id="gain" hidden>gain ×1.0</span></div>
+        <div class="tempo">
+          <span class="bpm none" id="bpm">---</span>
+          <span class="what" id="bpm_what">BPM · no beat yet</span>
+          <span class="beatlight" id="beat" role="img" aria-label="Beat light"></span>
+        </div>
+        <div class="meter-row"><span>Bass</span><div class="meter m-bass" id="m_bass"><i></i><b></b></div></div>
+        <div class="meter-row"><span>Mids</span><div class="meter m-mids" id="m_mids"><i></i><b></b></div></div>
+        <div class="meter-row"><span>Treble</span><div class="meter m-treble" id="m_treble"><i></i><b></b></div></div>
+        <div class="fps mono" id="fps"></div>
+      </section>
+      <section class="card c-quick" aria-labelledby="h_quick">
+        <div class="card-head"><h2 id="h_quick">Quick actions</h2></div>
+        <div class="quick">
+          <button class="btn" id="drop">Drop</button>
+          <button class="btn" data-open="picture">Open a picture</button>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <section class="log" aria-label="Log">
+    <h2>LOG</h2>
+    <ol id="log" aria-live="polite"></ol>
+  </section>
+
+</div>
+
+<input type="file" id="track" accept="audio/*">
+<input type="file" id="picture" accept="image/*">
+
+<script src="shaders.js"></script>
+<script src="scenes.js"></script>
+<script src="models/marble_bust.js"></script>
+<script src="pictures/sky.js"></script>
+<script src="pictures/pattern.js"></script>
+<script src="demo.js"></script>
+<script>
+(function () {
+  const { Demo, SETTINGS } = window.QRTZDemo;
+  const $ = (id) => document.getElementById(id);
+
+  // The log bar: the last three events, newest first.
+  const logList = $('log'), entries = [];
+  function log(text) {
+    const d = new Date(), pad = (n) => String(n).padStart(2, '0');
+    entries.unshift({ time: pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()), text });
+    entries.length = Math.min(entries.length, 3);
+    logList.replaceChildren(...entries.map((e) => {
+      const li = document.createElement('li'), t = document.createElement('time');
+      t.textContent = e.time; li.append(t, e.text); return li;
+    }));
+  }
+  log('waiting for sound');
+
+  // How it works opens in a pop-up window of its own; if the browser blocks pop-ups, the link
+  // still opens it in a new tab.
+  $('how_link').onclick = (e) => {
+    const win = window.open('how.html', 'qrtz_how', 'popup,width=760,height=760');
+    if (win) { e.preventDefault(); win.focus(); }
+  };
+
+  let demo;
+  try {
+    demo = new Demo($('canvas'));
+  } catch (e) {
+    log(e.message);
+    return;
+  }
+
+  const stage = $('stage'), tag = $('tag'), caption = $('caption'), start = $('start');
+  const names = { brilliant: 'Brilliant', disco: 'Disco ball', model: 'Marble bust', eyeball: 'Eye' };
+  // The deck scene shows as "Shaders": its three shader looks take turns (every scene follows the music).
+  const sceneNames = { crystal: 'Crystal', flow: 'Flow', mandala: 'Mandala', deck: 'Shaders' };
+  const sceneTips = { deck: 'Oil slick, Prism rays and Kaleidoscope take turns every 16 bars' };
+  const paletteNames = { dusk: 'Dusk', ember: 'Ember', tide: 'Tide', aura: 'Aura', picture: 'From the picture' };
+  const shapeLabel = (shape) => names[shape] || shape;
+
+  function choice(text) {
+    const b = document.createElement('button');
+    b.className = 'btn choice'; b.textContent = text; b.setAttribute('aria-pressed', 'false');
+    return b;
+  }
+  const scenes = $('scenes');
+  for (const scene in sceneNames) {
+    const b = choice(sceneNames[scene]);
+    b.dataset.scene = scene;
+    if (sceneTips[scene]) b.title = sceneTips[scene];
+    b.onclick = () => { if (demo.goToScene(scene)) log('scene: ' + sceneNames[scene]); };
+    scenes.appendChild(b);
+  }
+  const shapes = $('shapes');
+  for (const shape of SETTINGS.crystal.shapes) {
+    const b = choice(shapeLabel(shape));
+    b.dataset.shape = shape;
+    b.onclick = () => demo.motion.goToNow(SETTINGS.crystal, shape);  // the melt itself is logged below
+    shapes.appendChild(b);
+  }
+  const palettes = $('palettes');
+  function strip(colors) {
+    const s = document.createElement('span'); s.className = 'strip';
+    for (const c of colors) { const i = document.createElement('i'); i.style.background = c; s.appendChild(i); }
+    return s;
+  }
+  for (const name in paletteNames) {
+    const b = choice('');
+    b.classList.add('palette');
+    b.dataset.palette = name;
+    const label = document.createElement('span'); label.textContent = paletteNames[name];
+    b.append(strip(SETTINGS.palettes[name] || []), label);
+    if (!SETTINGS.palettes[name]) b.disabled = true;  // the picture's own colours, once a picture is open
+    b.onclick = () => { if (demo.setPalette(name)) log('colours: ' + paletteNames[name]); };
+    palettes.appendChild(b);
+  }
+  const pictureButton = palettes.querySelector('[data-palette=picture]');
+
+  // Sources. Every "Open a ..." button opens one of the two hidden file inputs.
+  for (const b of document.querySelectorAll('[data-open]')) b.onclick = () => $(b.dataset.open).click();
+  let source = null, trackName = '';
+  function started(kind, name) {
+    source = kind; trackName = name;
+    start.hidden = true;
+    stage.classList.remove('standby');
+    $('playpause').disabled = $('stop').disabled = kind === 'mic';
+    $('track_name').textContent = kind === 'mic' ? 'Microphone' : name;
+    $('progress').hidden = kind === 'mic';
+    $('time').textContent = kind === 'mic' ? 'live' : '';
+  }
+  // The drops: bars 41 and 65 at 128 BPM, each after a one-bar bass cut, which the drop detector
+  // (like the project's) doesn't count as a breakdown, so they're marked here.
+  const DEMO_TRACK = { url: 'music/qrtz-demo.mp3', name: 'QRTZ Demo', dropsSec: [75.0, 120.0] };
+  // Where the demo track plays from. On the web, the MP3 itself. On a page opened from a plain
+  // file, Chrome treats the MP3 file as another origin and gives the sound analysis only
+  // silence (the track's time runs, but nothing is heard and nothing moves), so there the track
+  // comes from music/qrtz-demo.js, loaded on first use, as a blob that counts as the page's own,
+  // the way a visitor's own file does.
+  let demoTrackUrl = location.protocol === 'file:' ? null : DEMO_TRACK.url;
+  async function demoTrack() {
+    if (demoTrackUrl) return demoTrackUrl;
+    if (!(window.QRTZMusic && window.QRTZMusic.demo)) {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = 'music/qrtz-demo.js'; script.onload = resolve; script.onerror = () => reject(new Error('music/qrtz-demo.js is missing'));
+        document.head.appendChild(script);
+      });
+    }
+    const blob = await (await fetch('data:audio/mpeg;base64,' + window.QRTZMusic.demo)).blob();
+    demoTrackUrl = URL.createObjectURL(blob);
+    return demoTrackUrl;
+  }
+  async function playDemo() {
+    try {
+      await demo.sound.playUrl(await demoTrack(), DEMO_TRACK.dropsSec);
+      demo.motion.newTrack(true);
+      started('demo', DEMO_TRACK.name);
+      log('playing: ' + DEMO_TRACK.name);
+    } catch (err) { log('could not play the demo track: ' + err.message); }
+  }
+  $('demo_track').onclick = playDemo;
+  $('demo_again').onclick = playDemo;
+  $('track').onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    e.target.value = '';  // so the same file can be picked again
+    try {
+      await demo.sound.playFile(file);
+      demo.motion.newTrack(false);
+      started('file', file.name);
+      log('playing: ' + file.name);
+    } catch (err) { log('could not play that file: ' + err.message); }
+  };
+  async function startMic() {
+    try {
+      await demo.sound.useMicrophone();
+      started('mic', 'Microphone');
+      log('listening to the microphone');
+    } catch (err) { log('no microphone: ' + err.message); }
+  }
+  for (const b of document.querySelectorAll('[data-mic]')) b.onclick = startMic;
+
+  $('playpause').onclick = async () => {
+    if (demo.sound.paused) { if (await demo.sound.play()) log('playing: ' + trackName); }
+    else { demo.sound.pause(); log('paused'); }
+  };
+  $('stop').onclick = () => { demo.sound.stop(); log('stopped: ' + trackName + ' is back at the start'); };
+  $('drop').onclick = () => {
+    demo.sound.ensure();
+    demo.sound.pressDrop(performance.now() / 1000 - demo.start);
+  };
+  // A picture for the crystal to refract: a demo picture, or the visitor's own file.
+  let currentPicture = null;
+  function usePicture(src, name, id) {
+    const image = new Image();
+    image.onload = () => {
+      demo.setImage(image);
+      currentPicture = id;
+      pictureButton.disabled = false;
+      pictureButton.querySelector('.strip').replaceWith(strip(demo.picturePalette().map((c) => 'rgb(' + c.map((v) => Math.round(v * 255)).join(',') + ')')));
+      log('picture: ' + name + (demo.paletteName === 'picture' ? ', and its colours' : ''));
+    };
+    image.onerror = () => log('could not open the picture ' + name);
+    image.src = src;
+  }
+  $('picture').onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    e.target.value = '';
+    usePicture(URL.createObjectURL(file), file.name, 'file');
+  };
+  // The demo pictures, each shipped as a script in pictures/ (see pictures/sky.js for why).
+  const DEMO_PICTURES = [
+    { id: 'sky', name: 'Sky', title: "Poly Haven's Kloofendal sky, CC0" },
+    { id: 'pattern', name: 'Pattern', title: 'A reaction-diffusion maze, made for this page (tools/make_pattern.py)' },
+  ];
+  const pictures = $('pictures');
+  for (const pic of DEMO_PICTURES) {
+    const src = (window.QRTZPictures || {})[pic.id];
+    if (!src) continue;
+    const b = choice('');
+    b.classList.add('pic');
+    b.dataset.picture = pic.id;
+    b.title = pic.title;
+    const thumb = document.createElement('img'); thumb.src = src; thumb.alt = '';
+    const label = document.createElement('span'); label.textContent = pic.name;
+    b.append(thumb, label);
+    b.onclick = () => usePicture(src, pic.name, pic.id);
+    pictures.appendChild(b);
+  }
+
+  // Full screen: the picture alone, filling the screen. Esc (the browser's own) or the button
+  // brings the panel back. Hidden where the browser can't put a page element full screen
+  // (an iPhone, for one).
+  const fsButton = $('fullscreen');
+  const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+  if (document.fullscreenEnabled || document.webkitFullscreenEnabled) {
+    fsButton.hidden = false;
+    fsButton.onclick = () => {
+      if (fsElement()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      else (stage.requestFullscreen || stage.webkitRequestFullscreen).call(stage);
+    };
+    // In full screen the button and the pointer fade away after 2 s without the mouse moving.
+    let stillTimer = null;
+    const wake = () => {
+      stage.classList.remove('still');
+      clearTimeout(stillTimer);
+      if (fsElement()) stillTimer = setTimeout(() => stage.classList.add('still'), 2000);
+    };
+    stage.addEventListener('pointermove', wake);
+    stage.addEventListener('pointerdown', wake);
+    stage.addEventListener('focusin', wake);
+    const fsChanged = () => {
+      const on = !!fsElement();
+      wake();
+      $('icon_fs').hidden = on; $('icon_fs_exit').hidden = !on;
+      fsButton.setAttribute('aria-label', on ? 'Exit full screen' : 'Full screen');
+      fsButton.title = on ? 'Exit full screen (Esc)' : 'Full screen';
+    };
+    document.addEventListener('fullscreenchange', fsChanged);
+    document.addEventListener('webkitfullscreenchange', fsChanged);
+  }
+
+  function clock(seconds) { const m = Math.floor(seconds / 60), s = Math.floor(seconds % 60); return m + ':' + (s < 10 ? '0' : '') + s; }
+  function press(container, key, live) {
+    for (const b of container.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset[key] === live));
+  }
+  // The shape on its way while the crystal melts: before the swap the one it's heading for,
+  // after it the new shape still forming.
+  function comingShape() {
+    const m = demo.motion, list = SETTINGS.crystal.shapes;
+    if (m.changeTime === null) return null;
+    if (m.shapeSwapped) return m.shapeName;
+    return list.includes(m.jumpTo) ? m.jumpTo : list[(m.shapeIndex + 1) % list.length];
+  }
+
+  const meters = {};
+  for (const band of ['bass', 'mids', 'treble']) {
+    const el = $('m_' + band);
+    meters[band] = { el, fill: el.querySelector('i'), mark: el.querySelector('b'), peak: 0, held: 0 };
+  }
+  const beatSquares = $('chip_beats').querySelectorAll('i');
+  let lastText = 0, lastFrameAt = null, lastModelState = null, lastComing = null, wasLocked = false, lastDropAt = -Infinity;
+  demo.onFrame = (values, now) => {
+    const dt = lastFrameAt === null ? 0 : now - lastFrameAt;
+    lastFrameAt = now;
+    const sound = demo.sound, beats = sound.beats;
+    const live = source !== null && sound.playing && (source === 'mic' || !sound.paused);
+
+    if (demo.modelState !== lastModelState) {
+      lastModelState = demo.modelState;
+      const words = { loading: 'marble bust: loading its cast', ready: 'marble bust: ready' };
+      if (demo.modelState) log(words[demo.modelState] || ('marble bust: ' + demo.modelState));
+    }
+    const coming = comingShape();
+    if (coming !== lastComing) {
+      if (coming) log('crystal: melting into ' + shapeLabel(coming).toLowerCase());
+      lastComing = coming;
+    }
+    if (sound.drops.lastFired > lastDropAt) {
+      lastDropAt = sound.drops.lastFired;
+      log('drop: ' + sound.drops.reason);
+    }
+
+    // Live or standing by: the red frame and LIVE tag only while sound is actually coming in.
+    stage.classList.toggle('idle', !live);
+    tag.textContent = live ? '● LIVE' : source === null ? 'STANDBY' : sound.paused && sound.position === 0 ? 'STOPPED' : 'PAUSED';
+    caption.textContent = sceneNames[demo.scene] + ' · ' + shapeLabel(demo.motion.shapeName) + ' · ' + paletteNames[demo.paletteName];
+
+    press(scenes, 'scene', demo.scene);
+    press(shapes, 'shape', demo.motion.shapeName);
+    press(palettes, 'palette', demo.paletteName);
+    press(pictures, 'picture', currentPicture);
+    for (const b of shapes.children) b.classList.toggle('coming', b.dataset.shape === coming);
+    $('melting').textContent = coming ? 'melting into ' + shapeLabel(coming).toLowerCase() : '';
+
+    // Meters with a peak that holds, then falls back.
+    for (const band in meters) {
+      const m = meters[band], level = source === null ? 0 : Math.min(Math.max(sound.levels[band], 0), 1);
+      if (level >= m.peak) { m.peak = level; m.held = 0; }
+      else if ((m.held += dt) > 0.8) m.peak = Math.max(level, m.peak - dt * 0.6);
+      m.fill.style.width = (level * 100).toFixed(1) + '%';
+      m.mark.style.left = 'calc(' + (m.peak * 100).toFixed(1) + '% - 2px)';
+      m.el.classList.toggle('on', m.peak > 0.01);
+    }
+    $('beat').classList.toggle('on', live && demo.motion.kick > 0.5);
+    for (let i = 0; i < beatSquares.length; i++) beatSquares[i].classList.toggle('on', live && beats.locked && i <= beats.beatInBar);
+
+    if (sound.element && source !== 'mic') {
+      const fraction = sound.duration ? sound.position / sound.duration : 0;
+      $('progress_fill').style.width = (fraction * 100).toFixed(2) + '%';
+      $('progress_thumb').style.left = (fraction * 100).toFixed(2) + '%';
+    }
+
+    if (now - lastText > 0.25) {
+      lastText = now;
+      const locked = source !== null && beats.locked;
+      if (locked && !wasLocked) log('tempo: ' + Math.round(beats.bpm) + ' BPM from the ' + (source === 'mic' ? 'microphone' : 'track'));
+      wasLocked = locked;
+      const from = source === 'mic' ? 'microphone' : source === 'demo' ? 'demo track' : 'your track';
+      $('chip_wait').hidden = source !== null;
+      $('chip_scene').hidden = $('chip_tempo').hidden = $('chip_beats').hidden = source === null;
+      $('chip_scene_name').textContent = sceneNames[demo.scene];
+      $('chip_bpm').textContent = locked ? Math.round(beats.bpm) : '---';
+      $('chip_source').textContent = from;
+      $('tempo_dot').className = 'dot ' + (locked ? 'green' : 'amber');
+      const bpm = $('bpm');
+      bpm.textContent = locked ? Math.round(beats.bpm) : '---';
+      bpm.classList.toggle('none', !locked);
+      $('bpm_what').textContent = locked ? 'BPM · beat from the ' + (source === 'mic' ? 'microphone' : 'track') : 'BPM · no beat yet';
+      $('gain').hidden = source === null;
+      $('gain').textContent = 'gain ×' + sound.autoGain.gain.toFixed(1);
+      if (sound.element && source !== 'mic') {
+        $('time').textContent = clock(sound.position) + ' / ' + clock(sound.duration);
+        $('progress').setAttribute('aria-valuenow', String(Math.round(sound.duration ? 100 * sound.position / sound.duration : 0)));
+        const paused = sound.paused;
+        $('icon_pause').hidden = paused; $('icon_play').hidden = !paused;
+        $('playpause').setAttribute('aria-label', paused ? 'Play' : 'Pause');
+        $('playpause').title = paused ? 'Play' : 'Pause';
+      }
+      $('fps').textContent = Math.round(demo.fps) + ' fps';
+    }
+  };
+  window.qrtz = demo;  // for poking at it from the console
+  demo.frame();
+})();
+</script>
+</body>
+</html>

@@ -20,6 +20,7 @@ Nick Lax's portfolio home page, live since November 3, 2026, at https://scenebis
 | `img/` | Favicon (`favicon.svg`, `favicon-32.png`, `apple-touch-icon.png`: a white document with a blue check), `tumbleweed.png` (Nick's drawing), project screenshots |
 | `Nick-Lax-Resume.pdf` | Public resume behind the Download resume button |
 | `.nojekyll` | Tells GitHub Pages to serve files as-is |
+| `qrtz/` | The QRTZ browser demo, served at https://scenebiscuit.com/qrtz/. A copy of `web/demo/` from the private qrtz repo: don't edit it here. Change it there, then run `C:\Projects\qrtz\web\demo\tools\publish_to_portfolio.ps1` to copy it over |
 | `CNAME` | Custom domain (`scenebiscuit.com`). DNS is on Cloudflare: four A records to GitHub Pages and `www` CNAME to `scenebiscuit-cell.github.io`, all DNS-only (grey cloud). Don't delete this file. |
 
 ## Copy
@@ -27,7 +28,7 @@ Nick Lax's portfolio home page, live since November 3, 2026, at https://scenebis
 - Lead with support, not compliance. The "more than ten years" is combined across support, cannabis compliance (about five years) and web and motion design.
 - Pharos comes before the cannabis project; cannabis should not be the first thing visitors see.
 - Name Atlassian in summaries, not Loom (a short stint). Loom stays in the Experience list.
-- Keep the Currently building status lines current (ASSET ZERO and QRTZ change often). As of Nov 9, 2026: QRTZ "In progress · control panel working", ASSET ZERO "In progress · boss fight playable".
+- Keep the Currently building status lines current (ASSET ZERO and QRTZ change often). As of Nov 13, 2026: QRTZ "In progress · browser demo live", ASSET ZERO "In progress · boss fight playable".
 - Contact says the roles Nick wants: support operations, customer success, compliance or AI evaluation, in Austin or remote. Update it if that changes.
 - Plain, specific sentences. No filler, no invented claims.
 

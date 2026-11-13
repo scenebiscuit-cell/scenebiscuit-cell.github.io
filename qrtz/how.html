@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How it works · QRTZ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
+<style>
+  /* The demo page's tokens (index.html), the ones this page uses. */
+  :root {
+    --ground: #0B0C10; --card: #14161C; --card-border: #22252E;
+    --button: #1B1E26; --button-border: #2A2E39;
+    --text: #ECEAE4; --text-2: #C9CBD2; --muted: #9CA0AB;
+    --link: #8FB8FF; --link-hover: #C2D8FF;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--ground); color: var(--text); font: 14px/1.5 Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  a { color: var(--link); text-decoration: none; }
+  a:hover { color: var(--link-hover); text-decoration: underline; }
+  :focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+  .page { max-width: 1000px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: 14px; }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: baseline; gap: 10px; }
+  .wordmark { font: 700 26px/1 "Space Grotesk", sans-serif; letter-spacing: 0.06em; }
+  h1 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .btn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; background: var(--button); border: 1px solid var(--button-border);
+         border-radius: 10px; color: var(--text); font: 500 14px/1 inherit; font-family: inherit; cursor: pointer; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 14px; padding: 14px; }
+  h2 { margin: 0 0 6px; font-size: 15px; font-weight: 600; }
+  p { margin: 0; color: var(--text-2); }
+  .credit { color: var(--muted); font-size: 13px; }
+  @media (max-width: 700px) { .page { padding: 16px; } .wordmark { font-size: 22px; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="brand"><span class="wordmark">QRTZ</span><h1>How it works</h1></div>
+    <button class="btn" id="close">Close</button>
+  </header>
+  <div class="cards">
+    <section class="card"><h2>The music moves it</h2><p>The crystal turns with the beat, swells with the bass, sparkles with the treble, and bursts into shards on a drop.</p></section>
+    <section class="card"><h2>Your pictures, through glass</h2><p>Open a picture and the crystal refracts it, and its colours become the palette. It runs in your browser: the sound and the picture are analyzed on your computer, and nothing is uploaded.</p></section>
+    <section class="card"><h2>The full version</h2><p>The full QRTZ runs in TouchDesigner, with a photo deck, scenes, an operator screen and a phone page.</p></section>
+  </div>
+  <p class="credit">The demo track, "QRTZ Demo", was written for this page in Ableton Live. Made by scenebiscuit.<br>
+    The Sky picture is <a href="https://polyhaven.com/a/kloofendal_48d_partly_cloudy_puresky" target="_blank" rel="noopener noreferrer">Kloofendal 48d Partly Cloudy (Pure Sky)</a> from Poly Haven, CC0. The Pattern picture is a reaction-diffusion maze grown for this page.</p>
+</div>
+<script>
+  // Opened as a pop-up, Close closes it; opened on its own (a new tab, a shared link), the
+  // browser won't let a page close itself, so Close goes to the demo instead.
+  document.getElementById('close').onclick = () => {
+    if (window.opener) window.close();
+    else location.href = './';
+  };
+</script>
+</body>
+</html>
