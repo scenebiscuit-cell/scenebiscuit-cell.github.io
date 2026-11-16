@@ -210,6 +210,14 @@ h1, h2, h3 { margin: 0; }
   font-family: var(--font-mono); font-size: 13px; color: var(--muted);
 }
 .card .btn-row { margin-top: 24px; }
+/* A card with gameplay clips: takes the full row so the clips have room. Each clip's flex-grow
+   is its width / height, which makes the two the same height side by side. */
+.card--media { flex-basis: 100%; }
+.card-media { display: flex; align-items: flex-start; gap: 16px; margin-top: 24px; }
+.card-shot { display: block; min-width: 0; flex: 1 1 0; }
+.card-shot--tall { flex-grow: 0.75; }
+.card-shot--wide { flex-grow: 1.7778; }
+.card-shot img { display: block; width: 100%; height: auto; border: 1.5px solid var(--line); border-radius: 8px; background: #0A0D0F; }
 .card-title { margin-bottom: 10px; font-family: var(--font-display); font-weight: 700; font-size: 28px; letter-spacing: -0.02em; }
 .dot { position: relative; display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
 .dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--accent); animation: ping 1.8s ease-out infinite; }
@@ -299,4 +307,7 @@ h1, h2, h3 { margin: 0; }
   .stats { gap: 24px; }
   .stats dd { font-size: 40px; }
   .about-body { font-size: 19px; }
+  .card-media { flex-direction: column; align-items: center; }
+  .card-shot { flex: none; width: 100%; }
+  .card-shot--tall { max-width: 360px; }
 }
