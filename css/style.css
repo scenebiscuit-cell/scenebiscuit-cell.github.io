@@ -281,8 +281,23 @@ h1, h2, h3 { margin: 0; }
 
 /* Sections fade up as they scroll into view (main.js adds .is-in).
    Only hidden when JavaScript is running, so the page never goes blank. */
-.js .reveal { opacity: 0; transform: translateY(16px); transition: opacity .75s var(--ease), transform .75s var(--ease); }
+.js .reveal { opacity: 0; transform: translateY(16px); transition: opacity .75s var(--ease), transform .75s var(--ease); transition-delay: var(--d, 0s); }
+/* Scroll motion (Nov 17, 2026): cards and rows come in with a little more life.
+   Grouped items arrive one after another (main.js sets --d); case-study halves
+   slide in from their own side; cards rise with a slight tilt and settle. */
+.js .reveal.from-left:not(.is-in) { transform: translateX(-48px); }
+.js .reveal.from-right:not(.is-in) { transform: translateX(48px); }
+.js .cards .card.reveal { transition-duration: .7s, .85s; transition-timing-function: var(--ease), cubic-bezier(.25, 1.35, .45, 1); }
+.js .cards .card.reveal:not(.is-in) { transform: translateY(36px) scale(.95) rotate(-1.2deg); }
+.js .cards .card.reveal:nth-child(even):not(.is-in) { transform: translateY(36px) scale(.95) rotate(1.2deg); }
+.js .jobs .job.reveal:not(.is-in) { transform: translateX(-28px); }
 .js .reveal.is-in { opacity: 1; transform: none; }
+/* Once an item has arrived, hand transform back to the quick hover lift */
+.js .reveal.is-in.settled { transition: transform .28s var(--ease), box-shadow .28s; transition-delay: 0s; }
+.js .reveal.is-in.settled.lift:hover { transform: translateY(-5px); }
+main { overflow-x: clip; }
+/* Screenshots drift slightly slower than the page (main.js sets --py) */
+.frame-body--shot img { transform: translateY(var(--py, 0px)) scale(1.06); transform-origin: top left; }
 
 .lift { transition: transform .28s var(--ease), box-shadow .28s; }
 .lift:hover { transform: translateY(-5px); box-shadow: 0 18px 34px -20px rgba(0, 0, 0, .4); }
@@ -294,7 +309,8 @@ h1, h2, h3 { margin: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .rise, .js .reveal { opacity: 1; transform: none; animation: none; transition: none; }
+  .rise, .js .reveal, .js .reveal.from-left, .js .reveal.from-right, .js .cards .card.reveal, .js .jobs .job.reveal { opacity: 1; transform: none !important; animation: none; transition: none; }
+  .frame-body--shot img { transform: none; }
   .hl { animation: none; background-size: 100% 85%; }
   .dot::after, .btn:hover .swirl { animation: none; }
   .lift:hover, .btn:hover, .theme-btn:hover { transform: none; }
