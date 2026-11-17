@@ -29,8 +29,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=2026-11-17c">
-  <script src="js/main.js?v=2026-11-17c" defer></script>
+  <link rel="stylesheet" href="css/style.css?v=2026-11-17d">
+  <script src="js/main.js?v=2026-11-17d" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -305,9 +305,8 @@
   </footer>
 
   <!-- Biscuit: a small horse (for Seabiscuit, the name behind scenebiscuit) that peeks up from the corner and watches the cursor -->
-  <div class="critter" id="critter">
-    <p class="critter-say" id="critter-say" role="status" aria-live="polite"></p>
-    <button type="button" class="critter-btn" id="critter-btn" aria-label="Say hi to Biscuit">
+  <div class="critter" id="critter" aria-hidden="true">
+    <div class="critter-btn">
       <svg class="critter-body" viewBox="0 0 90 92" width="90" height="92" aria-hidden="true">
         <path d="M27 30 C 19 24, 18 13, 21.5 6.5 C 23.5 2.5, 27 3, 29 7 C 33 13, 37 19, 36 26 Z" fill="#8B5A2B" stroke="#17171A" stroke-width="2.5" stroke-linejoin="round"/>
         <path d="M63 30 C 71 24, 72 13, 68.5 6.5 C 66.5 2.5, 63 3, 61 7 C 57 13, 53 19, 54 26 Z" fill="#8B5A2B" stroke="#17171A" stroke-width="2.5" stroke-linejoin="round"/>
@@ -322,7 +321,7 @@
           <g class="eye"><circle cx="58" cy="46" r="7.5" fill="#FFFFFF" stroke="#17171A" stroke-width="2.5"/><circle class="pupil" cx="58" cy="46" r="3.4" fill="#17171A"/></g>
         </g>
       </svg>
-    </button>
+    </div>
   </div>
 </body>
 </html>

@@ -57,57 +57,73 @@
     revealEls.forEach(function (el) { observer.observe(el); });
   }
 
-  /* ---------- 3. Idle tumbleweed ----------
-     First roll after 10 seconds with no mouse, keyboard, scroll or touch
-     activity. While the visitor stays idle, it comes back 5 seconds after
-     each roll finishes. Any activity resets the wait to 10 seconds. */
+  /* ---------- 3. Idle visitors: tumbleweed + Biscuit ----------
+     These are only here to catch the eye of someone who has stopped
+     interacting. After 10 idle seconds Biscuit the horse peeks up from the
+     corner and a tumbleweed rolls across; while the visitor stays idle the
+     tumbleweed comes back 5 seconds after each roll. The moment they move
+     the mouse, scroll, tap or type, both disappear and the 10-second wait
+     starts over. */
   var FIRST_IDLE_MS = 10000;
   var REPEAT_IDLE_MS = 5000;
   var idleTimer = null;
-  var rolling = false;
-  var activeDuringRoll = false;
+  var idle = false;
+  var weed = null;
+  var critterEl = document.getElementById('critter');
+  var lastPointer = null;
+
+  function startIdleShow() {
+    if (reduceMotion.matches || document.hidden) { return; }
+    idle = true;
+    if (critterEl) { critterEl.classList.add('is-up'); }
+    rollTumbleweed();
+  }
 
   function rollTumbleweed() {
-    if (rolling || reduceMotion.matches || document.hidden) { return; }
-    rolling = true;
-    activeDuringRoll = false;
-
-    var weed = document.createElement('div');
+    if (!idle || weed) { return; }
+    weed = document.createElement('div');
     weed.className = 'tumbleweed';
     weed.setAttribute('aria-hidden', 'true');
     weed.innerHTML = '<div class="tumbleweed-hop"><img src="img/tumbleweed.png" alt="" width="64" height="64"></div>';
-
-    // Easter egg: click the tumbleweed and it bounces off the screen
-    weed.addEventListener('click', function () {
-      if (weed.classList.contains('boing')) { return; }
-      var x = new DOMMatrix(getComputedStyle(weed).transform).m41;
-      weed.style.setProperty('--x', x + 'px');
-      weed.classList.add('boing');
-    });
-
+    var mine = weed;
     weed.addEventListener('animationend', function (event) {
-      if (event.target !== weed) { return; } // ignore the inner spin/hop loops
-      weed.remove();
-      rolling = false;
-      if (activeDuringRoll) { return; } // visitor moved mid-roll: the 10-second wait already started
-      clearTimeout(idleTimer);
-      idleTimer = setTimeout(rollTumbleweed, REPEAT_IDLE_MS);
+      if (event.target !== mine || mine.classList.contains('poof')) { return; } // ignore inner spin/hop loops
+      mine.remove();
+      if (weed === mine) { weed = null; }
+      if (idle) { idleTimer = setTimeout(rollTumbleweed, REPEAT_IDLE_MS); }
     });
-
     document.body.appendChild(weed);
   }
 
-  function onActivity() {
-    if (rolling) { activeDuringRoll = true; }
+  function endIdleShow() {
+    idle = false;
+    if (critterEl) { critterEl.classList.remove('is-up'); }
+    if (weed) {
+      var gone = weed;
+      weed = null;
+      gone.classList.add('poof');
+      setTimeout(function () { gone.remove(); }, 200);
+    }
+  }
+
+  function onActivity(event) {
+    // Ignore a mouse that only jiggles a few pixels (a bumped desk)
+    if (event && event.type === 'mousemove') {
+      var here = { x: event.clientX, y: event.clientY };
+      var moved = !lastPointer || Math.hypot(here.x - lastPointer.x, here.y - lastPointer.y) > 6;
+      lastPointer = here;
+      if (!moved) { return; }
+    }
+    if (idle) { endIdleShow(); }
     clearTimeout(idleTimer);
-    idleTimer = setTimeout(rollTumbleweed, FIRST_IDLE_MS);
+    idleTimer = setTimeout(startIdleShow, FIRST_IDLE_MS);
   }
 
   ['mousemove', 'pointerdown', 'keydown', 'wheel', 'scroll', 'touchstart'].forEach(function (type) {
     window.addEventListener(type, onActivity, { passive: true });
   });
   document.addEventListener('visibilitychange', function () {
-    if (document.hidden) { clearTimeout(idleTimer); } else { onActivity(); }
+    if (document.hidden) { clearTimeout(idleTimer); endIdleShow(); } else { onActivity(); }
   });
   onActivity();
 
@@ -187,75 +203,47 @@
   }
 
   /* ---------- 6. Biscuit the horse ----------
-     Peeks up from the bottom corner once the visitor scrolls past the intro.
-     Eyes follow the mouse (or the tumbleweed when it rolls by), the head leans
-     a little toward the cursor, and it blinks now and then. Click to say hi. */
-  var critter = document.getElementById('critter');
-  var critterBtn = document.getElementById('critter-btn');
-  var say = document.getElementById('critter-say');
-  if (critter && critterBtn) {
-    var body = critter.querySelector('.critter-body');
-    var eyes = critter.querySelector('.critter-eyes');
-    var pupils = critter.querySelectorAll('.pupil');
-    var lines = ["Howdy! I'm Biscuit.", "Named after Seabiscuit, the underdog that kept going.", "Scroll down, the good stuff is in the projects.", "Psst. Try clicking the tumbleweed."];
-    var lineIndex = 0, sayTimer = null, mouse = null;
-
-    function showCritter() {
-      if (window.scrollY > 380) { critter.classList.add('is-up'); }
-    }
-    window.addEventListener('scroll', showCritter, { passive: true });
-    setTimeout(function () { critter.classList.add('is-up'); }, 8000);
-    showCritter();
-
-    window.addEventListener('mousemove', function (e) { mouse = { x: e.clientX, y: e.clientY }; }, { passive: true });
+     Shown by the idle show above. While he's up, his eyes follow the
+     tumbleweed (or rest where the cursor was last), his head leans a little
+     toward it, and he blinks now and then. */
+  if (critterEl) {
+    var body = critterEl.querySelector('.critter-body');
+    var eyes = critterEl.querySelector('.critter-eyes');
+    var pupils = critterEl.querySelectorAll('.pupil');
 
     function look() {
-      var target = mouse;
-      var weed = document.querySelector('.tumbleweed');
-      if (weed) {
-        var w = weed.getBoundingClientRect();
-        target = { x: w.left + w.width / 2, y: w.top + w.height / 2 };
-      }
-      if (target && critter.classList.contains('is-up')) {
-        var lean = 0;
-        pupils.forEach(function (p) {
-          var r = p.getBoundingClientRect();
-          var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-          var dx = target.x - cx, dy = target.y - cy;
-          var dist = Math.max(Math.hypot(dx, dy), 1);
-          var reach = Math.min(dist / 40, 1) * 3.4;
-          p.style.transform = 'translate(' + (dx / dist * reach).toFixed(2) + 'px,' + (dy / dist * reach).toFixed(2) + 'px)';
-          lean = dx;
-        });
-        if (!reduceMotion.matches) {
-          var tilt = Math.max(-8, Math.min(8, lean / 60));
-          body.style.transform = 'rotate(' + tilt.toFixed(2) + 'deg)';
+      if (critterEl.classList.contains('is-up')) {
+        var target = lastPointer;
+        var rolling = document.querySelector('.tumbleweed:not(.poof)');
+        if (rolling) {
+          var w = rolling.getBoundingClientRect();
+          target = { x: w.left + w.width / 2, y: w.top + w.height / 2 };
+        }
+        if (target) {
+          var lean = 0;
+          pupils.forEach(function (p) {
+            var r = p.getBoundingClientRect();
+            var dx = target.x - (r.left + r.width / 2), dy = target.y - (r.top + r.height / 2);
+            var dist = Math.max(Math.hypot(dx, dy), 1);
+            var reach = Math.min(dist / 40, 1) * 3.4;
+            p.style.transform = 'translate(' + (dx / dist * reach).toFixed(2) + 'px,' + (dy / dist * reach).toFixed(2) + 'px)';
+            lean = dx;
+          });
+          body.style.transform = 'rotate(' + Math.max(-8, Math.min(8, lean / 60)).toFixed(2) + 'deg)';
         }
       }
       requestAnimationFrame(look);
     }
     requestAnimationFrame(look);
 
-    function blinkLater() {
+    (function blinkLater() {
       setTimeout(function () {
-        if (!reduceMotion.matches) {
+        if (critterEl.classList.contains('is-up')) {
           eyes.classList.add('blink');
           setTimeout(function () { eyes.classList.remove('blink'); }, 200);
         }
         blinkLater();
       }, 2500 + Math.random() * 3500);
-    }
-    blinkLater();
-
-    critterBtn.addEventListener('click', function () {
-      clearTimeout(sayTimer);
-      say.textContent = lines[lineIndex % lines.length];
-      lineIndex += 1;
-      say.classList.add('show');
-      sayTimer = setTimeout(function () {
-        say.classList.remove('show');
-        setTimeout(function () { say.textContent = ''; }, 250);
-      }, 3200);
-    });
+    })();
   }
 })();

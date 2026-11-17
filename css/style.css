@@ -375,36 +375,20 @@ main { overflow-x: clip; }
 .case-media { perspective: 1000px; }
 .frame.tilting { transition: transform .12s ease-out, box-shadow .28s; will-change: transform; }
 
-/* Tumbleweed easter egg: click it mid-roll */
-.tumbleweed { pointer-events: auto; cursor: pointer; }
-.tumbleweed.boing { animation: boing .9s cubic-bezier(.3, .6, .4, 1) forwards; }
-@keyframes boing {
-  0% { transform: translate(var(--x), 0); opacity: 1; }
-  35% { transform: translate(calc(var(--x) + 60px), -170px) rotate(200deg); opacity: 1; }
-  100% { transform: translate(calc(var(--x) + 140px), -420px) rotate(520deg); opacity: 0; }
-}
+/* Tumbleweed fades out the moment the visitor does something */
+.tumbleweed.poof { opacity: 0; transition: opacity .2s; }
 
 /* Biscuit the horse: peeks up from the bottom-right corner */
 .critter { position: fixed; right: clamp(12px, 3vw, 40px); bottom: 0; z-index: 40; pointer-events: none;
-  transform: translateY(105%); transition: transform .6s cubic-bezier(.3, 1.4, .5, 1); }
+  transform: translateY(105%); transition: transform .25s ease-in; }
+.critter.is-up { transition: transform .6s cubic-bezier(.3, 1.4, .5, 1); }
 .critter.is-up { transform: translateY(16px); }
-.critter.is-up:hover, .critter.is-up:focus-within { transform: translateY(4px); }
-.critter.ducking { transform: translateY(105%); transition-duration: .35s; }
-.critter-btn { pointer-events: auto; display: block; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 12px; }
+.critter-btn { display: block; }
 .critter-body { display: block; transform-origin: 50% 100%; transition: transform .25s ease-out; }
 .critter-eyes .pupil { transition: transform .08s linear; }
 .critter-eyes .eye { transform-box: fill-box; transform-origin: center; }
 .critter-eyes.blink .eye { animation: blink .18s ease-in-out; }
 @keyframes blink { 50% { transform: scaleY(.1); } }
-.critter-say {
-  position: absolute; right: 70%; bottom: calc(100% - 4px); margin: 0; width: max-content; max-width: 210px;
-  padding: 8px 12px; border: 1.5px solid var(--ink); border-radius: 12px 12px 2px 12px;
-  background: var(--surface); color: var(--ink); font-size: 14px; line-height: 1.35;
-  opacity: 0; transform: translateY(6px) scale(.95); transform-origin: 100% 100%;
-  transition: opacity .2s, transform .2s; pointer-events: none;
-}
-.critter-say.show { opacity: 1; transform: none; }
-.critter-say:empty { display: none; }
 .site-footer { padding-right: 140px; }
 @media (max-width: 760px) { .critter { display: none; } .site-footer { padding-right: var(--pad); } }
 
