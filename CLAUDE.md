@@ -29,7 +29,7 @@ Nick Lax's portfolio home page, live since November 3, 2026, at https://scenebis
 - Lead with support, not compliance. The "more than ten years" is combined across support, cannabis compliance (about five years) and web and motion design.
 - Pharos comes before the cannabis project; cannabis should not be the first thing visitors see.
 - Name Atlassian in summaries, not Loom (a short stint). Loom stays in the Experience list.
-- Keep the Currently building status lines current (ASSET ZERO and QRTZ change often). As of Nov 13, 2026: QRTZ "In progress · browser demo live", ASSET ZERO "In progress · boss fight playable".
+- Keep the Currently building status lines current (ASSET ZERO and QRTZ change often). As of Nov 17, 2026: QRTZ "Working demo · try it in your browser" (the card describes the desktop app and its browser demo; the crystal-on-the-booth controller is not built, so the card no longer mentions it), ASSET ZERO "In progress · boss fight playable".
 - Contact heading is "Hiring, or need help with a project? Let's chat." and the line names both the roles Nick wants (support operations, customer success, compliance, AI evaluation; Austin or remote) and freelance projects. Update it if that changes.
 - Plain, specific sentences. No filler, no invented claims.
 

@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>QRTZ · a music visualizer, light through a crystal</title>
+<meta name="description" content="QRTZ: live visuals for DJ sets, where every picture is light through a crystal that moves with the beat. Play the demo track or your own music and try the operator panel.">
+<meta property="og:title" content="QRTZ · a music visualizer, light through a crystal">
+<meta property="og:description" content="Live visuals for DJ sets. Play the demo track or your own music and try the operator panel in your browser.">
+<meta name="theme-color" content="#0B0C10">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230B0C10'/%3E%3Cpath d='M16 4l9 8-9 16-9-16z' fill='%23ECEAE4'/%3E%3Cpath d='M16 4l9 8H7z' fill='%238FB8FF'/%3E%3Cpath d='M16 12v16l9-16z' fill='%23F2A541'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">
@@ -33,6 +38,7 @@
   a:hover { color: var(--link-hover); text-decoration: underline; }
   :focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
   [hidden] { display: none !important; }
+  * { scrollbar-width: thin; scrollbar-color: #3A3F4D transparent; }
   input[type=file] { display: none; }
 
   .page { max-width: 1392px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; gap: var(--gap); }
@@ -54,43 +60,71 @@
   nav { display: flex; gap: 8px; }
   nav a, nav button { display: inline-flex; font: inherit; color: var(--link); cursor: pointer; align-items: center; height: 36px; padding: 0 14px; border-radius: 10px; background: var(--chip); border: 1px solid var(--chip-border); }
 
-  /* Main row */
-  .main { display: flex; flex-wrap: wrap; gap: var(--gap); align-items: flex-start; }
-  .stage-col { flex: 999 1 640px; min-width: 0; display: flex; flex-direction: column; gap: var(--gap); }
-  .side { flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: var(--gap); }
-  .stage-box { min-width: 0; }
+  /* The layout. On a phone or a narrow window it's one scrolling column: Program, Preview, the
+     Staged card, then the panels. From 1100 px wide it's the operator panel, below. */
+  .main { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+  .monitors, .lower { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+  .stage-box { min-width: 0; order: -1; }
+  .bar { display: flex; flex-direction: column; gap: var(--gap); }
+  .part + .part { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--card-border); }
 
-  /* Laptop and desktop: the whole panel fits the window, with no scrolling. The page is exactly
-     the window's height; the stage takes whatever room the cards leave, at 16:9 (its box is a
-     size container, so its width can follow the box's height); and on a window too short for
-     one column of cards, they sit in two. A window too small even for that scrolls rather
-     than overlapping. */
-  @media (min-width: 1100px) {
-    .page { min-height: 100vh; padding: 16px 24px; display: grid; grid-template-rows: auto auto auto; align-content: start; }
-    /* The row is as tall as the cards (align-content: start), and the picture column stretches to
-       it, so the bottom of the play bar lines up with the bottom of the Inputs card (owner's
-       request): the picture takes the height the play bar leaves, whatever its shape (about 16:10
-       on a laptop), and covers it, so nothing is stretched. */
-    /* One grid for the picture column and the cards (the side's own box steps aside), so the
-       picture column can end exactly at the bottom of the Inputs card. */
-    .main { display: grid; align-items: stretch; align-content: start; min-height: 0;
-            grid-template-columns: minmax(0, 1fr) minmax(250px, 290px) minmax(250px, 290px);
-            grid-template-areas: "stage scene colours" "stage crystal colours" "stage inputs colours" "stage inputs quick"; }
-    .side { display: contents; }
-    .stage-col { grid-area: stage; min-height: 0; }
-    .stage-box { flex: 1 1 0; min-height: 220px; display: flex; }
-    .stage { width: 100%; height: 100%; aspect-ratio: auto; }
-    .c-scene { grid-area: scene; } .c-crystal { grid-area: crystal; } .c-colours { grid-area: colours; }
-    .c-inputs { grid-area: inputs; } .c-quick { grid-area: quick; align-self: start; }
-    .grid.four .btn { padding: 0 4px; font-size: 13px; }
-  }
-  /* A window tall enough for one column of cards (about 1180 px of them with the header and log):
-     the picture column runs to the bottom of Inputs, and Quick actions sits below it. */
-  @media (min-width: 1100px) and (min-height: 1200px) {
-    .main { grid-template-columns: minmax(0, 1fr) 340px;
-            grid-template-areas: "stage scene" "stage crystal" "stage colours" "stage inputs" ". quick"; }
-    .grid.four .btn { padding: 0 8px; font-size: 14px; }
-  }
+  /* Preview, and the Staged card that sits between it and Program. */
+  .stage.preview { aspect-ratio: 16 / 9; height: auto; border: 2px solid var(--ok); }
+  .stage.preview.idle { border: 1px solid var(--button-border); }
+  .stage.preview .tag { background: var(--ok); }
+  .stage.preview.idle .tag { background: rgba(20, 22, 28, 0.85); color: var(--text-2); border: 1px solid var(--button-border); }
+  .stage.preview .empty { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+                          padding: 16px; text-align: center; color: var(--muted); font-size: 12px; }
+  .stage.preview .empty span { max-width: 46ch; }
+  .stage.preview .empty b { color: var(--text-2); font-size: 14px; font-weight: 600; }
+  .stage.preview:not(.idle) .empty { display: none; }
+  .c-staged { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .c-staged .card-head { margin: 0; }
+  /* The switch: where clicks go. Green and pointing left for Preview, red and pointing right for
+     Program, the same colours as the two pictures' frames. */
+  .send h2, .now h2 { margin: 0 0 5px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .send-row { display: grid; grid-template-columns: 1fr 1fr; }
+  .send-btn { min-height: 38px; font: 700 13px/1 var(--sans); letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
+              color: var(--muted); background: var(--button); border: 1px solid var(--button-border); }
+  .send-btn.to-prev { border-radius: 8px 0 0 8px; } .send-btn.to-live { border-radius: 0 8px 8px 0; margin-left: -1px; }
+  .send-btn.to-prev[aria-pressed=true] { background: var(--ok); border-color: var(--ok); color: #04170C; }
+  .send-btn.to-live[aria-pressed=true] { background: var(--live); border-color: var(--live); color: #fff; }
+  .now { margin-top: auto; padding-top: 8px; border-top: 1px solid var(--card-border); }
+  .now h2 { display: flex; align-items: center; gap: 6px; color: var(--text-2); }
+  .now h2 span { margin-left: auto; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--muted); }
+  /* The rail over the panels: says, in the same colour, where their clicks are going. */
+  .rail { margin: 0; padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; color: var(--ok); background: #102418; border: 1px solid #1D4A30; }
+  .rail b { font-weight: 700; letter-spacing: 0.06em; }
+  body.to-program .rail { color: #FF8A86; background: #2A1414; border-color: #5A2424; }
+  /* The panels under the rail carry its colour along their top edge. */
+  .c-look, .c-photos, .c-controls { border-top: 2px solid var(--ok); }
+  body.to-program .c-look, body.to-program .c-photos, body.to-program .c-controls { border-top-color: var(--live); }
+  .staged-list { margin: 0; font-size: 12px; color: var(--wait); min-height: 2.9em; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .staged-list.none { color: var(--muted); }
+  .btn.take { min-height: 48px; font: 700 16px/1 "Space Grotesk", var(--sans); letter-spacing: 0.08em; background: var(--live); border-color: var(--live); color: #fff; }
+  .btn.take:disabled { background: var(--button); border-color: var(--button-border); color: var(--muted); opacity: 1; }
+  .btn.take.armed { box-shadow: 0 0 0 0 var(--wait); animation: take-ring 2s ease-in-out infinite; }
+  .btn.take.waiting { background: #7A2424; font-size: 13px; }
+  @keyframes take-ring { 0%, 100% { box-shadow: 0 0 0 2px rgba(242, 165, 65, 0.25); } 50% { box-shadow: 0 0 0 4px rgba(242, 165, 65, 0.85); } }
+  .take-why { margin: -2px 0 0; font-size: 11px; color: var(--muted); }
+  .c-staged .quick { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .c-staged .quick .btn { min-height: 34px; font-size: 13px; padding: 0 6px; }
+  .c-staged #hanging { grid-column: 1 / -1; }
+
+  /* The media browser's tabs. */
+  .tabs { display: inline-flex; gap: 2px; }
+  .tab { font: 600 12px/1 var(--sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); background: none; cursor: pointer;
+         border: 0; border-bottom: 2px solid transparent; padding: 6px 8px; min-height: 26px; }
+  .tab { white-space: nowrap; }
+  .tabs { flex-wrap: wrap; }
+  .c-photos .card-head { flex-wrap: wrap; }
+  .tab:hover { color: var(--text-2); }
+  .tab[aria-pressed=true] { color: var(--text); border-bottom-color: var(--text-2); }
+
+  /* Staged on a button: the accent fill (docs/operator-panel.md, "Staged"). */
+  .choice.staged, .tile.staged { background: var(--wait); border-color: var(--wait); color: #1B1306; }
+  .choice.staged kbd { color: #1B1306; border-color: rgba(27, 19, 6, 0.4); }
+  .tile.staged span { color: #1B1306; }
 
   .card { background: var(--card); border: 1px solid var(--card-border); border-radius: var(--card-radius); padding: var(--card-pad); }
   .card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0 0 10px; }
@@ -114,6 +148,50 @@
   /* On its way: the shape melting in. */
   .choice.coming { outline: 2px solid var(--wait); outline-offset: -2px; }
   .choice.coming:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; box-shadow: inset 0 0 0 2px var(--wait); }
+  /* A scene held by hand: a lock in the corner. What the tempo would pick while one is held: a dashed outline. */
+  .choice.held::before { content: ""; position: absolute; top: 5px; left: 5px; width: 9px; height: 10px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 10'%3E%3Cpath d='M2 4.5V3a2.5 2.5 0 0 1 5 0v1.5' fill='none' stroke='%23F0524F' stroke-width='1.3'/%3E%3Crect x='0.5' y='4.5' width='8' height='5' rx='1' fill='%23F0524F'/%3E%3C/svg%3E") no-repeat; }
+  .choice.pick { outline: 1px dashed var(--muted); outline-offset: -4px; }
+  .follow { min-height: 28px; padding: 0 16px 0 8px; font-size: 12px; margin-left: auto; }
+  .c-scene .card-head { align-items: center; }
+  .c-scene .card-head .note { flex: 1; text-align: right; }
+
+  /* The Photos card: a strip of thumbnails that scrolls sideways, LIVE on the one on screen,
+     and a drop tile at its end. */
+  .deck-strip { display: grid; grid-auto-flow: column; grid-auto-columns: 96px; gap: 8px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
+  .tile { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 4px; min-height: 0; height: auto;
+          background: var(--button); border: 1px solid var(--button-border); border-radius: var(--button-radius); color: var(--text-2);
+          font: 500 11px/1.2 var(--sans); cursor: pointer; text-align: left; }
+  .tile img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 6px; display: block; background: #000; }
+  .tile span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tile[aria-pressed=true] { border-color: var(--live); }
+  .tile[aria-pressed=true]::before { content: "LIVE"; position: absolute; top: 8px; left: 8px; padding: 1px 5px; border-radius: 4px;
+          background: var(--live); color: #fff; font: 700 9px/1.4 var(--sans); letter-spacing: 0.06em; }
+  .tile.drop { align-items: center; justify-content: center; border-style: dashed; color: var(--muted); text-align: center; font-size: 11px; }
+  .strip-note { margin: 2px 0 0; font-size: 11px; color: var(--muted); min-height: 1.4em; }
+  .tile .swatch { width: 100%; aspect-ratio: 16 / 9; border-radius: 6px; display: block; }
+  .photo-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 6px; margin-top: 8px; }
+  .photo-actions .btn { min-height: 36px; padding: 0 6px; font-size: 12px; }
+  body.dragging .stage-box { outline: 2px dashed var(--wait); outline-offset: 4px; border-radius: var(--card-radius); }
+
+  /* The Controls card: thin sliders with a centre notch at ×1 (the settings' own value) and a
+     readout; the Waves switch above them. */
+  .link-btn { background: none; border: 0; padding: 0; font: 500 12px/1 var(--sans); color: var(--link); cursor: pointer; min-height: 24px; }
+  .link-btn:hover { color: var(--link-hover); text-decoration: underline; }
+  .link-btn:disabled { color: var(--faint); cursor: default; text-decoration: none; }
+  .waves { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; margin-bottom: 10px; }
+  .waves .btn { min-height: 34px; padding: 0 2px; font-size: 12px; }
+  .sliders { display: grid; gap: 6px; }
+  .slider { display: grid; grid-template-columns: 62px 1fr 40px; align-items: center; gap: 8px; font-size: 13px; color: var(--text-2); }
+  .slider output { font: 12px var(--mono); color: var(--muted); text-align: right; }
+  .slider .track { position: relative; height: 28px; display: flex; align-items: center; }
+  .slider .track::before { content: ""; position: absolute; left: 50%; top: 7px; bottom: 7px; width: 1px; background: var(--muted); opacity: 0.6; }
+  .slider input { width: 100%; margin: 0; accent-color: #8A90A0; background: transparent; cursor: pointer; position: relative; }
+  .slider.changed input { accent-color: var(--wait); }
+  .slider.changed output { color: var(--wait); }
+  .slider .live-tick { position: absolute; top: 6px; bottom: 6px; width: 2px; margin-left: -1px; background: var(--live-dot); display: none; pointer-events: none; }
+  .slider.changed .live-tick { display: block; }
+  .scene-note { margin: 8px 0 0; font-size: 12px; color: var(--muted); min-height: 1.45em; }
   .grid { display: grid; gap: 8px; }
   .grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -137,6 +215,11 @@
   .fs { position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center;
         background: rgba(11, 12, 16, 0.6); border: 1px solid rgba(236, 234, 228, 0.18); border-radius: 8px; color: var(--text); cursor: pointer; z-index: 2; }
   .fs:hover { background: rgba(11, 12, 16, 0.85); }
+  .fs.out-btn { right: 52px; }
+  .fs.out-btn.on { border-color: var(--live-dot); color: var(--live-dot); }
+  /* While the output window shows Program, the panel shows the same picture letterboxed. */
+  .stage.out canvas { object-fit: contain; }
+  .stage:fullscreen .out-btn { display: none; }
   .fs svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
   /* Full screen: the picture alone, filling the screen (Esc or the button brings the panel back). */
   .stage:fullscreen { width: 100vw !important; height: 100vh; aspect-ratio: auto; border: 0; border-radius: 0; }
@@ -160,7 +243,7 @@
   .start .small { font-size: 12px; color: var(--muted); }
 
   /* Transport */
-  .transport { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .transport { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--card); border: 1px solid var(--card-border); border-radius: var(--card-radius); padding: var(--card-pad); }
   .track { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
   .trackline { display: flex; justify-content: space-between; gap: 10px; }
   .trackline span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
@@ -177,16 +260,57 @@
   .tempo .what { color: var(--text-2); flex: 1; }
   .beatlight { width: 14px; height: 14px; border-radius: 3px; background: var(--off); flex: none; }
   .beatlight.on { background: var(--peak); }
+  .link-note { color: var(--text-2); font-size: 12px; margin: -4px 0 10px; }
   .meter-row { display: grid; grid-template-columns: 52px 1fr; align-items: center; gap: 10px; margin-top: 8px; color: var(--text-2); }
   .meter { position: relative; height: 8px; border-radius: 4px; background: var(--meter-track); overflow: hidden; }
   .meter i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; }
   .meter b { position: absolute; top: 0; bottom: 0; width: 2px; left: 0; background: var(--peak); display: none; }
   .meter.on b { display: block; }
   .m-bass i { background: var(--bass); } .m-mids i { background: var(--mids); } .m-treble i { background: var(--treble); }
-  .fps { margin-top: 10px; font-size: 12px; color: var(--muted); }
+  .fps { font-size: 12px; color: var(--muted); flex: none; }
 
   .quick { display: flex; flex-wrap: wrap; gap: 8px; }
   .quick .btn { flex: 1 1 140px; }
+  /* A button's key (docs/operator-panel.md: "each button shows its key"). */
+  kbd { font: 500 11px/1 var(--mono); color: var(--muted); border: 1px solid var(--button-border); border-radius: 4px; padding: 2px 5px; }
+  .grid.four kbd { position: absolute; right: 4px; bottom: 3px; border: 0; padding: 0; font-size: 10px; }
+  .stage.blackout .tag { color: var(--wait); }
+
+  /* The Keys panel: a solid sheet over the page, the keys in cards by group, like the project's Help. */
+  .keys-panel { width: min(1100px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 18px; color: var(--text);
+                background: var(--ground); border: 1px solid var(--card-border); border-radius: var(--card-radius); }
+  .keys-panel::backdrop { background: rgba(5, 6, 9, 0.8); }
+  .keys-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+  .keys-head h2 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .keys-head .note { flex: 1; color: var(--muted); font-size: 13px; }
+  .keys-head .btn { margin-left: auto; }
+  .keys-groups { columns: 3 300px; column-gap: var(--gap); }
+  .keys-group { break-inside: avoid; margin-bottom: var(--gap); background: var(--card); border: 1px solid var(--card-border); border-radius: var(--card-radius); padding: var(--card-pad); }
+  .keys-group h3 { margin: 0 0 8px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .keys-group dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 12px; align-items: baseline; }
+  .keys-group dt { white-space: nowrap; }
+  .keys-group dt kbd { color: var(--text); font-size: 12px; }
+  .keys-group dd { margin: 0; color: var(--text-2); }
+  .keys-group dl > div { display: contents; }
+  /* Help: subject cards across the top (the chosen one outlined), then only that subject. */
+  .help-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; margin-bottom: 14px; }
+  .help-card { display: flex; flex-direction: column; gap: 3px; text-align: left; padding: 10px 12px; min-height: 58px; cursor: pointer;
+               background: var(--card); border: 1px solid var(--card-border); border-radius: 10px; color: var(--text-2); font: 12px/1.35 var(--sans); }
+  .help-card b { color: var(--text); font-size: 13px; font-weight: 600; }
+  .help-card:hover { border-color: #3A3F4D; }
+  .help-card[aria-selected=true] { border-color: var(--link); box-shadow: inset 0 0 0 1px var(--link); background: #161B26; }
+  .help-topic { columns: 2 340px; column-gap: var(--gap); }
+  .help-topic[data-topic=keys] { columns: auto; }
+  .help-topic p, .help-topic li { color: var(--text-2); font-size: 13px; line-height: 1.55; }
+  .help-topic p { margin: 0; }
+  .help-topic ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+  .help-topic b { color: var(--text); font-weight: 600; }
+  .help-topic code { font: 12px var(--mono); color: var(--text); background: #0F1116; border: 1px solid var(--card-border); border-radius: 4px; padding: 0 4px; }
+  .help-lead { margin: 0 0 12px !important; color: var(--muted) !important; }
+  .help-topic .app-only { color: var(--wait); font-size: 12px; margin-top: 6px; }
+  .keys-panel { max-height: calc(100vh - 32px); overflow-y: auto; }
+  .keys-group .later dt kbd, .keys-group .later dd { color: var(--faint); }
+  .keys-group .later dd::after { content: " · not yet"; color: var(--faint); font-size: 12px; }
 
   /* Log */
   .log { display: flex; align-items: baseline; gap: 14px; background: var(--log); border: 1px solid var(--log-border); border-radius: 10px; padding: 10px 14px; }
@@ -195,13 +319,135 @@
   .log li { color: var(--muted); }
   .log li:first-child { color: var(--text); }
   .log time { margin-right: 8px; }
+  .log ol { flex: 1; }
+  .log .link-btn { flex: none; }
+  .log-all { list-style: none; margin: 0; padding: 0; max-height: calc(100vh - 140px); overflow-y: auto; font: 12px/1.7 var(--mono); color: var(--text-2); }
+  .log-all time { color: var(--muted); margin-right: 10px; }
+  /* The title bar's Level meter and the warning chip; the Inputs card's flags and live crystal. */
+  .chip.level { gap: 8px; }
+  .chip.level .meter { width: 90px; }
+  .m-level i { background: linear-gradient(90deg, var(--ok) 70%, var(--wait) 85%, var(--live-dot)); }
+  .meter.m-level b { background: var(--live-dot); }
+  .chip.flag { color: var(--wait); background: #2A2010; border-color: #5A4418; }
+  .chip.flag.bad { color: #FF8A86; background: #2A1414; border-color: #5A2424; }
+  .live-crystal { margin-top: 10px; font-size: 12px; color: var(--text-2); }
+  .flags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .flags span { font-size: 11px; padding: 3px 8px; border-radius: 6px; }
+  .flags .ok { color: var(--ok); background: #102418; }
+  .flags .warn { color: var(--wait); background: #2A2010; }
+  .flags .bad { color: #FF8A86; background: #2A1414; }
+  .fps.warn { color: var(--wait); } .fps.bad { color: #FF8A86; }
 
 
+  /* Laptop and desktop: the operator panel, laid out like a vision mixer (vMix, ATEM, the studio
+     mode in OBS) and filling the window edge to edge, like a VJ program. A status bar on top;
+     Preview on the left, Program on the right and TAKE between them; under them Look (scene,
+     crystal, colours), the media browser, Controls and Inputs; the sound and the log in a bar
+     at the bottom. Nothing is scaled and the window never scrolls: the two pictures take what
+     the width and height allow, and a panel that runs out of room scrolls inside itself. */
+  @media (min-width: 1100px) {
+    html, body { height: 100%; overflow: hidden; }
+    body { font-size: 13px; }
+    .page { max-width: none; height: 100vh; padding: 0; gap: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+    .top { padding: 6px 12px; background: var(--log); border-bottom: 1px solid var(--card-border); flex-wrap: nowrap; gap: 12px; }
+    .wordmark { font-size: 20px; }
+    .chips { flex-wrap: nowrap; overflow: hidden; }
+    .chip, nav a, nav button { height: 30px; padding: 0 10px; font-size: 12px; }
+
+    .main { --gap: 8px; padding: 8px; display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
+    /* The pictures are 16:9, as tall as the width allows, and never more than 46% of the window's height. */
+    .monitors { --mid: clamp(230px, 19vw, 300px); --mon-h: max(200px, min(calc((100vw - 32px - var(--mid)) / 2 * 0.5625), 46vh, calc(100vh - 390px)));
+                display: grid; grid-template-columns: auto minmax(230px, var(--mid)) auto; justify-content: center; height: var(--mon-h); }
+    .monitors .stage:not(:fullscreen) { height: var(--mon-h); width: calc(var(--mon-h) * 16 / 9); aspect-ratio: auto; border-radius: 8px; }
+    .stage-box { order: 0; }
+    .card { padding: 10px; border-radius: 8px; }
+    .card-head { margin: 0 0 6px; }
+    .card-head h2 { font-size: 11px; }
+    .follow { min-height: 24px; font-size: 11px; }
+    .btn { min-height: 30px; font-size: 12px; padding: 0 8px; border-radius: 6px; }
+    .grid { gap: 4px; }
+    .grid .btn { min-height: 30px; padding: 0 4px; }
+    /* A scene's key sits in its button's corner, clear of the name. */
+    .grid.four .btn { font-size: 12px; min-height: 34px; padding: 0 2px 6px; }
+    .grid.four kbd { right: 4px; bottom: 2px; font-size: 9px; }
+    .choice.held::before { top: auto; bottom: 3px; left: 4px; width: 8px; height: 9px; background-size: contain; }
+    .choice[aria-pressed=true]::after { top: 4px; right: 4px; }
+
+    .c-staged { padding: 8px 10px; gap: 5px; overflow-y: auto; }
+    .c-staged .staged-list { font-size: 11px; min-height: 1.45em; }
+    .send-btn { min-height: 34px; font-size: 12px; }
+    .now { padding-top: 6px; }
+    .c-staged .btn.take { min-height: 42px; }
+    .c-staged .quick { gap: 4px; }
+    .c-staged .quick .btn { min-height: 28px; font-size: 12px; }
+    .start .card { gap: 8px; max-width: 380px; }
+    .start .btn.primary { min-height: 44px; font-size: 14px; }
+    .start .pair .btn { min-height: 34px; }
+
+    .lower { display: grid; min-height: 0; grid-template-rows: auto minmax(0, 1fr);
+             grid-template-columns: clamp(280px, 23vw, 400px) minmax(0, 1fr) clamp(220px, 17vw, 320px) clamp(230px, 18vw, 320px); }
+    .lower > .card { min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+    .rail { grid-column: 1 / 4; padding: 3px 10px; }
+    .c-inputs { grid-column: 4; grid-row: 1 / 3; }
+    .slider output, .bar .trackline .mono { white-space: nowrap; }
+    /* Look: three short lists. */
+    .part + .part { margin-top: 6px; padding-top: 6px; }
+    .c-look { padding-top: 6px; padding-bottom: 6px; }
+    .scene-note { margin: 4px 0 0; font-size: 11px; }
+    .c-crystal .grid.two { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .c-colours .grid.two { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .palette { gap: 4px; padding: 10px 4px 5px; font-size: 11px; }
+    .palette .strip { height: 6px; }
+    /* The media browser: the pictures fill the panel as a grid and scroll down, not sideways. */
+    .lower > .c-photos { display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+    .c-photos .card-head { margin: 0; align-items: center; flex-wrap: nowrap; }
+    .tabs { flex-wrap: nowrap; flex: none; }
+    .deck-strip { flex: 1 1 0; min-height: 0; grid-auto-flow: row; grid-auto-rows: max-content; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); align-content: start;
+                  overflow-x: hidden; overflow-y: auto; padding: 0 4px 0 0; gap: 6px; }
+    .photo-actions { margin: 0; display: flex; gap: 6px; }
+    .photo-actions .btn { min-height: 28px; flex: 0 1 120px; }
+    .strip-note { margin: 0; min-height: 0; min-width: 0; flex: 1 1 0; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* Controls and Inputs. */
+    .waves { margin-bottom: 6px; }
+    .waves .btn { min-height: 28px; font-size: 11px; }
+    .sliders { gap: 1px; }
+    .slider { font-size: 12px; }
+    .slider .track { height: 24px; }
+    .tempo { margin-bottom: 6px; gap: 8px; }
+    .tempo .what { font-size: 12px; }
+    .flags { margin-top: 6px; }
+    .bpm { font-size: 22px; }
+    .link-note { margin: 0 0 6px; font-size: 11px; }
+    .meter-row { margin-top: 6px; grid-template-columns: 44px 1fr; font-size: 12px; }
+    .live-crystal { margin-top: 8px; font-size: 11px; }
+
+    /* The bottom bar: the sound on the left, the log on the right. */
+    .bar { display: grid; grid-template-columns: minmax(440px, 45%) minmax(0, 1fr); gap: 16px; align-items: center;
+           padding: 6px 12px; background: var(--log); border-top: 1px solid var(--card-border); }
+    .bar .transport { background: none; border: 0; border-radius: 0; padding: 0; flex-wrap: nowrap; gap: 8px; }
+    .bar .btn.icon { width: 30px; }
+    .bar .track { gap: 5px; flex: 1 1 120px; }
+    .bar .trackline { font-size: 12px; }
+    .transport .actions { flex-wrap: nowrap; gap: 6px; flex: none; }
+    .bar .log { background: none; border: 0; border-radius: 0; padding: 0; min-width: 0; gap: 10px; }
+    .bar .log ol { flex-wrap: nowrap; overflow: hidden; white-space: nowrap; gap: 0 18px; }
+    .bar .log li { overflow: hidden; text-overflow: ellipsis; flex: 0 1 auto; }
+    .bar .log li:first-child { flex: 0 0 auto; max-width: 100%; }
+  }
+  @media (min-width: 1100px) and (max-height: 680px) {
+    .c-staged { gap: 4px; padding: 6px 10px; }
+    .c-staged .take-why { display: none; }
+    .c-staged .btn.take { min-height: 34px; }
+    .send-btn { min-height: 28px; }
+    .send h2, .now h2 { margin-bottom: 3px; }
+    .c-staged .quick .btn { min-height: 24px; }
+    .grid.four .btn { min-height: 30px; }
+    .scene-note { display: none; }
+    .slider .track { height: 21px; }
+  }
   @media (max-width: 700px) {
     .page { padding: 16px; }
     .wordmark { font-size: 22px; }
-    .main { flex-direction: column; align-items: stretch; }
-    .stage-col, .side { flex: none; width: 100%; }
     .chips { justify-content: flex-start; }
     /* Before any sound the start card needs more room than a 16:9 strip gives on a phone. */
     .stage.standby { aspect-ratio: auto; min-height: 400px; }
@@ -222,16 +468,59 @@
     <div class="chips" aria-live="polite">
       <span class="chip" id="chip_wait"><i class="dot amber"></i>No sound yet</span>
       <span class="chip" id="chip_scene" hidden><i class="dot red"></i>Scene: <b id="chip_scene_name">Crystal</b></span>
+      <span class="chip level" id="chip_level" hidden title="The whole mix as it comes in, before the auto gain"><span>Level</span><span class="meter m-level" id="m_level"><i></i><b></b></span></span>
+      <span class="chip flag" id="chip_flag" hidden></span>
       <span class="chip" id="chip_tempo" hidden><i class="dot amber" id="tempo_dot"></i><span><span class="mono" id="chip_bpm">---</span> BPM · <span id="chip_source">demo track</span></span></span>
       <span class="chip beats" id="chip_beats" hidden role="img" aria-label="Beat counter"><i></i><i></i><i></i><i></i></span>
     </div>
     <nav>
+      <button type="button" id="keys_button" aria-haspopup="dialog" title="The keys and the panel (?)">Help</button>
       <a href="how.html" target="qrtz_how" id="how_link">How it works</a>
     </nav>
   </header>
 
+  <!-- The panel, laid out like a vision mixer (vMix, ATEM, the studio mode in OBS): Preview on
+       the left, Program on the right, and what moves one to the other (TAKE) between them. Under
+       them, what to show (Look, then the media browser) and how it moves (Controls, Inputs). -->
   <div class="main">
-    <section class="stage-col" aria-label="The picture">
+    <div class="monitors">
+      <div class="stage preview idle" id="preview_stage">
+        <canvas id="preview_canvas"></canvas>
+        <span class="tag" id="preview_tag">PREVIEW</span>
+        <button class="fs" id="preview_fs" aria-label="Preview full screen" title="Preview full screen">
+          <svg viewBox="0 0 16 16"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>
+        </button>
+        <button class="fs out-btn" id="preview_pop" aria-label="Pop out Preview" title="Pop out: Preview in its own window, to watch it bigger">
+          <svg viewBox="0 0 16 16"><path d="M9 2h5v5M14 2L7 9M12 10v4H2V4h4"/></svg>
+        </button>
+        <span class="caption" id="preview_caption" hidden></span>
+        <div class="empty" id="preview_empty"><b id="preview_empty_title">Nothing staged</b><span id="preview_empty_hint">Click a scene, shape, picture or colours to try it here first.</span></div>
+      </div>
+
+      <section class="card c-staged" aria-label="Where clicks go, and TAKE">
+        <!-- Where a click goes: one switch, each half pointing at its picture. -->
+        <div class="send" role="group" aria-labelledby="h_send">
+          <h2 id="h_send">Clicks go to</h2>
+          <div class="send-row">
+            <button class="send-btn to-prev" id="clicks_preview" aria-pressed="true" title="Clicks are staged in Preview; TAKE sends them live">&#9664; Preview</button>
+            <button class="send-btn to-live" id="clicks_program" aria-pressed="false" title="Every click changes Program at once">Live &#9654;</button>
+          </div>
+        </div>
+        <div class="card-head"><h2 id="h_staged">Staged</h2><button class="link-btn" id="clear" disabled title="Empty the stage">Clear</button></div>
+        <p class="staged-list" id="staged_list">Nothing staged</p>
+        <button class="btn take" id="take" disabled>TAKE</button>
+        <p class="take-why" id="take_why">Stage something first</p>
+        <!-- These three never wait in Preview: they act on Program the moment they are pressed. -->
+        <div class="now" role="group" aria-labelledby="h_now">
+          <h2 id="h_now"><i class="dot red"></i>Live now <span>never staged</span></h2>
+          <div class="quick">
+            <button class="btn" id="drop" title="Fire a drop on Program: the crystal explodes and reforms">Drop <kbd>J</kbd></button>
+            <button class="btn choice" id="blackout" aria-pressed="false" title="Fade Program to black, and back">Blackout <kbd>B</kbd></button>
+            <button class="btn choice" id="hanging" aria-pressed="false" title="The crystal hangs on a thread and swings, throwing caustics (from the next bar)">Hanging light <kbd>H</kbd></button>
+          </div>
+        </div>
+      </section>
+
       <div class="stage-box">
       <div class="stage idle standby" id="stage">
         <canvas id="canvas"></canvas>
@@ -239,6 +528,9 @@
         <button class="fs" id="fullscreen" aria-label="Full screen" title="Full screen" hidden>
           <svg viewBox="0 0 16 16" id="icon_fs"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/></svg>
           <svg viewBox="0 0 16 16" id="icon_fs_exit" hidden><path d="M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4"/></svg>
+        </button>
+        <button class="fs out-btn" id="output_button" title="Open the output window: Program alone, for the venue screen" aria-label="Open the output window">
+          <svg viewBox="0 0 16 16"><path d="M2 3h12v8H2zM6 14h4M8 11v3"/></svg>
         </button>
         <span class="caption" id="caption">Crystal · Brilliant · Dusk</span>
         <div class="start" id="start">
@@ -255,40 +547,65 @@
         </div>
       </div>
       </div>
-      <div class="card transport">
-        <button class="btn icon" id="playpause" aria-label="Pause" title="Pause" disabled>
-          <svg viewBox="0 0 16 16" id="icon_pause"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg>
-          <svg viewBox="0 0 16 16" id="icon_play" hidden><path d="M3 2l11 6-11 6z"/></svg>
-        </button>
-        <button class="btn icon" id="stop" aria-label="Stop" title="Stop" disabled><svg viewBox="0 0 16 16"><path d="M3 3h10v10H3z"/></svg></button>
-        <div class="track">
-          <div class="trackline"><span id="track_name">No track yet</span><span class="mono" id="time">0:00 / 0:00</span></div>
-          <div class="progress" id="progress" role="progressbar" aria-label="Track position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="progress_fill"></i><b id="progress_thumb"></b></div>
-        </div>
-        <div class="actions">
-          <button class="btn" id="demo_again">Demo track</button>
-          <button class="btn" data-open="track">Open a track</button>
-          <button class="btn" data-mic>Microphone</button>
-        </div>
-      </div>
-    </section>
+    </div>
 
-    <aside class="side">
-      <section class="card c-scene" aria-labelledby="h_scene">
-        <div class="card-head"><h2 id="h_scene">Scene</h2></div>
-        <div class="grid four" id="scenes"></div>
+    <div class="lower">
+      <p class="rail" id="rail" aria-live="polite"></p>
+      <!-- Look: what the crystal is doing. Three short lists in one panel. -->
+      <div class="card c-look">
+        <section class="part c-scene" aria-labelledby="h_scene">
+          <div class="card-head"><h2 id="h_scene">Scene</h2><span class="note wait" id="scene_coming" aria-live="polite"></span>
+            <button class="btn choice follow" id="follow" aria-pressed="true" title="The tempo picks the scene">Follow tempo <kbd>0</kbd></button></div>
+          <div class="grid four" id="scenes"></div>
+          <p class="scene-note" id="scene_note"></p>
+        </section>
+        <section class="part c-crystal" aria-labelledby="h_crystal">
+          <div class="card-head"><h2 id="h_crystal">Crystal</h2><span class="note wait" id="melting" aria-live="polite"></span></div>
+          <div class="grid two" id="shapes"></div>
+        </section>
+        <section class="part c-colours" aria-labelledby="h_colours">
+          <div class="card-head"><h2 id="h_colours">Colours</h2></div>
+          <div class="grid two" id="palettes"></div>
+        </section>
+      </div>
+
+      <!-- The media browser: tabs across the top, the pictures below as a grid that scrolls. -->
+      <section class="card c-photos" aria-label="Media">
+        <div class="card-head">
+          <span class="tabs" role="group" aria-label="Show in the browser">
+            <button class="tab" data-group="photos" aria-pressed="true">Photos</button><button class="tab" data-group="art" aria-pressed="false" hidden>Album art</button><button class="tab" data-group="shaders" aria-pressed="false">Shaders</button><button class="tab" data-group="textures" aria-pressed="false" hidden>Textures</button></span>
+          <span class="strip-note" id="photos_note"></span>
+        </div>
+        <div class="deck-strip" id="pictures" role="list"></div>
+        <div class="deck-strip" id="art_strip" role="list" hidden></div>
+        <div class="deck-strip" id="shader_strip" role="list" hidden></div>
+        <div class="deck-strip" id="skin_strip" role="list" hidden></div>
+        <div class="photo-actions" id="art_actions" hidden>
+          <button class="btn" id="art_next" title="The next picture">Next <kbd>I</kbd></button>
+          <button class="btn" id="art_get" title="Copy the covers of the Rekordbox playlist in settings (or the newest tracks) into images/album_art">Get covers <kbd>R</kbd></button>
+        </div>
+        <div class="photo-actions" id="shader_actions" hidden>
+          <button class="btn choice" id="shader_auto" aria-pressed="true" title="The shaders take turns every 16 bars">Take turns</button>
+          <button class="btn" id="shader_next" title="The next shader, on the next bar">Next <kbd>K</kbd></button>
+        </div>
+        <div class="photo-actions" id="skin_actions" hidden>
+          <button class="btn" id="skin_next" title="The next texture inside the crystal">Next <kbd>C</kbd></button>
+          <button class="btn choice" id="skin_off" aria-pressed="true" title="Textures off: the crystal refracts the picture">Off <kbd>V</kbd></button>
+        </div>
+        <div class="photo-actions" id="photo_actions">
+          <button class="btn" id="photo_next" title="The next picture in the strip">Next <kbd>I</kbd></button>
+          <button class="btn choice" id="photo_none" aria-pressed="false" title="Photos off: the crystal refracts its own picture">None <kbd>O</kbd></button>
+          <button class="btn" id="photo_remove" hidden title="Move the picture on screen to the removed folder">Remove</button>
+          <button class="btn" id="photo_rescan" hidden title="Look in the pictures folder again">Rescan</button>
+        </div>
       </section>
-      <section class="card c-crystal" aria-labelledby="h_crystal">
-        <div class="card-head"><h2 id="h_crystal">Crystal</h2><span class="note wait" id="melting" aria-live="polite"></span></div>
-        <div class="grid two" id="shapes"></div>
+
+      <section class="card c-controls" aria-labelledby="h_controls">
+        <div class="card-head"><h2 id="h_controls">Controls</h2><button class="link-btn" id="controls_reset" title="Every slider back to ×1">Reset</button></div>
+        <div class="waves" role="group" aria-label="Waves: the shape of the waves that blend the picture with its mirrored copy" id="waves"></div>
+        <div class="sliders" id="sliders"></div>
       </section>
-      <section class="card c-colours" aria-labelledby="h_colours">
-        <div class="card-head"><h2 id="h_colours">Colours</h2></div>
-        <div class="grid two" id="palettes"></div>
-        <div class="subhead">Demo pictures</div>
-        <div class="grid two" id="pictures"></div>
-        <button class="btn dashed" data-open="picture">Open a picture to take colours from it</button>
-      </section>
+
       <section class="card c-inputs" aria-labelledby="h_inputs">
         <div class="card-head"><h2 id="h_inputs">Inputs</h2><span class="note mono" id="gain" hidden>gain ×1.0</span></div>
         <div class="tempo">
@@ -296,32 +613,185 @@
           <span class="what" id="bpm_what">BPM · no beat yet</span>
           <span class="beatlight" id="beat" role="img" aria-label="Beat light"></span>
         </div>
+        <div class="link-note" id="link_note" hidden>Ableton Link: starting</div>
         <div class="meter-row"><span>Bass</span><div class="meter m-bass" id="m_bass"><i></i><b></b></div></div>
         <div class="meter-row"><span>Mids</span><div class="meter m-mids" id="m_mids"><i></i><b></b></div></div>
         <div class="meter-row"><span>Treble</span><div class="meter m-treble" id="m_treble"><i></i><b></b></div></div>
-        <div class="fps mono" id="fps"></div>
+        <div class="live-crystal" id="live_crystal"></div>
+        <div class="flags" id="flags" aria-live="polite"></div>
       </section>
-      <section class="card c-quick" aria-labelledby="h_quick">
-        <div class="card-head"><h2 id="h_quick">Quick actions</h2></div>
-        <div class="quick">
-          <button class="btn" id="drop">Drop</button>
-          <button class="btn" data-open="picture">Open a picture</button>
-        </div>
-      </section>
-    </aside>
+    </div>
   </div>
 
-  <section class="log" aria-label="Log">
-    <h2>LOG</h2>
-    <ol id="log" aria-live="polite"></ol>
-  </section>
+  <!-- The bottom bar: the sound that is playing on the left, the log on the right. -->
+  <footer class="bar">
+    <div class="transport">
+      <button class="btn icon" id="playpause" aria-label="Pause" title="Pause" disabled>
+        <svg viewBox="0 0 16 16" id="icon_pause"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg>
+        <svg viewBox="0 0 16 16" id="icon_play" hidden><path d="M3 2l11 6-11 6z"/></svg>
+      </button>
+      <button class="btn icon" id="stop" aria-label="Stop" title="Stop" disabled><svg viewBox="0 0 16 16"><path d="M3 3h10v10H3z"/></svg></button>
+      <div class="track">
+        <div class="trackline"><span id="track_name">No track yet</span><span class="mono" id="time">0:00 / 0:00</span></div>
+        <div class="progress" id="progress" role="progressbar" aria-label="Track position" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="progress_fill"></i><b id="progress_thumb"></b></div>
+      </div>
+      <div class="actions">
+        <button class="btn" id="demo_again">Demo track</button>
+        <button class="btn" data-open="track">Open a track</button>
+        <button class="btn" data-mic>Microphone</button>
+      </div>
+    </div>
+    <section class="log" aria-label="Log">
+      <h2>LOG</h2>
+      <ol id="log" aria-live="polite"></ol>
+      <button class="link-btn" id="log_all" title="Every message this session">All</button>
+      <span class="fps mono" id="fps"></span>
+    </section>
+  </footer>
+
+<!-- The whole log: every message this session, newest first. -->
+<dialog class="keys-panel" id="log_panel" aria-labelledby="log_title">
+  <div class="keys-head">
+    <h2 id="log_title">Log</h2>
+    <span class="note">Every message this session, newest first</span>
+    <button class="btn" id="log_close">Close <kbd>Esc</kbd></button>
+  </div>
+  <ol class="log-all" id="log_list"></ol>
+</dialog>
 
 </div>
+
+<!-- Help: a card for each subject across the top; clicking one shows only that subject below.
+     The Keys subject is made from the same list the keys run from (see "Keys and quick actions").
+     Parts marked "app" need the desktop app; on the website they say so. -->
+<dialog class="keys-panel help" id="keys_panel" aria-labelledby="keys_title">
+  <div class="keys-head">
+    <h2 id="keys_title">Help</h2>
+    <span class="note">Pick a subject.</span>
+    <button class="btn" id="keys_close">Close <kbd>Esc</kbd></button>
+  </div>
+  <div class="help-cards" role="tablist" aria-label="Help subjects">
+    <button class="help-card" role="tab" data-help="start" aria-selected="true"><b>Getting started</b><span>Sound, pictures and the first minute</span></button>
+    <button class="help-card" role="tab" data-help="keys" aria-selected="false"><b>Keys</b><span>Every shortcut, by group</span></button>
+    <button class="help-card" role="tab" data-help="stage" aria-selected="false"><b>Preview and TAKE</b><span>Try a change before it goes out</span></button>
+    <button class="help-card" role="tab" data-help="scenes" aria-selected="false"><b>Scenes and crystal</b><span>What the tempo picks, holding one</span></button>
+    <button class="help-card" role="tab" data-help="photos" aria-selected="false"><b>Photos and album art</b><span>The deck, dropping pictures, R</span></button>
+    <button class="help-card" role="tab" data-help="textures" aria-selected="false"><b>Textures and Poly Haven</b><span>Images inside the crystal, G</span></button>
+    <button class="help-card" role="tab" data-help="outputs" aria-selected="false"><b>Screens at the venue</b><span>Outputs on one or more displays</span></button>
+    <button class="help-card" role="tab" data-help="controls" aria-selected="false"><b>Controls and show</b><span>Sliders, waves, drop, blackout, light</span></button>
+    <button class="help-card" role="tab" data-help="phone" aria-selected="false"><b>Phone page</b><span>Backup controls from a phone</span></button>
+    <button class="help-card" role="tab" data-help="inputs" aria-selected="false"><b>Inputs, tempo and log</b><span>Link, meters, flags, messages</span></button>
+  </div>
+
+  <div class="help-topic" data-topic="start">
+    <section class="keys-group"><h3>Give it sound</h3><ol>
+      <li>Click <b>Play the demo track</b>, or <b>Open a track</b> to play your own file, or <b>Microphone</b> to listen to the room.</li>
+      <li>In the app with DJ software running, turn on <b>Ableton Link</b> there (Rekordbox, Serato, Traktor, Engine DJ, Live): QRTZ follows its tempo and never changes it.</li>
+      <li>The Inputs card shows the BPM and where it comes from. Within a few seconds the crystal turns with the beat, swells with the bass and sparkles with the treble.</li>
+    </ol></section>
+    <section class="keys-group"><h3>Give it pictures</h3><ol>
+      <li>Click a picture in the <b>Photos</b> card, or drop pictures anywhere on the window.</li>
+      <li>The crystal refracts the picture, and the colours come from it.</li>
+      <li>In the app, the Photos card lists the project's <code>images/</code> folder; pictures you drop are copied there.</li>
+    </ol></section>
+    <section class="keys-group"><h3>The screen</h3><p><b>Program</b> (red frame, on the right) is what the audience sees. <b>Preview</b> (green frame, on the left) shows what you've staged, and <b>TAKE</b> between them sends it across. Below: <b>Scene</b>, <b>Crystal</b> and <b>Colours</b>, the media browser (Photos, Album art, Shaders, Textures), <b>Controls</b> and <b>Inputs</b>. The bar at the bottom has the sound and the log. <b>Help</b> and the <b>?</b> key open this sheet.</p></section>
+  </div>
+
+  <div class="help-topic" data-topic="keys" hidden>
+    <p class="help-lead">Keys work while this window is in front; click it once first. Greyed ones aren't in the app yet. Ctrl, Alt and Cmd combinations are left to the menus.</p>
+    <div class="keys-groups" id="keys_groups"></div>
+  </div>
+
+  <div class="help-topic" data-topic="stage" hidden>
+    <section class="keys-group"><h3>Stage, then TAKE</h3><ol>
+      <li>Set <b>Clicks go to</b> (in the Staged card) to <b>Preview</b>.</li>
+      <li>Click a scene, crystal, colours, picture, shader, texture, wave shape, or move a slider. It fills amber and Preview shows the result; Program doesn't change.</li>
+      <li>Stage as many things as you like. Click a staged item again to unstage it; <b>Clear</b> empties the stage.</li>
+      <li>Press <b>TAKE</b>. It counts down ("LANDS IN 3 BEATS") and everything staged comes into Program together on the next bar.</li>
+    </ol></section>
+    <section class="keys-group"><h3>Preview or Live</h3><p>The <b>Clicks go to</b> switch between the two pictures decides it: <b>Preview</b> (green, pointing left) stages every click, <b>Live</b> (red, pointing right) sends every click straight to Program (switching to it clears the stage). The bar over the panels says which is on, in the same colour. <b>Shift-click</b> sends one click straight to Program. <b>Drop</b>, <b>Blackout</b> and <b>Hanging light</b> sit under <b>Live now</b>: they always act on Program and never on Preview. The keys always act on Program. A staged slider shows a red tick at its live value.</p></section>
+    <section class="keys-group"><h3>Bigger Preview</h3><p>The arrow button on Preview (<b>Pop out</b>) opens it in its own window, to watch a staged change at a useful size. The full-screen button fills the screen with it; Esc brings the panel back.</p></section>
+  </div>
+
+  <div class="help-topic" data-topic="scenes" hidden>
+    <section class="keys-group"><h3>The tempo picks the scene</h3><p>Below 100 BPM <b>Organic</b>, from 100 to 135 <b>Grid</b>, above 135 <b>Shards</b>. Every 64 bars the <b>Shaders</b> scene takes a 32-bar turn. A drop cuts to Mandala, Grid or Shards in turn. Scenes change on a bar and crossfade over 4 bars.</p></section>
+    <section class="keys-group"><h3>Holding a scene</h3><ol>
+      <li>Click a scene, or press its key (1 to 6). It gets a lock and comes in on the next bar.</li>
+      <li>While it's held, a dashed outline shows what the tempo would pick, and the card says so.</li>
+      <li>Click <b>Follow tempo</b>, or press 0, to let the tempo pick again.</li>
+    </ol></section>
+    <section class="keys-group"><h3>Crystal and colours</h3><p>Click a crystal shape (or press N) and the crystal melts into it; it also changes by itself when the music changes section. Pick a palette in <b>Colours</b>; with a picture on, a fixed palette recolours it (P switches back and forth), and <b>From the picture</b> uses its own four colours.</p></section>
+  </div>
+
+  <div class="help-topic" data-topic="photos" hidden>
+    <section class="keys-group"><h3>The photo deck</h3><ol>
+      <li>The <b>Photos</b> strip lists every picture: the demo pictures and, in the app, the <code>images/</code> folder. LIVE marks the one on screen.</li>
+      <li>Drop pictures anywhere on the window, or click <b>+ Add</b>. In the app they're copied into <code>images/</code> for good.</li>
+      <li>A new picture fades in over 4 bars, and the deck moves on by itself every 32 bars. <b>Next</b> (I) moves on now; <b>None</b> (O) turns the photos off.</li>
+      <li>In the app, <b>Remove</b> moves the picture on screen to the <code>removed/</code> folder (move it back to undo); <b>Rescan</b> looks in the folder again.</li>
+    </ol></section>
+    <section class="keys-group"><h3>Album art from Rekordbox (R, app)</h3><ol>
+      <li>Once, in a terminal: <code>python -m pip install pyrekordbox</code></li>
+      <li>In Rekordbox, make a playlist called <b>QRTZ</b> with the tracks whose covers you want (without one, QRTZ takes the most recently added tracks).</li>
+      <li>In QRTZ, pick <b>Album art</b> in the Photos card and click <b>Get covers</b>, or press R.</li>
+      <li>Up to 40 covers are copied into <code>images/album_art/</code> and play along with the photos. Rekordbox's own files are only read; running it again follows the playlist.</li>
+    </ol></section>
+  </div>
+
+  <div class="help-topic" data-topic="textures" hidden>
+    <section class="keys-group"><h3>Textures inside the crystal (app)</h3><ol>
+      <li>Pick <b>Textures</b> in the Photos card: it lists the <code>crystal_images/</code> folder.</li>
+      <li>Click one: the crystal refracts it instead of the picture, while the background stays the picture.</li>
+      <li><b>Next</b> (C) moves to the next texture; <b>Off</b> (V) turns them off and on.</li>
+    </ol></section>
+    <section class="keys-group"><h3>Free assets from Poly Haven (G, app)</h3><ol>
+      <li>On polyhaven.com, open a texture, an HDRI or a model and copy the page's link (for example <code>https://polyhaven.com/a/rock_wall_08</code>).</li>
+      <li>Click the QRTZ window and press <b>G</b>.</li>
+      <li>A texture lands in <code>crystal_images/</code> and shows under Textures; an HDRI's picture lands in <code>images/</code> and shows under Photos; a model lands in <code>models/</code> (casting it in crystal is still done by the TouchDesigner project).</li>
+      <li>The log says what was saved. The assets are CC0: free to use anywhere, gigs included.</li>
+    </ol></section>
+  </div>
+
+  <div class="help-topic" data-topic="outputs" hidden>
+    <section class="keys-group"><h3>Program on the venue's screens (app)</h3><ol>
+      <li>Plug in the projector, TVs or LED wall processor, and set Windows to <b>Extend</b> these displays (Windows key + P).</li>
+      <li>In QRTZ's <b>Picture</b> menu, tick <b>Output on Display 2</b> (or press Ctrl+Shift+2; Ctrl+Shift+1 is the first display, and so on).</li>
+      <li>That display fills with Program alone; the panel stays on the laptop. Tick more displays for more screens: they all show the same Program.</li>
+      <li>Untick a display, or <b>Close all outputs</b>, to take outputs away.</li>
+    </ol></section>
+    <section class="keys-group"><h3>During the show</h3><p><b>Esc</b> on an output turns it into a window; <b>F11</b> (or double-click) fills the screen again, and <b>Outputs back to full screen</b> does it for all. If a cable comes out, that output closes, the log says so, and Program and the other screens carry on; plug it back in and the output returns. The displays you chose are remembered: next time QRTZ starts, their outputs come back by themselves.</p></section>
+    <section class="keys-group"><h3>Good to know</h3><p>Outputs render up to 1920 pixels wide (a 4K screen gets that, scaled up). Every screen and the panel share one graphics card, so try your setup at the venue's resolution before the night. With one screen only, <b>Program full screen in this window</b> fills it; on the website, the screen button on Program opens the output as a pop-up window.</p></section>
+  </div>
+
+  <div class="help-topic" data-topic="controls" hidden>
+    <section class="keys-group"><h3>Sliders</h3><p>Each multiplies from ×0 to ×2. <b>Warp</b> and <b>Ripple</b> bend the picture; <b>Intensity</b>, <b>Bass</b>, <b>Mids</b> and <b>Treble</b> scale how much the music moves everything. The notch is ×1; double-click a slider, or <b>Reset</b>, to go back.</p></section>
+    <section class="keys-group"><h3>Waves</h3><p>The picture blends with a mirrored copy of itself in moving waves. <b>Bands</b>, <b>Rings</b>, <b>Spiral</b> or <b>Blobs</b> holds that shape across pictures; <b>Auto</b> gives each new picture another.</p></section>
+    <section class="keys-group"><h3>Show buttons</h3><p><b>Drop</b> (J) explodes the crystal and lets it reform. <b>Blackout</b> (B) fades the picture to black over half a second, and back. <b>Hanging light</b> (H) hangs the crystal on a thread from the next bar: it swings with the music and throws light below it. In the Photos card, <b>Shaders</b> holds one shader in the Shaders scene; <b>Take turns</b> lets them rotate again.</p></section>
+  </div>
+
+  <div class="help-topic" data-topic="phone" hidden>
+    <section class="keys-group"><h3>Backup controls from a phone (app)</h3><ol>
+      <li>Put the phone on the same Wi-Fi as the computer.</li>
+      <li>Open the address shown in the Inputs card (like <code>http://192.168.1.20:9990/</code>) in the phone's browser.</li>
+      <li>Enter the PIN from <code>config/phone_pin.txt</code> on this computer. Five wrong PINs lock that phone out for a minute.</li>
+      <li>Tap a scene or Follow tempo, Next photo, Hanging light, Blackout or Drop: they go live on Program at once.</li>
+      <li><b>Add photos</b> sends pictures to the deck; the newest is staged in Preview, for a TAKE.</li>
+    </ol></section>
+    <section class="keys-group"><h3>Good to know</h3><p>The TouchDesigner project serves the same page on the same port, so only one of the two can run it at a time; the other says "Phone page: off" and carries on. The first time, Windows may ask whether to let QRTZ use the network: allow <b>Private networks</b>.</p></section>
+  </div>
+
+  <div class="help-topic" data-topic="inputs" hidden>
+    <section class="keys-group"><h3>Inputs card</h3><p>The BPM and where it comes from (Ableton Link in the app, or the beat in the audio), the beat light, the bass, mids and treble meters with the auto gain, and the live crystal. The <b>Level</b> meter in the title bar is the whole mix before the auto gain.</p></section>
+    <section class="keys-group"><h3>Flags</h3><p>Green <b>All inputs working</b>; amber <b>Link off · audio beat</b> (no Link heard, the beat comes from the audio) or <b>No beat yet</b>; red <b>No sound</b> after 3 seconds of silence. The most urgent also shows as a chip in the title bar.</p></section>
+    <section class="keys-group"><h3>Log</h3><p>The bar at the bottom shows the last three messages: what each click and key did, outputs opening, a display unplugged. <b>All</b> shows the whole session, newest first.</p></section>
+  </div>
+</dialog>
 
 <input type="file" id="track" accept="audio/*">
 <input type="file" id="picture" accept="image/*">
 
 <script src="shaders.js"></script>
+<script src="td_shaders.js"></script>
 <script src="scenes.js"></script>
 <script src="models/marble_bust.js"></script>
 <script src="pictures/sky.js"></script>
@@ -333,16 +803,19 @@
   const $ = (id) => document.getElementById(id);
 
   // The log bar: the last three events, newest first.
+  // The bar shows the last log_lines messages; All shows the session's last log_keep.
   const logList = $('log'), entries = [];
+  const logItem = (e) => { const li = document.createElement('li'), t = document.createElement('time'); t.textContent = e.time; li.append(t, e.text); return li; };
   function log(text) {
     const d = new Date(), pad = (n) => String(n).padStart(2, '0');
     entries.unshift({ time: pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds()), text });
-    entries.length = Math.min(entries.length, 3);
-    logList.replaceChildren(...entries.map((e) => {
-      const li = document.createElement('li'), t = document.createElement('time');
-      t.textContent = e.time; li.append(t, e.text); return li;
-    }));
+    entries.length = Math.min(entries.length, 200);
+    logList.replaceChildren(...entries.slice(0, 3).map(logItem));
+    if ($('log_panel') && $('log_panel').open) $('log_list').replaceChildren(...entries.map(logItem));
   }
+  $('log_all').onclick = () => { $('log_list').replaceChildren(...entries.map(logItem)); $('log_panel').showModal(); };
+  $('log_close').onclick = () => $('log_panel').close();
+  $('log_panel').addEventListener('click', (e) => { if (e.target === $('log_panel')) $('log_panel').close(); });
   log('waiting for sound');
 
   // How it works opens in a pop-up window of its own; if the browser blocks pop-ups, the link
@@ -360,11 +833,39 @@
     return;
   }
 
+  // Ableton Link, in the desktop app only: its preload script adds window.qrtzLink, which
+  // passes on the tempo of the DJ software (it can't set it). While a Link session is heard its
+  // tempo leads; without one, or on the website, the beat tracker reads the tempo from the audio.
+  let link = null;  // the latest Link state from the app, or null on the website
+  if (window.qrtzLink) {
+    window.qrtzLink.onState((state) => {
+      const was = link;
+      link = state;
+      demo.sound.beats.followLink(state.live ? state.bpm : null);
+      if (state.live && (!was || !was.live)) log('tempo: ' + state.bpm.toFixed(1) + ' BPM from Ableton Link');
+      else if (state.live && Math.abs(state.bpm - was.bpm) >= 0.5) log('tempo: Ableton Link changed to ' + state.bpm.toFixed(1) + ' BPM');
+      else if (!state.live && was && was.live) log('tempo: Ableton Link gone, back to the beat from the audio');
+      if (state.error && (!was || was.error !== state.error)) log('Ableton Link: ' + state.error);
+    });
+  }
+  const linkWords = (state) => !state.listening ? 'Ableton Link: not listening' + (state.error ? ' (' + state.error + ')' : '')
+    : state.live ? 'Ableton Link: ' + state.peers + (state.peers === 1 ? ' app' : ' apps') + (state.playing ? ', playing' : ', stopped')
+    : 'Ableton Link: listening, no DJ software heard (tempo from the audio)';
+
   const stage = $('stage'), tag = $('tag'), caption = $('caption'), start = $('start');
   const names = { brilliant: 'Brilliant', disco: 'Disco ball', model: 'Marble bust', eyeball: 'Eye' };
   // The deck scene shows as "Shaders": its three shader looks take turns (every scene follows the music).
-  const sceneNames = { crystal: 'Crystal', flow: 'Flow', mandala: 'Mandala', deck: 'Shaders' };
-  const sceneTips = { deck: 'Oil slick, Prism rays and Kaleidoscope take turns every 16 bars' };
+  // The project's six scenes in its order (keys 1 to 6), then the page's own plain Crystal.
+  const sceneNames = { organic: 'Organic', flow: 'Flow', grid: 'Grid', shards: 'Shards', mandala: 'Mandala', deck: 'Shaders', crystal: 'Crystal' };
+  const sceneTips = {
+    organic: 'Slow paint in the palette with long trails (the tempo picks it below 100 BPM)',
+    flow: 'Ribbons of colour bending through the crystal',
+    grid: 'Tiles and mirrors of the crystal (the tempo picks it from 100 to 135 BPM)',
+    shards: 'The picture cut into turning shards, with neon lines (the tempo picks it above 135 BPM)',
+    mandala: 'Mirrors filled with marbled paint',
+    deck: 'Oil slick, Prism rays and Kaleidoscope take turns every 16 bars (it also visits every 64 bars)',
+    crystal: 'The crystal over the picture, nothing else',
+  };
   const paletteNames = { dusk: 'Dusk', ember: 'Ember', tide: 'Tide', aura: 'Aura', picture: 'From the picture' };
   const shapeLabel = (shape) => names[shape] || shape;
 
@@ -377,15 +878,25 @@
   for (const scene in sceneNames) {
     const b = choice(sceneNames[scene]);
     b.dataset.scene = scene;
+    const key = SETTINGS.keys.scenes[scene];
+    if (key) { const k = document.createElement('kbd'); k.textContent = key; b.append(' ', k); }
     if (sceneTips[scene]) b.title = sceneTips[scene];
-    b.onclick = () => { if (demo.goToScene(scene)) log('scene: ' + sceneNames[scene]); };
+    b.onclick = (e) => act('scene', scene, e);
     scenes.appendChild(b);
   }
+  // A click or key holds a scene: it comes in on the next bar and stays until Follow tempo.
+  function holdScene(scene, how) {
+    if (demo.goToScene(scene)) log('scene: ' + sceneNames[scene] + how + ', held (comes in on the next bar)');
+  }
+  function followTempo() {
+    if (demo.followTempo()) log('scene: following the tempo again');
+  }
+  $('follow').onclick = followTempo;
   const shapes = $('shapes');
   for (const shape of SETTINGS.crystal.shapes) {
     const b = choice(shapeLabel(shape));
     b.dataset.shape = shape;
-    b.onclick = () => demo.motion.goToNow(SETTINGS.crystal, shape);  // the melt itself is logged below
+    b.onclick = (e) => act('shape', shape, e);  // the melt itself is logged below
     shapes.appendChild(b);
   }
   const palettes = $('palettes');
@@ -398,10 +909,11 @@
     const b = choice('');
     b.classList.add('palette');
     b.dataset.palette = name;
-    const label = document.createElement('span'); label.textContent = paletteNames[name];
+    const label = document.createElement('span'); label.textContent = name === 'picture' ? 'Picture' : paletteNames[name];
+    if (name === 'picture') b.title = 'From the picture: its own four colours';
     b.append(strip(SETTINGS.palettes[name] || []), label);
     if (!SETTINGS.palettes[name]) b.disabled = true;  // the picture's own colours, once a picture is open
-    b.onclick = () => { if (demo.setPalette(name)) log('colours: ' + paletteNames[name]); };
+    b.onclick = (e) => act('palette', name, e);
     palettes.appendChild(b);
   }
   const pictureButton = palettes.querySelector('[data-palette=picture]');
@@ -480,12 +992,12 @@
     demo.sound.pressDrop(performance.now() / 1000 - demo.start);
   };
   // A picture for the crystal to refract: a demo picture, or the visitor's own file.
-  let currentPicture = null;
-  function usePicture(src, name, id) {
+  let currentPicture = null, currentImage = null;
+  function usePicture(src, name, id, fadeBars = null, keepPalette = false) {
     const image = new Image();
     image.onload = () => {
-      demo.setImage(image);
-      currentPicture = id;
+      demo.setImage(image, true, fadeBars, keepPalette);
+      currentPicture = id; currentImage = image;
       pictureButton.disabled = false;
       pictureButton.querySelector('.strip').replaceWith(strip(demo.picturePalette().map((c) => 'rgb(' + c.map((v) => Math.round(v * 255)).join(',') + ')')));
       log('picture: ' + name + (demo.paletteName === 'picture' ? ', and its colours' : ''));
@@ -493,31 +1005,656 @@
     image.onerror = () => log('could not open the picture ' + name);
     image.src = src;
   }
-  $('picture').onchange = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    e.target.value = '';
-    usePicture(URL.createObjectURL(file), file.name, 'file');
-  };
-  // The demo pictures, each shipped as a script in pictures/ (see pictures/sky.js for why).
+  // ---- The photo deck (photo_deck.py): every picture in a strip ----
+  // The demo pictures (shipped as scripts in pictures/, see pictures/sky.js for why); in the app,
+  // the project's images/ folder (window.qrtzPictures, from app/preload.js); and pictures opened
+  // or dropped this session. Each entry: { id, name, title, thumb, src() -> a URL to load }.
   const DEMO_PICTURES = [
     { id: 'sky', name: 'Sky', title: "Poly Haven's Kloofendal sky, CC0" },
     { id: 'pattern', name: 'Pattern', title: 'A reaction-diffusion maze, made for this page (tools/make_pattern.py)' },
   ];
-  const pictures = $('pictures');
-  for (const pic of DEMO_PICTURES) {
-    const src = (window.QRTZPictures || {})[pic.id];
-    if (!src) continue;
-    const b = choice('');
-    b.classList.add('pic');
-    b.dataset.picture = pic.id;
-    b.title = pic.title;
-    const thumb = document.createElement('img'); thumb.src = src; thumb.alt = '';
-    const label = document.createElement('span'); label.textContent = pic.name;
-    b.append(thumb, label);
-    b.onclick = () => usePicture(src, pic.name, pic.id);
-    pictures.appendChild(b);
+  const folder = window.qrtzPictures || null;
+  let deck = [];
+  const demoEntries = DEMO_PICTURES.filter((p) => (window.QRTZPictures || {})[p.id])
+    .map((p) => ({ id: p.id, name: p.name, title: p.title, thumb: window.QRTZPictures[p.id], src: async () => window.QRTZPictures[p.id] }));
+  let folderEntries = [];
+  const openedEntries = [];   // on the website: pictures opened or dropped this session
+  const folderUrls = {};      // a folder picture's bytes as a blob URL, once loaded
+  async function readFolder() {
+    if (!folder) return;
+    try {
+      const list = await folder.list();
+      folderEntries = list.map((p) => ({ id: 'folder:' + p.name, name: p.name, title: p.name + ' (in the pictures folder)', thumb: p.thumb, folder: true,
+        src: async () => folderUrls[p.name] || (folderUrls[p.name] = URL.createObjectURL(new Blob([await folder.load(p.name)], { type: 'image/jpeg' }))) }));
+    } catch (e) { log('pictures folder: ' + e.message); }
+    drawStrip();
   }
+  const pictures = $('pictures');
+  // Album art (the app, with R): covers from Rekordbox in images/album_art, played alongside the
+  // photos (rekordbox.use_in_photos) and shown as their own group.
+  const fetcher = window.qrtzFetch || null;
+  let artEntries = [];
+  const artUrls = {};
+  async function readArt() {
+    if (!fetcher) return;
+    try {
+      const list = await fetcher.artList();
+      artEntries = list.map((p) => ({ id: 'art:' + p.name, name: p.name.replace(/^rekordbox_/, '').replace(/\.[^.]+$/, ''), title: p.name + ' (album art)', thumb: p.thumb,
+        src: async () => artUrls[p.name] || (artUrls[p.name] = URL.createObjectURL(new Blob([await fetcher.artLoad(p.name)], { type: 'image/jpeg' }))) }));
+    } catch (e) { log('album art: ' + e.message); }
+    drawStrip();
+  }
+  function drawStrip() {
+    deck = demoEntries.concat(folderEntries, artEntries, openedEntries);
+    const artStrip = $('art_strip');
+    if (artStrip) {
+      artStrip.replaceChildren();
+      for (const entry of artEntries) {
+        const b = document.createElement('button');
+        b.className = 'tile'; b.dataset.picture = entry.id; b.title = entry.title; b.setAttribute('role', 'listitem');
+        const thumb = document.createElement('img'); thumb.src = entry.thumb; thumb.alt = ''; thumb.loading = 'lazy';
+        const label = document.createElement('span'); label.textContent = entry.name;
+        b.append(thumb, label);
+        b.onclick = (e) => act('picture', entry, e);
+        artStrip.appendChild(b);
+      }
+    }
+    pictures.replaceChildren();
+    for (const entry of demoEntries.concat(folderEntries, openedEntries)) {
+      const b = document.createElement('button');
+      b.className = 'tile'; b.dataset.picture = entry.id; b.title = entry.title || entry.name; b.setAttribute('role', 'listitem');
+      const thumb = document.createElement('img'); thumb.src = entry.thumb; thumb.alt = ''; thumb.loading = 'lazy';
+      const label = document.createElement('span'); label.textContent = entry.name;
+      b.append(thumb, label);
+      b.onclick = (e) => act('picture', entry, e);
+      pictures.appendChild(b);
+    }
+    const drop = document.createElement('button');
+    drop.className = 'tile drop';
+    drop.textContent = '+ Add';
+    drop.title = folder ? 'Add pictures to the pictures folder (or drop them anywhere on the window)' : 'Open a picture (or drop one anywhere on the window)';
+    drop.onclick = () => $('picture').click();
+    pictures.appendChild(drop);
+    $('photos_note').dataset.photos = deck.length + (deck.length === 1 ? ' picture' : ' pictures') + (folder ? ' (images/ and the demo pictures)' : '');
+  }
+  async function showEntry(entry, fadeBars = null, keepPalette = false) {
+    try {
+      if (!demo.photosOn) demo.togglePhotos();   // a new photo turns the photos back on, as in the project
+      usePicture(await entry.src(), entry.name, entry.id, fadeBars, keepPalette);
+      barsOnPicture = 0;
+    } catch (e) { log('could not open the picture ' + entry.name + ': ' + e.message); }
+  }
+  // Pictures from the file picker or dropped on the window. In the app they're copied into the
+  // pictures folder (and join the deck for good); on the website they stay for this visit.
+  async function addFiles(files) {
+    const images = [...files].filter((f) => f.type.startsWith('image/'));
+    if (!images.length) { if (files.length) log('only pictures can be added here (JPEG, PNG or TIFF)'); return; }
+    if (folder) {
+      const added = await folder.add(await Promise.all(images.map(async (f) => ({ name: f.name, bytes: new Uint8Array(await f.arrayBuffer()) }))));
+      if (!added.length) { log('those pictures are not a kind the deck takes (' + SETTINGS.photo.extensions.join(', ') + ')'); return; }
+      log('pictures: added ' + added.join(', ') + ' to the pictures folder');
+      await readFolder();
+      const first = folderEntries.find((e) => e.name === added[0]);
+      if (first) showEntry(first);
+      return;
+    }
+    for (const f of images) openedEntries.push({ id: 'file' + openedEntries.length, name: f.name, thumb: URL.createObjectURL(f), src: async () => URL.createObjectURL(f) });
+    drawStrip();
+    showEntry(openedEntries[openedEntries.length - 1]);
+  }
+  $('picture').onchange = (e) => { const files = e.target.files; addFiles(files); e.target.value = ''; };
+  // Drop pictures anywhere on the window.
+  let dragDepth = 0;
+  document.addEventListener('dragenter', (e) => { if ([...e.dataTransfer.types].includes('Files')) { dragDepth++; document.body.classList.add('dragging'); } });
+  document.addEventListener('dragleave', () => { if (--dragDepth <= 0) { dragDepth = 0; document.body.classList.remove('dragging'); } });
+  document.addEventListener('dragover', (e) => { if ([...e.dataTransfer.types].includes('Files')) e.preventDefault(); });
+  document.addEventListener('drop', (e) => {
+    e.preventDefault(); dragDepth = 0; document.body.classList.remove('dragging');
+    if (e.dataTransfer.files.length) addFiles(e.dataTransfer.files);
+  });
+  $('photo_next').onclick = () => nextPicture();
+  $('photo_none').onclick = () => {
+    if (!demo.image) { log('photos: open a picture first'); return; }
+    log(demo.togglePhotos() ? 'photos: on' : 'photos: off, the crystal shows its own picture');
+  };
+  if (folder) {
+    $('photo_remove').hidden = $('photo_rescan').hidden = false;
+    $('photo_rescan').onclick = async () => { await readFolder(); log('pictures folder: ' + folderEntries.length + ' pictures'); };
+    // Remove moves the picture on screen to removed/ (nothing is deleted), then shows the next one.
+    $('photo_remove').onclick = async () => {
+      const entry = deck.find((e) => e.id === currentPicture);
+      if (!entry || !entry.folder) { log('remove: only a picture from the pictures folder can be removed'); return; }
+      try {
+        const where = await folder.remove(entry.name);
+        log('removed ' + entry.name + ' (moved to ' + where + '; move it back to undo)');
+        nextPicture();
+        await readFolder();
+      } catch (e) { log('remove: ' + e.message); }
+    };
+    folder.onChange(readFolder);
+  }
+  drawStrip();
+  readFolder();
+  // The deck moves on by itself every auto_advance_bars while there's more than one picture.
+  let barsOnPicture = 0, lastBar = null, shownTile = null;
+
+  // ---- The Photos card's other groups: Shaders and Textures (docs/operator-panel.md) ----
+  // Shaders: the shader deck's shaders and None (the crystal with no shader); picking one holds
+  // it in the Shaders scene, Take turns lets them rotate again. Textures (in the app): the
+  // crystal skins in crystal_images/, the image the crystal refracts instead of the picture.
+  let photoGroup = 'photos';
+  const shaderNames = { oil_slick: 'Oil slick', prism_rays: 'Prism rays', kaleidoscope: 'Kaleidoscope' };
+  const shaderLooks = { oil_slick: 'linear-gradient(135deg,#2b1f5c,#0e6f8a,#e26d3c,#f2c14e)', prism_rays: 'radial-gradient(circle,#fff,#c56cf0 30%,#0e4d64 70%)',
+    kaleidoscope: 'conic-gradient(#e2522f,#30b0c7,#f6c453,#6a1b4d,#e2522f)', none: 'linear-gradient(#1B1E26,#2A2E39)' };
+  const shaderStrip = $('shader_strip');
+  const shaderIndex = (name) => name === 'none' ? -1 : demo.deck.names.indexOf(name);
+  for (const name of demo.deck.names.concat('none')) {
+    const b = document.createElement('button');
+    b.className = 'tile'; b.dataset.shader = name; b.setAttribute('role', 'listitem');
+    b.title = name === 'none' ? 'No shader: the crystal over the picture, held in the Shaders scene' : 'Hold ' + (shaderNames[name] || name) + ' in the Shaders scene';
+    const sw = document.createElement('i'); sw.className = 'swatch'; sw.style.background = shaderLooks[name] || shaderLooks.none;
+    const label = document.createElement('span'); label.textContent = name === 'none' ? 'None' : shaderNames[name] || name;
+    b.append(sw, label);
+    b.onclick = (e) => act('shader', name, e);
+    shaderStrip.appendChild(b);
+  }
+  $('shader_auto').onclick = (e) => act('shader', 'auto', e);
+  $('shader_next').onclick = () => { demo.deck.pin(null); demo.deck.next(); log('shaders: the next one comes in on the next bar'); };
+
+  const skinsFolder = window.qrtzSkins || null;
+  let skinEntries = [], currentSkin = null, currentSkinImage = null;
+  const skinUrls = {};
+  async function readSkins() {
+    if (!skinsFolder) return;
+    try {
+      const list = await skinsFolder.list();
+      skinEntries = list.map((p) => ({ id: 'skin:' + p.name, name: p.name, thumb: p.thumb,
+        src: async () => skinUrls[p.name] || (skinUrls[p.name] = URL.createObjectURL(new Blob([await skinsFolder.load(p.name)], { type: 'image/jpeg' }))) }));
+    } catch (e) { log('textures folder: ' + e.message); }
+    drawSkins();
+  }
+  function drawSkins() {
+    const strip = $('skin_strip');
+    strip.replaceChildren();
+    for (const entry of skinEntries) {
+      const b = document.createElement('button');
+      b.className = 'tile'; b.dataset.skin = entry.id; b.title = entry.name + ' (inside the crystal)'; b.setAttribute('role', 'listitem');
+      const img = document.createElement('img'); img.src = entry.thumb; img.alt = ''; img.loading = 'lazy';
+      const label = document.createElement('span'); label.textContent = entry.name.replace(/\.[^.]+$/, '').replace(/^polyhaven_/, '');
+      b.append(img, label);
+      b.onclick = (e) => act('skin', entry, e);
+      strip.appendChild(b);
+    }
+  }
+  async function loadImage(src) {
+    return new Promise((resolve, reject) => { const i = new Image(); i.onload = () => resolve(i); i.onerror = () => reject(new Error('could not read it')); i.src = src; });
+  }
+  async function showSkin(entry, target = demo) {
+    if (entry === 'none') { target.skinsOn = false; if (target === demo) log('textures: off'); return; }
+    try {
+      const image = await loadImage(await entry.src());
+      target.setSkin(image);
+      if (target === demo) { currentSkin = entry.id; currentSkinImage = image; log('texture: ' + entry.name); }
+      return image;
+    } catch (e) { log('texture ' + entry.name + ': ' + e.message); }
+  }
+  function nextSkin() {
+    if (!skinEntries.length) { log('textures: ' + (skinsFolder ? 'none in crystal_images/' : 'in the app only')); return; }
+    const at = skinEntries.findIndex((s) => s.id === currentSkin);
+    showSkin(skinEntries[(at + 1) % skinEntries.length]);
+  }
+  function toggleSkins() {
+    if (!demo.skin) { nextSkin(); return; }
+    demo.skinsOn = !demo.skinsOn;
+    log(demo.skinsOn ? 'textures: on' : 'textures: off');
+  }
+  $('skin_next').onclick = nextSkin;
+  $('skin_off').onclick = (e) => act('skin', demo.skinsOn ? 'none' : (skinEntries.find((s) => s.id === currentSkin) || skinEntries[0] || 'none'), e);
+  if (skinsFolder) {
+    document.querySelector('[data-group=textures]').hidden = false;
+    skinsFolder.onChange(readSkins);
+    readSkins();
+  }
+  function showGroup(group) {
+    photoGroup = group;
+    for (const b of document.querySelectorAll('[data-group]')) b.setAttribute('aria-pressed', String(b.dataset.group === group));
+    $('pictures').hidden = $('photo_actions').hidden = group !== 'photos';
+    $('art_strip').hidden = $('art_actions').hidden = group !== 'art';
+    shaderStrip.hidden = $('shader_actions').hidden = group !== 'shaders';
+    $('skin_strip').hidden = $('skin_actions').hidden = group !== 'textures';
+  }
+  for (const b of document.querySelectorAll('[data-group]')) b.onclick = () => showGroup(b.dataset.group);
+  // R: copy the Rekordbox covers (the playlist in settings, or the newest tracks) into images/album_art.
+  let gettingArt = false;
+  async function getCovers() {
+    if (!fetcher) { log('album art from Rekordbox: in the app only'); return; }
+    if (gettingArt) return;
+    gettingArt = true; $('art_get').disabled = true;
+    log('album art: reading the Rekordbox library…');
+    try {
+      const result = await fetcher.getArt();
+      log(result.message || (result.ok ? 'album art: done' : 'album art: it did not work'));
+      await readArt();
+    } finally { gettingArt = false; $('art_get').disabled = false; }
+  }
+  // G: fetch the Poly Haven asset whose link is on the clipboard.
+  async function getAsset() {
+    if (!fetcher) { log('Poly Haven: in the app only'); return; }
+    log('Poly Haven: fetching the asset on the clipboard…');
+    const r = await fetcher.getAsset();
+    if (!r.ok) { log('Poly Haven: ' + r.message); return; }
+    const what = { texture: 'a texture for the crystal (Textures)', photo: 'a backdrop (Photos)', model: 'a model' }[r.kind];
+    log('Poly Haven: ' + (r.already ? 'already have ' : 'saved ') + r.where + ', ' + what
+      + (r.kind === 'model' ? '; casting a model in crystal is done by the TouchDesigner project for now' : ''));
+    if (r.kind === 'texture') { await readSkins(); showGroup('textures'); }
+    if (r.kind === 'photo') { await readFolder(); showGroup('photos'); }
+  }
+  $('art_get').onclick = getCovers;
+  $('art_next').onclick = () => nextPicture();
+  if (fetcher) {
+    document.querySelector('[data-group=art]').hidden = false;
+    fetcher.onArtChange(readArt);
+    readArt();
+  }
+  function hangingLight() {
+    log(demo.toggleHanging() ? 'hanging light: on, from the next bar' : 'hanging light: off, from the next bar');
+  }
+  $('hanging').onclick = hangingLight;
+
+  // ---- Controls: the six sliders and the Waves switch ----
+  const controlNames = { warp: 'Warp', ripple: 'Ripple', intensity: 'Intensity', bass: 'Bass', mids: 'Mids', treble: 'Treble' };
+  const controlTips = {
+    warp: 'How far the picture bends', ripple: 'How far the bass ripples the picture',
+    intensity: 'How strongly the music moves everything', bass: 'How much the bass counts', mids: 'How much the mids count', treble: 'How much the treble counts',
+  };
+  const sliders = {};
+  for (const name of SETTINGS.operator.controls) {
+    const row = document.createElement('label'); row.className = 'slider'; row.title = controlTips[name] || '';
+    const label = document.createElement('span'); label.textContent = controlNames[name] || name;
+    const track = document.createElement('span'); track.className = 'track';
+    const input = document.createElement('input');
+    Object.assign(input, { type: 'range', min: 0, max: SETTINGS.operator.control_max, step: 0.01, value: 1 });
+    input.setAttribute('aria-label', controlNames[name] || name);
+    const out = document.createElement('output'); out.textContent = '×1.00';
+    track.appendChild(input); row.append(label, track, out);
+    $('sliders').appendChild(row);
+    // A red tick at the live value, shown while a different value is staged.
+    const tick = document.createElement('i'); tick.className = 'live-tick';
+    track.appendChild(tick);
+    // Dragging stages the value (or sets it, with clicks on Program or Shift held).
+    let shift = false;
+    input.onpointerdown = (e) => { shift = e.shiftKey; };
+    input.onkeydown = (e) => { shift = e.shiftKey; };
+    input.oninput = () => act('control', { name, value: +input.value }, { shiftKey: shift, quiet: true });
+    input.onchange = () => act('control', { name, value: +input.value }, { shiftKey: shift });
+    // A double-click puts one slider back to ×1.
+    input.ondblclick = (e) => act('control', { name, value: 1 }, e);
+    sliders[name] = { input, out, row, tick };
+  }
+  // Sets a slider live, now.
+  function setControl(name, value) {
+    demo.controls[name] = value;
+  }
+  // Reset: every slider back to ×1 (staged, or at once with clicks on Program).
+  $('controls_reset').onclick = (e) => {
+    for (const name in sliders) act('control', { name, value: 1 }, Object.assign({ quiet: true }, { shiftKey: e.shiftKey }));
+    log(stagingClicks(e) ? 'staged: every slider at ×1' : 'controls: every slider back to ×1');
+  };
+  const waveNames = { auto: 'Auto', bands: 'Bands', rings: 'Rings', spiral: 'Spiral', blobs: 'Blobs' };
+  const waveTips = { auto: 'Each new picture gets another shape' };
+  for (const name in waveNames) {
+    const b = choice(waveNames[name]);
+    b.dataset.wave = name;
+    b.title = waveTips[name] || 'The picture blends with its mirrored copy in ' + name + ', held across pictures';
+    b.onclick = (e) => act('waves', name, e);
+    $('waves').appendChild(b);
+  }
+  const waveByNumber = ['bands', 'rings', 'spiral', 'blobs'];
+
+  // ---- Program, Preview and the stage (docs/operator-panel.md) ----
+  // A click on a scene, shape, colours, picture, slider or wave shape is staged: Preview shows
+  // it, and TAKE brings everything staged into Program together on the next bar, fading over
+  // take_fade_bars. With "Clicks go to: Program", or Shift held, a click goes live at once
+  // instead. The keys always act on Program, as in the project. On the website clicks start on
+  // Program (a visitor wants to see things happen); in the app they start on Preview.
+  const pending = { scene: null, shape: null, palette: null, picture: null, waves: null, shader: null, skin: null, controls: {} };
+  const KINDS = ['scene', 'shape', 'picture', 'palette', 'waves', 'shader', 'skin'];
+  let clicksTo = localStorage.getItem('qrtz-clicks-to') || (folder ? 'preview' : 'program');
+  let takeAt = null;          // the bar a pressed TAKE lands on
+  let stagedImage = null;     // the staged picture, loaded, for Preview
+  const anyStaged = () => KINDS.some((k) => pending[k]) || Object.keys(pending.controls).length > 0;
+  let stagedSkinImage = null;
+  const stagingClicks = (e) => clicksTo === 'preview' && !(e && e.shiftKey);
+  const words = {
+    scene: (v) => sceneNames[v], shape: (v) => shapeLabel(v), palette: (v) => paletteNames[v], picture: (v) => v.name,
+    waves: (v) => 'waves ' + waveNames[v].toLowerCase(),
+    shader: (v) => v === 'auto' ? 'shaders taking turns' : v === 'none' ? 'no shader' : shaderNames[v] || v,
+    skin: (v) => v === 'none' ? 'textures off' : 'texture ' + v.name,
+  };
+  function act(kind, value, e) {
+    if (!stagingClicks(e)) { applyNow(kind, value, e); return; }
+    if (kind === 'control') {
+      // A slider staged back to its live value is no longer staged.
+      if (Math.abs(value.value - demo.controls[value.name]) < 0.005) delete pending.controls[value.name];
+      else pending.controls[value.name] = value.value;
+      if (!(e && e.quiet)) log(pending.controls[value.name] !== undefined ? 'staged: ' + controlNames[value.name].toLowerCase() + ' ×' + value.value.toFixed(2) : controlNames[value.name] + ' matches Program again');
+    } else {
+      const id = (v) => v && typeof v === 'object' ? v.id : v;
+      const same = pending[kind] && id(pending[kind]) === id(value);
+      pending[kind] = same ? null : value;   // clicking what's staged unstages it
+      log(same ? 'unstaged: ' + words[kind](value) : 'staged: ' + words[kind](value) + ' (TAKE brings it in)');
+      if (kind === 'picture') loadStagedImage();
+      if (kind === 'skin') { stagedSkinImage = null; if (pending.skin && pending.skin !== 'none') pending.skin.src().then(loadImage).then((i) => { if (pending.skin === value) stagedSkinImage = i; }).catch(() => {}); }
+    }
+    takeAt = null;
+  }
+  // Straight to Program: everything as the click asks, now (the project's "now" rows).
+  function applyNow(kind, value, e, fadeBars = null) {
+    const quiet = e && e.quiet;
+    if (kind === 'scene') {
+      if (demo.goToScene(value, fadeBars === null, fadeBars)) log('scene: ' + sceneNames[value] + ', held');
+    } else if (kind === 'shape') {
+      demo.motion.goToNow(SETTINGS.crystal, value);
+    } else if (kind === 'palette') {
+      if (demo.setPalette(value)) { if (value !== 'picture') lastFixedPalette = value; log('colours: ' + paletteNames[value]); }
+    } else if (kind === 'picture') {
+      showEntry(value, fadeBars, !!(e && e.keepPalette));
+    } else if (kind === 'waves') {
+      demo.photoMotion.pinWaves(value);
+      log('waves: ' + (value === 'auto' ? 'a new shape for each picture' : waveNames[value].toLowerCase() + ', held'));
+    } else if (kind === 'shader') {
+      demo.deck.pin(value === 'auto' ? null : shaderIndex(value));
+      if (value !== 'auto') demo.goToScene('deck', fadeBars === null, fadeBars);
+      log('shaders: ' + (value === 'auto' ? 'taking turns again' : (value === 'none' ? 'none' : shaderNames[value]) + ', held in the Shaders scene'));
+    } else if (kind === 'skin') {
+      showSkin(value);
+    } else if (kind === 'control') {
+      setControl(value.name, value.value);
+      delete pending.controls[value.name];
+      if (!quiet) log(controlNames[value.name].toLowerCase() + ': ×' + value.value.toFixed(2));
+    }
+  }
+  async function loadStagedImage() {
+    stagedImage = null;
+    const entry = pending.picture;
+    if (!entry) return;
+    try {
+      const src = await entry.src(), image = new Image();
+      image.onload = () => { if (pending.picture === entry) stagedImage = image; };
+      image.src = src;
+    } catch (e) { log('could not open the picture ' + entry.name + ': ' + e.message); }
+  }
+  function clearStage(quiet) {
+    const had = anyStaged();
+    for (const k of KINDS) pending[k] = null;
+    pending.controls = {};
+    stagedImage = null; stagedSkinImage = null; takeAt = null;
+    if (had && !quiet) log('stage cleared');
+  }
+  function take() {
+    if (!anyStaged() || takeAt !== null) return;
+    const bar = demo.clock.values ? demo.clock.values.bar : null;
+    // Without music there are no bars to wait for: it lands at once.
+    if (bar === null || !demo.sound.playing) { landTake(); return; }
+    takeAt = bar + 1;
+    log('take: lands on the next bar');
+  }
+  function landTake() {
+    const fade = SETTINGS.operator.take_fade_bars, done = [];
+    for (const kind of KINDS) {
+      if (pending[kind]) { applyNow(kind, pending[kind], { quiet: true, keepPalette: !!pending.palette }, fade); done.push(words[kind](pending[kind])); }
+    }
+    for (const name in pending.controls) { setControl(name, pending.controls[name]); done.push(controlNames[name].toLowerCase() + ' ×' + pending.controls[name].toFixed(2)); }
+    log('take: ' + done.join(', '));
+    clearStage(true);
+  }
+  $('take').onclick = take;
+  $('clear').onclick = () => clearStage();
+  function setClicks(to) {
+    clicksTo = to;
+    localStorage.setItem('qrtz-clicks-to', to);
+    // Switching to Program clears the stage, since nothing could be taken.
+    if (to === 'program') clearStage();
+    log(to === 'program' ? 'clicks go straight to Program' : 'clicks stage in Preview; TAKE brings them in');
+  }
+  $('clicks_preview').onclick = () => setClicks('preview');
+  $('clicks_program').onclick = () => setClicks('program');
+
+  // Preview: a second, small copy of the engine sharing Program's sound, drawn only while
+  // something is staged (operator_screen.pause_preview_when_idle).
+  let preview = null;
+  try { preview = new Demo($('preview_canvas'), { program: demo }); preview.paused = true; }
+  catch (e) { log('preview: ' + e.message); }
+  let previewImage = null, previewSkin = null;
+  function syncPreview() {
+    const show = !!preview && clicksTo === 'preview' && anyStaged();
+    if (!preview) return show;
+    preview.paused = !show;
+    if (!show) return show;
+    preview.fixedScene = pending.scene || (pending.shader && pending.shader !== 'auto' ? 'deck' : demo.scene);
+    const wantPin = pending.shader ? (pending.shader === 'auto' ? null : shaderIndex(pending.shader)) : (demo.deck.pinned ?? null);
+    if ((preview.deck.pinned ?? null) !== wantPin) preview.deck.pin(wantPin);
+    const skinImage = pending.skin ? (pending.skin === 'none' ? null : stagedSkinImage) : (demo.skinsOn ? currentSkinImage : null);
+    if (skinImage && skinImage !== previewSkin) { preview.setSkin(skinImage); previewSkin = skinImage; }
+    preview.skinsOn = !!skinImage;
+    const image = pending.picture ? stagedImage : currentImage;
+    if (image && image !== previewImage) { preview.setImage(image, false); previewImage = image; }
+    preview.photosOn = pending.picture ? true : demo.photosOn;
+    const palette = pending.palette || demo.paletteName;
+    if (preview.paletteName !== palette) preview.setPalette(palette);
+    const shape = pending.shape || demo.motion.shapeName, m = preview.motion;
+    if (m.shapeName !== shape && m.jumpTo !== shape) m.goToNow(SETTINGS.crystal, shape);
+    for (const name in demo.controls) preview.controls[name] = name in pending.controls ? pending.controls[name] : demo.controls[name];
+    const waves = pending.waves || (demo.photoMotion.pinned === null ? 'auto' : waveByNumber[demo.photoMotion.pinned]);
+    const pinned = waves === 'auto' ? null : WAVE_NUMBERS[waves];
+    if (preview.photoMotion.pinned !== pinned) preview.photoMotion.pinWaves(waves);
+    return show;
+  }
+  const WAVE_NUMBERS = { bands: 0, rings: 1, spiral: 2, blobs: 3 };
+  if (preview) preview.frame();
+  // Preview full screen fills the window with it (Esc brings the panel back).
+  $('preview_fs').onclick = () => {
+    const box = $('preview_stage');
+    if (document.fullscreenElement) document.exitFullscreen(); else box.requestFullscreen();
+  };
+
+  // The panel's look, every frame: what's staged, TAKE, the switch and the staged buttons.
+  function drawStage(beats) {
+    const showing = syncPreview(), staged = anyStaged();
+    // TAKE lands on the bar it waited for.
+    if (takeAt !== null && demo.clock.values && demo.clock.values.bar >= takeAt) landTake();
+    $('preview_stage').classList.toggle('idle', !showing);
+    $('preview_empty_title').textContent = clicksTo === 'program' ? 'Clicks are live' : 'Nothing staged';
+    $('preview_empty_hint').textContent = clicksTo === 'program'
+      ? 'Pick a scene, a crystal, colours or a picture below and Program changes at once. Switch to Preview to try a change here first, then TAKE it.'
+      : 'Click a scene, shape, picture or colours to try it here first. Shift-click goes straight to Program.';
+    const caption = $('preview_caption');
+    caption.hidden = !showing;
+    if (showing) caption.textContent = sceneNames[preview.scene] + ' · ' + shapeLabel(pending.shape || demo.motion.shapeName) + ' · ' + paletteNames[pending.palette || demo.paletteName];
+    const parts = [];
+    for (const kind of KINDS) if (pending[kind]) parts.push(words[kind](pending[kind]));
+    for (const name in pending.controls) parts.push(controlNames[name] + ' ×' + pending.controls[name].toFixed(2));
+    const list = $('staged_list');
+    list.textContent = parts.length ? parts.join(' · ') : 'Nothing staged';
+    list.classList.toggle('none', !parts.length);
+    const takeButton = $('take');
+    takeButton.disabled = !staged || clicksTo === 'program';
+    takeButton.classList.toggle('armed', staged && takeAt === null && clicksTo === 'preview');
+    takeButton.classList.toggle('waiting', takeAt !== null);
+    takeButton.textContent = takeAt !== null
+      ? 'LANDS IN ' + Math.max(SETTINGS.beats_per_bar - beats.beatInBar, 1) + (SETTINGS.beats_per_bar - beats.beatInBar === 1 ? ' BEAT' : ' BEATS') : 'TAKE';
+    $('clear').disabled = !staged;
+    $('take_why').textContent = clicksTo === 'program' ? 'Not needed: clicks are live' : !staged ? 'Stage something first' : takeAt !== null ? 'On the next bar' : 'Lands on the next bar';
+    if (document.body.dataset.to !== clicksTo) {
+      document.body.dataset.to = clicksTo;
+      document.body.classList.toggle('to-program', clicksTo === 'program');
+      $('rail').innerHTML = clicksTo === 'program'
+        ? '<b>LIVE &#9654;</b>&nbsp; Every click on these panels changes Program at once.'
+        : '<b>&#9664; PREVIEW</b>&nbsp; Clicks on these panels are staged in Preview. TAKE sends them live.';
+    }
+    $('clicks_preview').setAttribute('aria-pressed', String(clicksTo === 'preview'));
+    $('clicks_program').setAttribute('aria-pressed', String(clicksTo === 'program'));
+    for (const b of scenes.children) b.classList.toggle('staged', b.dataset.scene === pending.scene);
+    for (const b of shapes.children) b.classList.toggle('staged', b.dataset.shape === pending.shape);
+    for (const b of palettes.children) b.classList.toggle('staged', b.dataset.palette === pending.palette);
+    for (const b of pictures.children) b.classList.toggle('staged', !!pending.picture && b.dataset.picture === pending.picture.id);
+    for (const b of $('waves').children) b.classList.toggle('staged', b.dataset.wave === pending.waves);
+    // Shaders: live (red border) on the one showing in the Shaders scene; Textures: on the skin inside the crystal.
+    const deckNow = demo.deck.going !== null && demo.deck.mix > 0.5 ? demo.deck.going : demo.deck.showing;
+    for (const b of shaderStrip.children) {
+      b.setAttribute('aria-pressed', String(demo.scene === 'deck' && shaderIndex(b.dataset.shader) === deckNow));
+      b.classList.toggle('staged', b.dataset.shader === pending.shader);
+    }
+    $('shader_auto').setAttribute('aria-pressed', String((demo.deck.pinned ?? null) === null));
+    $('shader_auto').classList.toggle('staged', pending.shader === 'auto');
+    for (const b of $('skin_strip').children) {
+      b.setAttribute('aria-pressed', String(demo.skinsOn && b.dataset.skin === currentSkin));
+      b.classList.toggle('staged', !!pending.skin && pending.skin !== 'none' && b.dataset.skin === pending.skin.id);
+    }
+    $('skin_off').setAttribute('aria-pressed', String(!demo.skinsOn));
+    $('skin_off').classList.toggle('staged', pending.skin === 'none');
+    $('hanging').setAttribute('aria-pressed', String(demo.hangingOn));
+    $('hanging').classList.toggle('coming', demo.hangingWanted !== null);
+    const note = $('photos_note');
+    note.textContent = photoGroup === 'photos' ? (note.dataset.photos || '')
+      : photoGroup === 'art' ? artEntries.length + ' covers in images/album_art/ (they play with the photos)'
+      : photoGroup === 'shaders' ? ((demo.deck.pinned ?? null) === null ? 'Taking turns every ' + SETTINGS.deck.bars_per_shader + ' bars in the Shaders scene' : 'Held in the Shaders scene')
+      : skinEntries.length + ' textures in crystal_images/' + (demo.skinsOn ? '' : ' (off)');
+    // Sliders: the staged value with the accent fill and a red tick at the live value, or the live value.
+    for (const name in sliders) {
+      const s = sliders[name], live = demo.controls[name], staged = pending.controls[name];
+      const shown = staged !== undefined ? staged : live;
+      if (document.activeElement !== s.input) s.input.value = shown;
+      s.out.textContent = '×' + shown.toFixed(2);
+      s.row.classList.toggle('changed', staged !== undefined);
+      s.tick.style.left = (100 * live / SETTINGS.operator.control_max).toFixed(1) + '%';
+    }
+  }
+
+  // ---- Keys and quick actions (README.md, Keys) ----
+  // The TouchDesigner operator's keys, with the same letters and numbers. A key whose feature
+  // isn't in the app yet says so in the log, so a pressed key is never silently ignored.
+  const K = SETTINGS.keys;
+  function blackout() {
+    const on = demo.toggleBlackout();
+    log(on ? 'blackout: fading to black' : 'blackout: off, the picture fades back');
+  }
+  $('blackout').onclick = blackout;
+  function nextPicture() {
+    if (!deck.length) { log('next photo: no pictures yet'); return; }
+    const at = deck.findIndex((p) => p.id === currentPicture);
+    showEntry(deck[(at + 1) % deck.length]);
+  }
+  let lastFixedPalette = 'dusk';  // for P: the palette the photo is recolored in
+  function toggleRecolor() {
+    if (!demo.image) { log('recolor: open a picture first'); return; }
+    const to = demo.paletteName === 'picture' ? lastFixedPalette : 'picture';
+    demo.setPalette(to);
+    log(to === 'picture' ? 'recolor: off, the photo in its own colours' : 'recolor: the photo in ' + paletteNames[to]);
+  }
+  function nextShape(onlyModel) {
+    const list = SETTINGS.crystal.shapes, now = comingShape() || demo.motion.shapeName;
+    const to = onlyModel ? 'model' : list[(list.indexOf(now) + 1) % list.length];
+    if (demo.motion.goToNow(SETTINGS.crystal, to)) return;
+    log(onlyModel ? 'model: the marble bust is the only model in the app so far' : 'crystal: already ' + shapeLabel(to).toLowerCase());
+  }
+  function toggleFullWindow() {
+    const el = document.fullscreenElement;
+    if (el) document.exitFullscreen();
+    else document.documentElement.requestFullscreen().catch((e) => log('full screen: ' + e.message));
+  }
+  // Every key, in the README's groups: [group, key, what it does, the action]. A null action
+  // means the feature isn't in the app yet: the key says so in the log, and the Keys panel greys it.
+  const scene = (name) => () => holdScene(name, ' (key)');
+  const KEYS = [
+    ['Scenes', K.scenes.organic, 'Hold Organic', scene('organic')],
+    ['Scenes', K.scenes.flow, 'Hold Flow', scene('flow')],
+    ['Scenes', K.scenes.grid, 'Hold Grid', scene('grid')],
+    ['Scenes', K.scenes.shards, 'Hold Shards', scene('shards')],
+    ['Scenes', K.scenes.mandala, 'Hold Mandala', scene('mandala')],
+    ['Scenes', K.scenes.deck, 'Hold Shaders (the shader deck)', scene('deck')],
+    ['Scenes', K.scenes.auto, 'Back to automatic: the tempo picks the scene', followTempo],
+    ['Scenes', K.next_shader, 'Next shader in the shader deck, on the next bar',
+      () => { demo.deck.next(); log('shaders: the next one comes in on the next bar' + (demo.scene === 'deck' ? '' : ' (shown in the Shaders scene)')); }],
+    ['Show', K.drop, 'Fire a drop: the crystal explodes and reforms', () => $('drop').click()],
+    ['Show', K.blackout, 'Blackout: fade the picture to black, and back', blackout],
+    ['Show', K.hanging, 'Hanging light on and off: the crystal swings on a thread with caustics below it', hangingLight],
+    ['Crystal', K.shape, 'Next crystal shape', () => nextShape(false)],
+    ['Crystal', K.model, 'Next model, cast in crystal', () => nextShape(true)],
+    ['Crystal', K.satellite, 'Orbiting crystal', null],
+    ['Crystal', K.skin_next, 'Next crystal skin: a texture inside the crystal' + (window.qrtzSkins ? '' : ' (in the app)'), nextSkin],
+    ['Crystal', K.skin_on, 'Crystal skins on and off', toggleSkins],
+    ['Photos', K.photo_next, 'Next picture', nextPicture],
+    ['Photos', K.recolor, "Recolor the picture in the palette, on and off", toggleRecolor],
+    ['Photos', K.photos, 'Photos on and off', () => {
+      if (!demo.image) { log('photos: open a picture first'); return; }
+      log(demo.togglePhotos() ? 'photos: on' : 'photos: off, the crystal shows its own picture');
+    }],
+    ['Photos', K.get_art, 'Album art from Rekordbox: the covers of the playlist in settings' + (window.qrtzFetch ? '' : ' (in the app)'), getCovers],
+    ['Photos', K.get_asset, 'Get the Poly Haven asset whose link is on the clipboard' + (window.qrtzFetch ? '' : ' (in the app)'), getAsset],
+    ['Windows', K.fullscreen, 'The whole window full screen, and back', toggleFullWindow],
+    ['Windows', '?', 'Help (this sheet)', () => openKeys()],
+    ['Windows', 'Esc', 'Close Help or the log, or leave full screen', undefined],   // the browser's own; listed only
+    ['Windows', K.window, 'Operator window open and closed', null],
+    ['Windows', K.window_fit, 'Window back in the middle of the screen', null],
+  ];
+  const actions = {};
+  for (const [, key, what, run] of KEYS) {
+    if (run === undefined) continue;
+    actions[key] = run || (() => log(what.split(':')[0].toLowerCase() + ': not in the app yet'));
+  }
+  const keysPanel = $('keys_panel');
+  function openKeys() { if (!keysPanel.open) keysPanel.showModal(); }
+  $('keys_button').onclick = openKeys;
+  // Help's subject cards: one subject shows at a time, and the last one chosen opens next time.
+  function showHelp(topic) {
+    for (const c of document.querySelectorAll('[data-help]')) c.setAttribute('aria-selected', String(c.dataset.help === topic));
+    for (const s of document.querySelectorAll('.help-topic')) s.hidden = s.dataset.topic !== topic;
+    localStorage.setItem('qrtz-help', topic);
+  }
+  for (const card of document.querySelectorAll('[data-help]')) card.onclick = () => showHelp(card.dataset.help);
+  showHelp(document.querySelector('[data-help="' + localStorage.getItem('qrtz-help') + '"]') ? localStorage.getItem('qrtz-help') : 'start');
+  // On the website, the parts that need the app say so.
+  if (!window.qrtzPictures) {
+    for (const h of document.querySelectorAll('.help-topic h3')) {
+      if (/\(app\)$/.test(h.textContent)) {
+        const note = document.createElement('p'); note.className = 'app-only';
+        note.textContent = 'This needs the QRTZ desktop app; the website can\'t reach your folders, Rekordbox or other screens.';
+        h.after(note);
+      }
+    }
+  }
+  $('keys_close').onclick = () => keysPanel.close();
+  keysPanel.addEventListener('click', (e) => { if (e.target === keysPanel) keysPanel.close(); });  // a click outside it
+  const groups = {};
+  for (const [group, key, what, run] of KEYS) {
+    if (!groups[group]) {
+      const card = document.createElement('section'); card.className = 'keys-group';
+      const h = document.createElement('h3'); h.textContent = group;
+      groups[group] = document.createElement('dl');
+      card.append(h, groups[group]);
+      $('keys_groups').appendChild(card);
+    }
+    const row = document.createElement('div');
+    if (run === null) row.className = 'later';
+    const dt = document.createElement('dt'), k = document.createElement('kbd'), dd = document.createElement('dd');
+    k.textContent = key.length === 1 ? key.toUpperCase() : key;
+    dt.appendChild(k); dd.textContent = what;
+    row.append(dt, dd);
+    groups[group].appendChild(row);
+  }
+  document.addEventListener('keydown', (e) => {
+    // Ctrl, Alt and Cmd belong to the browser and the app's menu (Ctrl+Shift+1 sends the picture to a display).
+    if (e.ctrlKey || e.altKey || e.metaKey || e.repeat) return;
+    // With the Keys panel open, keys only close it (Esc, or ? again), so nothing changes behind it.
+    if (keysPanel.open) { if (e.key === '?') { e.preventDefault(); keysPanel.close(); } return; }
+    if ($('log_panel').open) return;
+    const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    const action = actions[key];
+    if (!action) return;
+    e.preventDefault();
+    action();
+  });
 
   // Full screen: the picture alone, filling the screen. Esc (the browser's own) or the button
   // brings the panel back. Hidden where the browser can't put a page element full screen
@@ -570,6 +1707,7 @@
     meters[band] = { el, fill: el.querySelector('i'), mark: el.querySelector('b'), peak: 0, held: 0 };
   }
   const beatSquares = $('chip_beats').querySelectorAll('i');
+  let silentSec = 0, levelPeak = 0;
   let lastText = 0, lastFrameAt = null, lastModelState = null, lastComing = null, wasLocked = false, lastDropAt = -Infinity;
   demo.onFrame = (values, now) => {
     const dt = lastFrameAt === null ? 0 : now - lastFrameAt;
@@ -594,13 +1732,53 @@
 
     // Live or standing by: the red frame and LIVE tag only while sound is actually coming in.
     stage.classList.toggle('idle', !live);
-    tag.textContent = live ? '● LIVE' : source === null ? 'STANDBY' : sound.paused && sound.position === 0 ? 'STOPPED' : 'PAUSED';
+    tag.textContent = demo.blackoutOn ? 'BLACKOUT' : live ? '● LIVE' : source === null ? 'STANDBY' : sound.paused && sound.position === 0 ? 'STOPPED' : 'PAUSED';
+    stage.classList.toggle('blackout', demo.blackoutOn);
+    $('blackout').setAttribute('aria-pressed', String(demo.blackoutOn));
     caption.textContent = sceneNames[demo.scene] + ' · ' + shapeLabel(demo.motion.shapeName) + ' · ' + paletteNames[demo.paletteName];
 
     press(scenes, 'scene', demo.scene);
+    // Waves: the red dot on the shape showing (or Auto while it picks), the amber outline on one melting in.
+    const pm = demo.photoMotion;
+    for (const b of $('waves').children) {
+      const showing = pm.styleMix > 0.5 ? pm.styleB : pm.styleA;
+      const live = b.dataset.wave === 'auto' ? pm.pinned === null : (pm.pinned !== null && waveByNumber[showing] === b.dataset.wave);
+      b.setAttribute('aria-pressed', String(live));
+      b.classList.toggle('coming', pm.styleB !== pm.styleA && waveByNumber[pm.styleB] === b.dataset.wave && b.dataset.wave !== 'auto');
+    }
+    const st = demo.sceneState, sceneComing = demo.sceneComing;
+    for (const b of scenes.children) {
+      b.classList.toggle('coming', b.dataset.scene === sceneComing);
+      b.classList.toggle('held', b.dataset.scene === st.held);
+      b.classList.toggle('pick', st.held !== null && b.dataset.scene === st.tempoPick && st.tempoPick !== st.held);
+    }
+    $('follow').setAttribute('aria-pressed', String(st.held === null));
+    $('scene_coming').textContent = sceneComing ? sceneNames[sceneComing].toLowerCase() + (st.from !== st.to ? ' fading in' : ' on the next bar') : '';
+    $('scene_note').textContent = st.held !== null
+      ? 'Held by hand. The tempo would pick ' + sceneNames[st.tempoPick] + '.'
+      : 'The tempo picks the scene' + (beats.locked ? ': ' + Math.round(beats.bpm) + ' BPM is ' + sceneNames[st.tempoPick] + '.' : '.');
+    drawStage(beats);
     press(shapes, 'shape', demo.motion.shapeName);
     press(palettes, 'palette', demo.paletteName);
-    press(pictures, 'picture', currentPicture);
+    press(pictures, 'picture', demo.photosOn ? currentPicture : null);
+    press($('art_strip'), 'picture', demo.photosOn ? currentPicture : null);
+    for (const b of $('art_strip').children) b.classList.toggle('staged', !!pending.picture && b.dataset.picture === pending.picture.id);
+    $('photo_none').setAttribute('aria-pressed', String(!demo.photosOn && !!demo.image));
+    if (currentPicture !== shownTile) {
+      shownTile = currentPicture;
+      const tile = document.querySelector('.deck-strip [data-picture="' + CSS.escape(currentPicture || '') + '"]');
+      if (tile) tile.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
+    // Auto-advance, counted in bars of the music.
+    const bar = demo.clock.values ? demo.clock.values.bar : null;
+    if (bar !== null && lastBar !== null && bar !== lastBar && live) {
+      barsOnPicture++;
+      if (barsOnPicture >= SETTINGS.photo.auto_advance_bars && deck.length > 1 && demo.image && demo.photosOn) {
+        log('photos: the next picture (every ' + SETTINGS.photo.auto_advance_bars + ' bars)');
+        nextPicture();
+      }
+    }
+    lastBar = bar;
     for (const b of shapes.children) b.classList.toggle('coming', b.dataset.shape === coming);
     $('melting').textContent = coming ? 'melting into ' + shapeLabel(coming).toLowerCase() : '';
 
@@ -613,8 +1791,20 @@
       m.mark.style.left = 'calc(' + (m.peak * 100).toFixed(1) + '% - 2px)';
       m.el.classList.toggle('on', m.peak > 0.01);
     }
-    $('beat').classList.toggle('on', live && demo.motion.kick > 0.5);
-    for (let i = 0; i < beatSquares.length; i++) beatSquares[i].classList.toggle('on', live && beats.locked && i <= beats.beatInBar);
+    // Silence: after beat_quiet_sec the beat light and squares stay dark (a light flashing in
+    // silence only confuses); after silence_flag_sec a red flag says so.
+    const op = SETTINGS.operator;
+    silentSec = live && sound.meter < 0.05 ? silentSec + dt : 0;
+    const quiet = silentSec >= op.beat_quiet_sec;
+    $('beat').classList.toggle('on', live && !quiet && demo.motion.kick > 0.5);
+    // The Level meter, with a red peak line that falls back slowly.
+    const lv = source === null ? 0 : Math.min(Math.max(sound.meter || 0, 0), 1);
+    levelPeak = Math.max(lv, levelPeak - dt / op.meter_peak_fall_sec);
+    $('chip_level').hidden = source === null;
+    $('m_level').querySelector('i').style.width = (lv * 100).toFixed(1) + '%';
+    $('m_level').querySelector('b').style.left = 'calc(' + (levelPeak * 100).toFixed(1) + '% - 1px)';
+    $('m_level').classList.toggle('on', levelPeak > 0.01);
+    for (let i = 0; i < beatSquares.length; i++) beatSquares[i].classList.toggle('on', live && !quiet && beats.locked && i <= beats.beatInBar);
 
     if (sound.element && source !== 'mic') {
       const fraction = sound.duration ? sound.position / sound.duration : 0;
@@ -624,20 +1814,25 @@
 
     if (now - lastText > 0.25) {
       lastText = now;
-      const locked = source !== null && beats.locked;
-      if (locked && !wasLocked) log('tempo: ' + Math.round(beats.bpm) + ' BPM from the ' + (source === 'mic' ? 'microphone' : 'track'));
+      const fromLink = beats.source === 'link';
+      const locked = (source !== null || fromLink) && beats.locked;
+      if (locked && !wasLocked && !fromLink) log('tempo: ' + Math.round(beats.bpm) + ' BPM from the ' + (source === 'mic' ? 'microphone' : 'track'));
       wasLocked = locked;
       const from = source === 'mic' ? 'microphone' : source === 'demo' ? 'demo track' : 'your track';
       $('chip_wait').hidden = source !== null;
-      $('chip_scene').hidden = $('chip_tempo').hidden = $('chip_beats').hidden = source === null;
+      $('chip_scene').hidden = $('chip_beats').hidden = source === null;
+      $('chip_tempo').hidden = source === null && !fromLink;
       $('chip_scene_name').textContent = sceneNames[demo.scene];
       $('chip_bpm').textContent = locked ? Math.round(beats.bpm) : '---';
-      $('chip_source').textContent = from;
+      $('chip_source').textContent = fromLink ? 'Ableton Link' : from;
       $('tempo_dot').className = 'dot ' + (locked ? 'green' : 'amber');
       const bpm = $('bpm');
       bpm.textContent = locked ? Math.round(beats.bpm) : '---';
       bpm.classList.toggle('none', !locked);
-      $('bpm_what').textContent = locked ? 'BPM · beat from the ' + (source === 'mic' ? 'microphone' : 'track') : 'BPM · no beat yet';
+      $('bpm_what').textContent = fromLink ? 'BPM · tempo from Ableton Link'
+        : locked ? 'BPM · beat from the ' + (source === 'mic' ? 'microphone' : 'track') + ' (audio)' : 'BPM · no beat yet';
+      $('link_note').hidden = link === null;
+      if (link) $('link_note').textContent = linkWords(link);
       $('gain').hidden = source === null;
       $('gain').textContent = 'gain ×' + sound.autoGain.gain.toFixed(1);
       if (sound.element && source !== 'mic') {
@@ -649,9 +1844,142 @@
         $('playpause').title = paused ? 'Play' : 'Pause';
       }
       $('fps').textContent = Math.round(demo.fps) + ' fps';
+      $('fps').classList.toggle('bad', demo.fps < op.fps_alert);
+      $('fps').classList.toggle('warn', demo.fps >= op.fps_alert && demo.fps < op.fps_warn);
+      // The live crystal: its shape and spin angle.
+      $('live_crystal').textContent = 'Crystal: ' + shapeLabel(demo.motion.shapeName) + ' · ' + Math.round(demo.motion.angle % 360) + '°'
+        + (demo.hangingOn ? ' · hanging' : '') + (demo.skinsOn ? ' · textured' : '');
+      // The flags: an input on its fallback (amber) or missing (red), each as a chip; the title
+      // bar shows the most urgent in a word.
+      const flags = [];
+      if (source !== null || fromLink) {
+        if (link && link.listening && !fromLink && locked) flags.push(['warn', 'Link off · audio beat']);
+        else if (!locked) flags.push(['warn', 'No beat yet · clock']);
+        if (silentSec >= op.silence_flag_sec) flags.push(['bad', 'No sound ' + Math.round(silentSec) + ' s']);
+      }
+      $('flags').replaceChildren(...(flags.length ? flags : source !== null ? [['ok', 'All inputs working']] : []).map(([kind, text]) => {
+        const s = document.createElement('span'); s.className = kind; s.textContent = text; return s;
+      }));
+      const urgent = flags.find((f) => f[0] === 'bad') || flags[0];
+      $('chip_flag').hidden = !urgent;
+      if (urgent) {
+        $('chip_flag').textContent = urgent[1].startsWith('Link off') ? 'Link off' : urgent[1].startsWith('No sound') ? 'No sound' : 'No beat';
+        $('chip_flag').classList.toggle('bad', urgent[0] === 'bad');
+      }
     }
   };
+  // ---- The output window and Pop out ----
+  // Output: Program alone in its own window (output.html), for the venue screen, while the
+  // panel stays here. The page plays its own canvas into that window as a live stream, so
+  // there's still one engine; while it's open, Program renders at the output window's size
+  // (at most 1920 across). Pop out does the same for Preview, to watch a staged change bigger.
+  // In the app the Picture menu puts the output window full screen on a chosen display.
+  // Several outputs can show Program at once (one per display, in the app): all play the same
+  // stream, and Program renders at the largest one's size.
+  const outputs = {};     // key ('output', 'output:<display>', 'preview') -> { win, kind }
+  const streams = {};     // kind -> the canvas's stream, made once
+  function openWindow(kind, tag) {
+    const key = kind + (tag ? ':' + tag : '');
+    const o = outputs[key] || (outputs[key] = { win: null, kind });
+    if (o.win && !o.win.closed) { o.win.focus(); return o.win; }
+    const engine = kind === 'output' ? demo : preview;
+    if (!engine) return null;
+    o.win = window.open('output.html?' + kind + (tag ? '&' + encodeURIComponent(tag) : ''), 'qrtz_' + key.replace(/\W/g, '_'), 'popup,width=960,height=540');
+    if (!o.win) { log((kind === 'output' ? 'output' : 'pop out') + ': the browser blocked the window (allow pop-ups for this page)'); return null; }
+    const show = () => {
+      try {
+        if (!streams[kind]) streams[kind] = engine.canvas.captureStream(60);
+        o.win.qrtzShow(streams[kind]);
+        o.win.document.title = kind === 'output' ? 'QRTZ output' : 'QRTZ preview';
+      } catch (e) { log('output: ' + e.message); }
+    };
+    o.win.addEventListener('load', show);
+    if (!tag) log(kind === 'output' ? 'output window open: Program alone, for the venue (double-click it for full screen)' : 'Preview popped out');
+    return o.win;
+  }
+  window.qrtzOpenOutput = (tag) => !!openWindow('output', tag);
+  if (window.qrtzApp) window.qrtzApp.onLog((text) => log(text));
+  $('output_button').onclick = () => openWindow('output');
+  $('preview_pop').onclick = () => openWindow('preview');
+  // Each second: the open windows' sizes set what Program and Preview render at; closed ones let go.
+  setInterval(() => {
+    const largest = { output: null, preview: null }, open = { output: false, preview: false };
+    for (const key in outputs) {
+      const o = outputs[key];
+      if (o.win && o.win.closed) {
+        o.win = null;
+        if (!key.includes(':')) log(o.kind === 'output' ? 'output window closed' : 'Preview pop-out closed');
+        continue;
+      }
+      if (!o.win) continue;
+      open[o.kind] = true;
+      try {
+        const dpr = o.win.devicePixelRatio || 1, w = o.win.innerWidth * dpr, h = o.win.innerHeight * dpr;
+        const s = Math.min(1, 1920 / Math.max(w, 1));
+        const size = [Math.max(Math.round(w * s), 2), Math.max(Math.round(h * s), 2)];
+        if (w > 0 && h > 0 && (!largest[o.kind] || size[0] * size[1] > largest[o.kind][0] * largest[o.kind][1])) largest[o.kind] = size;
+      } catch (e) { /* not readable yet */ }
+    }
+    for (const kind of ['output', 'preview']) {
+      const engine = kind === 'output' ? demo : preview;
+      if (!engine) continue;
+      const size = largest[kind];
+      if (JSON.stringify(engine.outputSize || null) !== JSON.stringify(size)) engine.outputSize = size;
+      (kind === 'output' ? stage : $('preview_stage')).classList.toggle('out', !!size);
+      $(kind === 'output' ? 'output_button' : 'preview_pop').classList.toggle('on', open[kind]);
+    }
+  }, 1000);
+
+  // ---- The phone page (app only; app/phone.js serves web/controller.html) ----
+  // A phone on the same Wi-Fi, with the PIN, gets backup controls: scenes and actions go live on
+  // Program at once, and a photo it sends joins the deck and is staged in Preview.
+  if (window.qrtzPhone) {
+    const phone = window.qrtzPhone;
+    const bandNames = SETTINGS.bpm_bands.map((b) => b.name);
+    phone.onTap(async (tap) => {
+      if (tap.scene !== undefined) {
+        if (tap.scene === -2) { if (demo.followTempo()) log('phone: follow the tempo'); }
+        else if (demo.goToScene(bandNames[tap.scene], true)) log('phone: scene ' + sceneNames[bandNames[tap.scene]] + ', held');
+      } else if (tap.action === 'scene_next') {
+        // A "next scene" pad (brain_ext.py's press_next): the first scene, then each after it, then the tempo.
+        const held = demo.brain.held;
+        if (held !== null && held + 1 >= bandNames.length) { demo.followTempo(); log('phone: follow the tempo'); }
+        else { const name = bandNames[held === null ? 0 : held + 1]; demo.goToScene(name, true); log('phone: scene ' + sceneNames[name]); }
+      } else if (tap.action === 'palette_next') { log('phone: next photo'); nextPicture(); }
+      else if (tap.action === 'blackout') blackout();
+      else if (tap.action === 'light_mode_next') hangingLight();
+      else if (tap.action === 'drop') { log('phone: drop'); $('drop').click(); }
+      else if (tap.uploaded) {
+        await readFolder();
+        const entry = folderEntries.find((e) => e.name === tap.uploaded);
+        if (entry && clicksTo === 'preview') { pending.picture = entry; loadStagedImage(); log('phone: photo ' + tap.uploaded + ' added and staged in Preview (TAKE shows it)'); }
+        else log('phone: photo ' + tap.uploaded + ' added to the deck');
+      }
+    });
+    setInterval(() => {
+      const st = demo.sceneState, beats = demo.sound.beats;
+      phone.report({
+        scenes: bandNames.map((n) => sceneNames[n]),
+        live: bandNames.indexOf(st.to), held: demo.brain.held === null ? -1 : demo.brain.held, tempo_pick: bandNames.indexOf(st.tempoPick),
+        bpm: Math.round(beats.bpm * 10) / 10,
+        source: beats.source === 'link' ? 'Link' : beats.locked ? 'audio beat' : 'clock',
+        blackout: demo.blackoutOn, hanging: demo.hangingOn,
+      });
+    }, 500);
+    phone.info().then((info) => {
+      const line = document.createElement('div');
+      line.className = 'live-crystal';
+      line.textContent = info.error ? 'Phone page: off (' + info.error + ')' : 'Phone page: ' + info.address + ' (PIN in ' + info.pinFile + ')';
+      $('flags').before(line);
+      log(info.error ? 'phone page: could not start (' + info.error + ')' : 'phone page: ' + info.address);
+    });
+  }
+
+  // In the desktop app the title says so.
+  if (window.qrtzApp) document.querySelector('.brand .sub').textContent = 'desktop';
+
   window.qrtz = demo;  // for poking at it from the console
+  window.qrtzPreview = preview;
   demo.frame();
 })();
 </script>

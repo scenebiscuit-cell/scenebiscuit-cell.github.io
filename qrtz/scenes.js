@@ -545,4 +545,80 @@ void main() {
     fragColor = texture(uLens, loc);
 }`;
 
-window.QRTZ_SCENES = { LENS, MIX, FLOW, MANDALA, OIL_SLICK, PRISM_RAYS, KALEIDOSCOPE };
+// ---- The project's own shaders, converted when the page loads ----
+// td_shaders.js holds shaders/*.glsl word for word (tools/pack_td_shaders.py). TouchDesigner
+// gives a GLSL TOP its inputs as sTD2DInputs[0], [1], ..., its size as uTDOutputInfo.res.zw,
+// the pixel as vUV.st, and wants the output through TDOutputSwizzle. Here the inputs become
+// samplers named sIn0, sIn1, ... (Pass.draw binds them by those names), the size uRes, the
+// pixel vUV, and the swizzle goes (WebGL's colors are already in order).
+function fromTD(source, inputCount) {
+    const samplers = [];
+    for (let i = 0; i < inputCount; i++) samplers.push('uniform sampler2D sIn' + i + ';');
+    const body = source
+        .replace(/layout\s*\(\s*location\s*=\s*0\s*\)\s*out\s+vec4\s+fragColor\s*;/, '')
+        .replace(/sTD2DInputs\[(\d)\]/g, (m, i) => 'sIn' + i)
+        // TouchDesigner's res is (1/width, 1/height, width, height).
+        .replace(/uTDOutputInfo\.res\.zw/g, 'uRes')
+        .replace(/uTDOutputInfo\.res\.xy/g, '(1.0 / uRes)')
+        .replace(/uTDOutputInfo\.res\.z/g, 'uRes.x')
+        .replace(/uTDOutputInfo\.res\.w/g, 'uRes.y')
+        .replace(/uTDOutputInfo\.res\.x/g, '(1.0 / uRes.x)')
+        .replace(/uTDOutputInfo\.res\.y/g, '(1.0 / uRes.y)')
+        .replace(/vUV\.st/g, 'vUV')
+        .replace(/TDOutputSwizzle\(/g, '(');
+    return '#version 300 es\nprecision highp float;\nin vec2 vUV;\nout vec4 fragColor;\nuniform vec2 uRes;\n' + samplers.join('\n') + '\n' + body;
+}
+const TD = window.QRTZ_TD_GLSL || {};
+// scene_organic.glsl: input 0 the crystal, 1 its own last frame (the trail), 2 the picture.
+const ORGANIC = TD.scene_organic && fromTD(TD.scene_organic, 3);
+// scene_shards.glsl: input 0 the crystal, 1 the picture, 2 the main crystal alone.
+const SHARDS = TD.scene_shards && fromTD(TD.scene_shards, 3);
+// scene_cell_lines.glsl: input 0 the shards (mipmapped), 1 the shards blurred (lines_soft).
+const CELL_LINES = TD.scene_cell_lines && fromTD(TD.scene_cell_lines, 2);
+// light_hanging.glsl: input 0 the finished scene, 1 the crystal, 2 the crystal blurred wide.
+const HANGING = TD.light_hanging && fromTD(TD.light_hanging, 3);
+
+// A Gaussian blur in one direction (run twice, across then down), standing in for the
+// project's Blur TOP. uStep is one pixel in the blur's direction; uSigma its spread in pixels.
+const BLUR = `#version 300 es
+precision highp float;
+in vec2 vUV;
+out vec4 fragColor;
+uniform vec2 uRes;
+uniform sampler2D sIn0;
+uniform vec2 uStep;
+uniform float uSigma;
+void main() {
+    float sigma = max(uSigma, 0.001);
+    float spacing = max(sigma / 4.0, 1.0);
+    vec4 sum = vec4(0.0);
+    float weights = 0.0;
+    for (int i = -12; i <= 12; i++) {
+        float x = float(i) * spacing;
+        float w = exp(-0.5 * x * x / (sigma * sigma));
+        sum += texture(sIn0, vUV + uStep * x) * w;
+        weights += w;
+    }
+    fragColor = sum / weights;
+}`;
+
+// A crystal skin (crystal_images/): the texture the crystal refracts instead of the picture,
+// filling the frame like a photo (cover), mixed over the picture by uMix.
+const SKIN = `#version 300 es
+precision highp float;
+in vec2 vUV;
+out vec4 fragColor;
+uniform vec2 uRes;
+uniform sampler2D sIn0;
+uniform sampler2D sIn1;
+uniform vec2 uImageSize;
+uniform float uMix;
+void main() {
+    float screen = uRes.x / uRes.y, image = uImageSize.x / max(uImageSize.y, 1.0);
+    vec2 uv = vUV - 0.5;
+    if (screen > image) uv.y *= image / screen; else uv.x *= screen / image;
+    vec3 skin = texture(sIn1, uv + 0.5).rgb;
+    fragColor = vec4(mix(texture(sIn0, vUV).rgb, skin, uMix), 1.0);
+}`;
+
+window.QRTZ_SCENES = { SKIN, LENS, MIX, FLOW, MANDALA, OIL_SLICK, PRISM_RAYS, KALEIDOSCOPE, ORGANIC, SHARDS, CELL_LINES, HANGING, BLUR };
