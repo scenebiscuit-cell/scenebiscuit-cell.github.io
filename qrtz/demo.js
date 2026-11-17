@@ -13,6 +13,7 @@ const SETTINGS = {
         bands_hz: { bass: [20, 150], mids: [150, 2000], treble: [4000, 16000] },
         band_gain: { bass: 2, mids: 2.5, treble: 5 },
         auto_gain: { target: 0.25, max: 12, halflife_sec: 20, rise_sec: 2, floor: 0.002 },
+        meter_floor_db: -48, meter_attack_sec: 0.02, meter_release_sec: 0.3,
         attack_sec: 0.05, release_sec: 0.3,
         drop_breakdown_ratio: 0.35, drop_breakdown_sec: 4, drop_return_ratio: 0.6, drop_rise_ratio: 3,
         drop_rise_min_level: 0.2, drop_rise_sec: 1.5, drop_min_bass: 0.05, drop_reference_halflife_sec: 60,
@@ -67,9 +68,27 @@ const SETTINGS = {
     },
     palette_from_photos: true, palette_fade_sec: 2, palette_saturation: 1.3, palette_contrast: 1.3,
     recolor_fade_sec: 0.5,  // the picture recolors to a chosen palette (photo_fx.glsl's uRecolor)
+    blackout_fade_sec: 0.5, // settings.json output.blackout_fade_sec: B fades the picture to black, and back
+    // settings.json operator_screen: the Controls card's sliders and how far they go.
+    // take_fade_bars: how long a Take's scene and picture fades last.
+    operator: { controls: ['warp', 'ripple', 'intensity', 'bass', 'mids', 'treble'], control_max: 2, take_fade_bars: 1,
+                silence_flag_sec: 3, beat_quiet_sec: 2, log_lines: 3, log_keep: 200, meter_peak_fall_sec: 1.5, fps_warn: 30, fps_alert: 20 },
+    // The operator's keys, from settings.json (scene_change.keys, audio.drop_manual_key, output.key_blackout,
+    // shader_deck.key_next, photo_deck.key_*, light_modes.key_hanging, virtual_crystal.key_*,
+    // crystal_images.key_*, operator_screen.key_*). README.md's Keys section lists them.
+    keys: {
+        scenes: { organic: '1', flow: '2', grid: '3', shards: '4', mandala: '5', deck: '6', auto: '0' },
+        next_shader: 'k', drop: 'j', blackout: 'b', hanging: 'h',
+        shape: 'n', model: 'm', satellite: 's', skin_next: 'c', skin_on: 'v',
+        photo_next: 'i', recolor: 'p', photos: 'o', get_art: 'r', get_asset: 'g',
+        window: 'u', window_fit: 'f', fullscreen: 'F1',
+    },
     // settings.json "photo_deck": what the music does to a picture (photo_fx.glsl), and the
     // still moment a new picture gets before it starts to bend.
     photo: {
+        // photo_deck: a new picture crossfades in over crossfade_bars, and with more than one
+        // picture the deck moves on by itself every auto_advance_bars.
+        crossfade_bars: 4, auto_advance_bars: 32, max_side: 2560, extensions: ['jpg', 'jpeg', 'png', 'tif', 'tiff'],
         still_hold_sec: 4, still_ease_sec: 3, energy_flow_gain: 1.5, treble_follow_sec: 0.4,
         warp_amount: 0.02, wave_blend: 0.85, wave_size: 0.8, wave_speed: 3,
         wave_styles: ['bands', 'rings', 'spiral', 'blobs'], wave_style_fade_sec: 6, copy_zoom: 1.25,
@@ -77,8 +96,8 @@ const SETTINGS = {
         ripple_amount: 0.03, ripple_scale: 1.5, ripple_per_bar: 0.1, dispersion_amount: 0.012,
         zoom_pulse_amount: 0, zoom_release_sec: 0.2,
         glitch_on_drop: true, glitch_amount: 0.12, glitch_slices: 14, glitch_release_sec: 0.5,
-        // The page's own (owner's request, Nov 11, 2026): the bend and the waves are subtle in quiet
-        // music and grow with it, where the project holds them at warp_amount and wave_blend. The
+        // Owner's request, Nov 11, 2026 (the project's photo_deck.py does the same since Nov 13): the
+        // bend and the waves are subtle in quiet music and grow with it. The
         // drive is the louder of the bass and the mids, from drive_from (0) to drive_full (1),
         // rising over drive_attack_sec and settling over drive_release_sec. The waves follow it
         // only that slowly, never the beat, since their mix shifts the brightness a little.
@@ -103,6 +122,61 @@ const SETTINGS = {
         looks: [{ style: 0, width: 0.035, invert: 0 }, { style: 1, width: 0.05, invert: 1 }, { style: 2, width: 0.03, invert: 0 },
                 { style: 4, width: 0.04, invert: 1 }, { style: 5, width: 0.05, invert: 0 }, { style: 0, width: 0.07, invert: 1 },
                 { style: 2, width: 0.055, invert: 1 }],
+    },
+    // scene_organic in settings.json.
+    organic: {
+        bars_per_look: 16, fade_bars: 8, bend: 0.25, picture: 0.45, crystal: 1, trail: 0.25, trail_zoom: 1.003,
+        looks: [{ style: 'washes', scale: 1.3, warp: 2.2, invert: 0 }, { style: 'marble', scale: 1.0, warp: 2.6, invert: 0 },
+                { style: 'contours', scale: 0.9, warp: 1.6, invert: 1 }, { style: 'rings', scale: 1.5, warp: 1.2, invert: 0 },
+                { style: 'washes', scale: 2.4, warp: 3.2, invert: 1 }, { style: 'marble', scale: 1.8, warp: 1.4, invert: 1 }],
+    },
+    // scene_shards in settings.json.
+    shards: {
+        cells: 3, snap_deg: 30, turn_range_deg: 60, spread: 0.5, picture_gain: 0.9, contrast: 1.5, tint: 0.3, edge_width: 0.02,
+        crystal_share: 0.55, crystal_share_quiet: 0.25, crystal_all_chance: 0.2, crystal_all_energy: 0.85,
+        cell_pop: 0.3, cell_spin: 1.2, crystal_fill: 0.72, crystal_reach: 0.345,
+        line_colors: ['#ff2fa0', '#20e6ff', '#a8ff2a', '#ff9a1f', '#b05cff'], line_hue_shifts: [0, 0.06, -0.06, 0.03, -0.03],
+        line_color_bars: 4, line_color_fade_bars: 1, colors_per_cut: 2, line_leave_bars: 4, line_return_bars: 4,
+        line_facet_px: 6, line_round: 5, line_facets: 7, line_bend: 0.09, line_split: 0.14, line_glint: 0.35,
+        line_edge: 0.25, line_neon: 0.3, line_floor: 0.3, line_glow: 0.15,
+        // The project renders its scenes 540 pixels high; line_facet_px is at that size.
+        design_height: 540,
+    },
+    // scene_grid in settings.json: the Grid scene's looks and lines (the Mandala below shares the shader).
+    grid: {
+        looks: [{ shape: 'square', cells: 3, wedges: 0 }, { shape: 'hexagon', cells: 2, wedges: 6 }, { shape: 'triangle', cells: 1.6, wedges: 3 },
+                { shape: 'diamond', cells: 2.5, wedges: 4 }, { shape: 'radial', cells: 1, wedges: 8, on_drop: true }, { shape: 'square', cells: 2, wedges: 0 },
+                { shape: 'hexagon', cells: 3, wedges: 6 }, { shape: 'radial', cells: 1, wedges: 12, on_drop: true }, { shape: 'radial', cells: 1, wedges: 6, on_drop: true },
+                { shape: 'radial', cells: 1, wedges: 10, on_drop: true }, { shape: 'radial', cells: 1.3, wedges: 8, on_drop: true }, { shape: 'radial', cells: 0.8, wedges: 12, on_drop: true }],
+        bars_per_look: 16, look_fade_bars: 4, drop_look_bars: 8, line_width: 0.03, line_dark: 0.35,
+        lines_every_bars: 8, lines_off_chance: 0.35, lines_fade_bars: 4,
+        // music_sections in settings.json: when the music hits hard, a new look is usually a big
+        // single mirror; in quiet passages looks stay twice as long.
+        hard_mirror_chance: 0.75, quiet_below: 0.35,
+    },
+    // crystal_images in settings.json: crystal skins (C next, V on and off).
+    skins: { amount: 0.75, fade_sec: 1 },
+    // light_modes in settings.json: the hanging-crystal light (H), switched on a bar.
+    light: {
+        switch_on_bar: true, crossfade_bars: 1,
+        hanging: {
+            dispersion: 0.012, caustic_strength: 0.45, caustic_scale: 14, caustic_reach: 0.35, caustic_blur: 0.12, caustic_speed: 0.4,
+            caustic_scenes: { organic: 1.0, flow: 1.0, grid: 0.0, shards: 1.0, mandala: 0.5, deck: 0.5, crystal: 1.0 },
+            sway_length: 1.1, sway_deg: 26, sway_punch_deg: 10, sway_period_beats: 8, spin_scale: 0.25, split_sway: 0.4, sway_widen_sec: 1.5,
+        },
+    },
+    // bpm_bands and scene_change in settings.json: which scene the tempo picks (brain_ext.py).
+    // The page's own Crystal scene is last, with no tempo of its own: it shows only when held.
+    bpm_bands: [
+        { name: 'organic', min_bpm: 0, max_bpm: 100 }, { name: 'flow', min_bpm: 0, max_bpm: 0 },
+        { name: 'grid', min_bpm: 100, max_bpm: 135 }, { name: 'shards', min_bpm: 135, max_bpm: 999 },
+        { name: 'mandala', min_bpm: 0, max_bpm: 0 }, { name: 'deck', min_bpm: 0, max_bpm: 0 },
+        { name: 'crystal', min_bpm: 0, max_bpm: 0 },
+    ],
+    scene_change: {
+        crossfade_bars: 4, change_only_on_bar: true, drop_scenes: ['mandala', 'grid', 'shards'],
+        band_margin_bpm: 5, band_hold_bars: 4, min_bars_between_changes: 32,
+        deck_scene: 'deck', deck_visit_every_bars: 64, deck_visit_bars: 32, override_bpm: 0,
     },
     mandala: {
         cells: 1, wedges: [8, 12, 6, 10], bars_per_look: 16, look_fade_bars: 4,
@@ -263,6 +337,8 @@ class DropDetector {
 // followed once the same answer keeps coming. Phase: the offset at which a comb of beats at that
 // spacing catches the most onsets over the last two bars, which the running beat is nudged
 // toward. Without music it ticks at the fallback tempo, like the project's clock.
+// In the desktop app, Ableton Link's tempo can take over (followLink): the tempo is then the DJ
+// software's, and the music only places the beat. On the website there is no Link.
 const ONSET_RATE = 100;           // readings a second
 const ONSET_SECONDS = 8;
 const BPM_RANGE = [90, 180];
@@ -275,7 +351,18 @@ class BeatTracker {
         this.candidate = null; this.agree = 0; this.locked = false; this.beat = false; this.lastLoud = -Infinity;
         this.onset = 0; this.onsetAverage = 0; this.beatsWaiting = 0;
         this.speakerLatency = 0;  // seconds from the analyser to the speakers, set by Sound
+        this.linkBpm = null;      // Ableton Link's tempo while a Link session is heard
     }
+    // The tempo from Ableton Link, or null when Link is gone, which hands the tempo back to
+    // this tracker: it starts listening afresh, as if the music had just started.
+    followLink(bpm) {
+        if (bpm) {
+            this.linkBpm = bpm; this.bpm = bpm; this.locked = true;
+        } else if (this.linkBpm !== null) {
+            this.linkBpm = null; this.locked = false; this.candidate = null; this.agree = 0;
+        }
+    }
+    get source() { return this.linkBpm !== null ? 'link' : 'audio'; }
     // Whether a beat has passed since the last call. The tracker runs on its own 10 ms clock and
     // `beat` is up for one of its readings only, which a drawn frame (16 to 50 ms apart) mostly
     // misses; so each frame takes the beats counted since the frame before, as tempo_out gives
@@ -321,6 +408,11 @@ class BeatTracker {
         return this.onsets[(this.head - this.filled + index + this.onsets.length * 2) % this.onsets.length];
     }
     estimate() {
+        if (this.linkBpm !== null) {
+            // Link sets the tempo; the music, while there is some, says where the beats fall.
+            if (this.lastEstimate - this.lastLoud < 1) this.align(60 * ONSET_RATE / this.bpm);
+            return;
+        }
         const n = this.filled;
         const minLag = Math.round(60 / BPM_RANGE[1] * ONSET_RATE), maxLag = Math.round(60 / BPM_RANGE[0] * ONSET_RATE);
         const scores = {};
@@ -400,7 +492,7 @@ class BeatTracker {
             this.beatsWaiting++;
             this.beatInBar = (this.beatInBar + 1) % SETTINGS.beats_per_bar;
         }
-        if (now - this.lastLoud > 4) { this.locked = false; this.candidate = null; this.agree = 0; }
+        if (this.linkBpm === null && now - this.lastLoud > 4) { this.locked = false; this.candidate = null; this.agree = 0; }
     }
     get beatPhase() { return this.phase - Math.floor(this.phase); }
     get barPhase() { return (this.beatInBar + this.beatPhase) / SETTINGS.beats_per_bar; }
@@ -410,6 +502,7 @@ class Sound {
     constructor() {
         this.context = null; this.analyser = null; this.source = null; this.element = null;
         this.levels = { bass: 0, mids: 0, treble: 0 }; this.rms = { bass: 0, mids: 0, treble: 0 };
+        this.bandLevels = { bass: 0, mids: 0, treble: 0 };
         this.autoGain = new AutoGain(); this.drops = new DropDetector(); this.beats = new BeatTracker();
         this.drop = 0; this.playing = false; this.bins = null; this.lastTime = null; this.kind = 'none';
         this.markedDrops = []; this.lastTrackTime = null;
@@ -552,15 +645,24 @@ class Sound {
         this.analyser.getFloatFrequencyData(this.bins);
         const raw = {};
         for (const band of BANDS) raw[band] = this.bandLevel(band);
+        // The level meter (audio_bands.py): the whole mix as it comes in, before the auto gain, so
+        // a quiet input reads quiet; in decibels from meter_floor_db (the bottom) to 0 (the top).
+        const mix = Math.sqrt(raw.bass * raw.bass + raw.mids * raw.mids + raw.treble * raw.treble);
+        const db = 20 * Math.log10(Math.max(mix, 1e-9));
+        this.meter = smoothStep(this.meter || 0, Math.min(Math.max((db - cfg.meter_floor_db) / -cfg.meter_floor_db, 0), 1), dt, cfg.meter_attack_sec, cfg.meter_release_sec);
         const gain = this.autoGain.update(dt, raw.bass + raw.mids + raw.treble, cfg.auto_gain);
+        // bandLevels are the levels as measured, which the drop detector reads; `levels`, which
+        // everything else reads, are those scaled by the Intensity, Bass, Mids and Treble sliders.
+        const ctl = this.controls || { intensity: 1, bass: 1, mids: 1, treble: 1 };
         for (const band of BANDS) {
             this.rms[band] = raw[band] * gain;
-            this.levels[band] = smoothStep(this.levels[band], Math.min(this.rms[band] * cfg.band_gain[band], 1), dt, cfg.attack_sec, cfg.release_sec);
+            this.bandLevels[band] = smoothStep(this.bandLevels[band], Math.min(this.rms[band] * cfg.band_gain[band], 1), dt, cfg.attack_sec, cfg.release_sec);
+            this.levels[band] = Math.min(this.bandLevels[band] * ctl[band] * ctl.intensity, 1);
         }
         this.beats.feed(now, dt, this.bins, this.context.sampleRate / this.analyser.fftSize,
                         this.rms.bass + this.rms.mids + this.rms.treble >= cfg.drop_min_level);
         this.beats.update(now, dt);
-        this.drop = this.drops.update(now, this.levels, this.rms, cfg, this.beats.bpm, this.beats.locked ? this.beats.beatPhase : null);
+        this.drop = this.drops.update(now, this.bandLevels, this.rms, cfg, this.beats.bpm, this.beats.locked ? this.beats.beatPhase : null);
         this.checkMarkedDrops(now);
     }
     pressDrop(now) { this.drops.press(now, SETTINGS.audio, this.beats.bpm); this.drop = 1; }
@@ -781,8 +883,10 @@ class CrystalMotion {
         moves.update(step, barsPerSec, cfg);
         this.whip *= Math.exp(-step / cfg.beat_spin_release_sec);
         if (beat) this.whip = Math.max(this.whip, intensity);
+        // In the hanging light (this.hang, 0 to 1, set by the Demo) the crystal turns slower.
+        const hangCfg = SETTINGS.light.hanging, hang = this.hang || 0;
         const spinSpeed = 360 * barsPerSec / cfg.turn_bars * spin * (1 + (moves.spin - 1) * intensity)
-            * (1 + intensity * cfg.heavy_spin_gain) * (1 + this.whip * cfg.beat_spin_gain);
+            * (1 + intensity * cfg.heavy_spin_gain) * (1 + this.whip * cfg.beat_spin_gain) * (1 - hang * (1 - hangCfg.spin_scale));
         this.angle = (this.angle + spinSpeed * step) % 360;
         if (beat) this.kick = 1; else this.kick *= Math.exp(-step / cfg.beat_kick_release_sec);
         this.swayPhase = (this.swayPhase + barsPerSec / cfg.sway_bars * moves.swaySpeed * step) % 1;
@@ -794,15 +898,22 @@ class CrystalMotion {
         const target = Math.min(Math.max(treble * cfg.treble_sparkle, 0), 1);
         this.sparkle = follow(this.sparkle, target, step, target > this.sparkle ? cfg.sparkle_rise_sec : cfg.sparkle_fall_sec);
         const [eyeX, eyeY] = this.gaze.update(step, cfg);
+        // crystal_motion.py's Pendulum: hanging from a thread, the crystal swings across in time
+        // with the music, one full swing every sway_period_beats, wider the harder it hits,
+        // tilting toward the thread. It fades in and out with the light mode.
+        this.pendulumPhase = ((this.pendulumPhase || 0) + step * bpm / 60 / hangCfg.sway_period_beats) % 1;
+        this.pendulumExtra = follow(this.pendulumExtra || 0, punch, step, hangCfg.sway_widen_sec);
+        const swing = (hangCfg.sway_deg + hangCfg.sway_punch_deg * this.pendulumExtra) * Math.PI / 180 * hang * Math.sin(2 * Math.PI * this.pendulumPhase);
         return {
             ...shape,
+            offsetX: Math.sin(swing) * hangCfg.sway_length, hangTilt: swing * 180 / Math.PI,
             eyeX, eyeY, eyeBlink: this.blink.update(step, cfg),
             angle: this.angle, sparkle: this.sparkle, intensity, punch,
             breathe: Math.max(bass, 0) * cfg.bass_breathe + this.kick * cfg.beat_pulse * punch
                 + this.bassKick.update(step, Math.max(bass, 0), cfg) * cfg.bass_pulse,
             twist: this.kick * cfg.beat_twist_deg * punch,
             swayTilt: (Math.sin(sway) * cfg.sway_deg * moves.swaySize + moves.tilt) * motion,
-            swayRoll: (Math.cos(sway) * cfg.sway_deg * 0.7 * moves.swaySize + moves.roll) * motion,
+            swayRoll: (Math.cos(sway) * cfg.sway_deg * 0.7 * moves.swaySize + moves.roll) * motion + swing * 180 / Math.PI,
             explode: this.explosion.amount, shardTurn: this.explosion.turn, shardPulse: this.explosion.pulse,
         };
     }
@@ -833,8 +944,59 @@ class LookFader {
 // The numbers the scenes share: the beat pulse, the turn that follows the crystal, the flow,
 // the burst, the kick, the energy, the tiles' view, the Flow's look, the Mandala's mirrors and
 // the calm opening to the single crystal.
+// The numbers the Organic shader uses for each style, and scene_grid.glsl for each tile shape.
+const ORGANIC_STYLES = { washes: 0, marble: 1, contours: 2, rings: 3 };
+const GRID_SHAPES = { square: 0, hexagon: 1, triangle: 2, diamond: 3, radial: 4 };
+
+// scene_clock.py's CellLines: the life of the Shards scene's lines. They change color a few
+// times, then shrink away as the pieces turn back into the whole picture, and a new pattern of
+// cuts turns out of it as new lines grow back. The pattern only changes while no lines show it.
+class CellLines {
+    constructor() { this.cut = 0; this.color = 0; this.colorFade = null; this.changes = 0; this.held = 0; this.leaving = null; this.back = 1; this.share = null; }
+    newCutSoon() { this.held = Infinity; this.changes = Infinity; }
+    pickShare(energy, cfg) {
+        if (energy >= cfg.crystal_all_energy || Math.random() < cfg.crystal_all_chance) return 1;
+        return cfg.crystal_share_quiet + (cfg.crystal_share - cfg.crystal_share_quiet) * energy;
+    }
+    update(bars, newBar, energy, cfg) {
+        this.held += bars;
+        if (this.colorFade !== null) {
+            this.colorFade += bars / cfg.line_color_fade_bars;
+            if (this.colorFade >= 1) { this.color++; this.colorFade = null; }
+        }
+        if (this.leaving !== null) {
+            this.leaving += bars / cfg.line_leave_bars;
+            if (this.leaving >= 1) {
+                this.leaving = null; this.back = 0; this.cut++;
+                this.share = this.pickShare(energy, cfg); this.color++; this.changes = 0; this.held = 0;
+            }
+        } else if (this.back < 1) {
+            this.back = Math.min(this.back + bars / cfg.line_return_bars, 1);
+        } else if (newBar && this.held >= cfg.line_color_bars && this.colorFade === null) {
+            this.held = 0;
+            if (this.changes >= cfg.colors_per_cut) this.leaving = 0;
+            else { this.changes++; this.colorFade = 0; }
+        }
+        const colors = cfg.line_colors.map(hexColor);
+        const now = colors[this.color % colors.length], going = colors[(this.color + 1) % colors.length];
+        const amount = this.colorFade !== null ? ease(this.colorFade) : 0;
+        const hues = cfg.line_hue_shifts;
+        const hueNow = hues[this.color % hues.length], hueGoing = hues[(this.color + 1) % hues.length];
+        const here = ease(this.back) * (1 - ease(this.leaving || 0));
+        return {
+            cut: this.cut, crystalShare: this.share === null ? cfg.crystal_share : this.share,
+            lineColor: now.map((v, i) => v + (going[i] - v) * amount), lineHue: hueNow + (hueGoing - hueNow) * amount,
+            linesIn: here, show: here,
+        };
+    }
+}
+
 class SceneClock {
     constructor() {
+        // The Grid's looks and lines, the Organic's looks and the Shards' lines (scene_clock.py).
+        this.look = 0; this.lookNext = null; this.lookFade = 0; this.lookBars = 0;
+        this.linesShow = 1; this.linesOn = true; this.linesBars = 0;
+        this.organicLooks = new LookFader(); this.cellLines = new CellLines();
         this.pulse = 0; this.view = 0; this.viewBeats = 0; this.viewFade = null; this.bar = 0; this.lastPhase = null;
         this.sinceBar = Infinity; this.sincePulse = Infinity; this.loudness = 0; this.loudnessPeak = 0; this.turn = 0;
         this.lastAngle = null; this.flow = 0; this.burst = 0; this.dropWasUp = false; this.energy = 0;
@@ -872,7 +1034,15 @@ class SceneClock {
         this.energy = follow(this.energy, strength, step, strength > this.energy ? cfg.energy_rise_sec : cfg.energy_fall_sec);
         this.flow += bars * cfg.flow_per_bar * (1 + Math.max(mids, 0) * cfg.flow_mids_gain) * (1 + this.energy * cfg.flow_gain);
         this.burst *= Math.exp(-step / cfg.burst_release_sec);
-        if (drop && !this.dropWasUp) { this.burst = 1; this.plain = 0; }
+        if (drop && !this.dropWasUp) {
+            this.burst = 1; this.plain = 0;
+            // A drop lands the Grid on a kaleidoscope look straight away, and holds it for the explosion.
+            const looks = SETTINGS.grid.looks;
+            const strong = looks.map((l, i) => i).filter((i) => looks[i].on_drop);
+            this.lookNext = null;
+            this.look = choice(strong.length ? strong : looks.map((l, i) => i));
+            this.lookBars = SETTINGS.grid.bars_per_look - SETTINGS.grid.drop_look_bars;
+        }
         this.dropWasUp = drop;
         this.pulse *= Math.exp(-step / cfg.beat_release_sec);
         if (beat && this.sincePulse >= 1 / SETTINGS.max_flashes_per_second) {
@@ -897,11 +1067,34 @@ class SceneClock {
         this.plain = this.calm ? Math.min(this.plain + bars / cfg.plain_in_bars, 1) : Math.max(this.plain - bars / cfg.plain_out_bars, 0);
         // A new part of the song: every scene shows something new (scene_clock.py's _on_section),
         // and the crystal changes shape (Demo.render reads `section`).
+        const grid = SETTINGS.grid;
         if (this.sectionChanged(bars, newBar, bpm, cfg)) {
             this.flowLooks.barsHeld = Infinity;
+            this.organicLooks.barsHeld = Infinity;
+            this.cellLines.newCutSoon();
+            if (this.lookNext === null) { this.lookNext = this.nextLook(grid); this.lookFade = 0; }
+            this.lookBars = 0;
             if (this.mandalaNext === null) { this.mandalaNext = this.mandalaLook + 1; this.mandalaFade = 0; }
             this.mandalaBars = 0;
         }
+        // The Grid's look changes on a bar, every bars_per_look (twice that in quiet passages).
+        if (newBar) {
+            this.lookBars++;
+            if (this.lookBars >= grid.bars_per_look * (this.energy < grid.quiet_below ? 2 : 1)) {
+                this.lookBars = 0;
+                if (this.lookNext === null) { this.lookNext = this.nextLook(grid); this.lookFade = 0; }
+            }
+        }
+        if (this.lookNext !== null) {
+            this.lookFade += bars / grid.look_fade_bars;
+            if (this.lookFade >= 1) { this.look = this.lookNext; this.lookNext = null; }
+        }
+        // The Grid's lines fade away and come back; every so often it decides which.
+        if (newBar && ++this.linesBars >= grid.lines_every_bars) {
+            this.linesBars = 0;
+            this.linesOn = Math.random() >= grid.lines_off_chance;
+        }
+        this.linesShow = Math.min(Math.max(this.linesShow + (this.linesOn ? 1 : -1) * bars / grid.lines_fade_bars, 0), 1);
         if (this.viewFade !== null) {
             this.viewFade += bars / cfg.view_fade_bars;
             if (this.viewFade >= 1) { this.view++; this.viewFade = null; }
@@ -933,18 +1126,63 @@ class SceneClock {
             flowWidth: leaving.width + (going.width - leaving.width) * amount,
             flowInvert: leaving.invert + (going.invert - leaving.invert) * amount,
         };
+        // The Grid: the look now and the one it's fading to, denser the harder the music hits.
+        const looks = grid.looks, look = looks[this.look % looks.length];
+        const goingLook = this.lookNext === null ? look : looks[this.lookNext % looks.length];
+        const density = cfg.cells_quiet + (cfg.cells_loud - cfg.cells_quiet) * this.energy;
+        Object.assign(this.values, {
+            gridCells: look.cells * density, gridCellsB: goingLook.cells * density,
+            gridShape: GRID_SHAPES[look.shape], gridShapeB: GRID_SHAPES[goingLook.shape],
+            gridWedges: look.wedges, gridWedgesB: goingLook.wedges,
+            gridLookMix: this.lookNext === null ? 0 : ease(this.lookFade), gridLines: ease(this.linesShow),
+        });
+        // The Organic's look.
+        const org = SETTINGS.organic;
+        const [oLeaving, oGoing, oAmount] = this.organicLooks.update(bars, newBar, org.looks, org.bars_per_look, org.fade_bars);
+        Object.assign(this.values, {
+            organicStyleA: ORGANIC_STYLES[oLeaving.style], organicStyleB: ORGANIC_STYLES[oGoing.style], organicMix: oAmount,
+            organicScale: oLeaving.scale + (oGoing.scale - oLeaving.scale) * oAmount,
+            organicWarp: oLeaving.warp + (oGoing.warp - oLeaving.warp) * oAmount,
+            organicInvert: oLeaving.invert + (oGoing.invert - oLeaving.invert) * oAmount,
+        });
+        // The Shards' cuts and lines.
+        this.values.shards = this.cellLines.update(bars, newBar, this.energy, SETTINGS.shards);
+        this.values.newBar = newBar;
         return this.values;
+    }
+    // Any Grid look but the current one, so every change shows. When the music hits hard it's
+    // usually one of the big single mirrors, where a kick shows best.
+    nextLook(grid) {
+        const looks = grid.looks, others = [];
+        for (let i = 0; i < looks.length; i++) if (i !== this.look % looks.length) others.push(i);
+        const strong = others.filter((i) => looks[i].on_drop);
+        if (strong.length && this.energy >= SETTINGS.scenes.hard_above && Math.random() < grid.hard_mirror_chance) return choice(strong);
+        return others.length ? choice(others) : 0;
     }
 }
 
 // The shader deck: the three library shaders take turns, crossing from one to the next.
 class Deck {
-    constructor() { this.names = Object.keys(SETTINGS.deck.shaders); this.showing = 0; this.going = null; this.fade = 0; this.barsHeld = 0; this.lastBar = null; }
+    constructor() { this.names = Object.keys(SETTINGS.deck.shaders); this.showing = 0; this.going = null; this.fade = 0; this.barsHeld = 0; this.lastBar = null; this.wantNext = false; }
+    // The K key: the next shader in the list comes in on the next bar.
+    next() { this.wantNext = true; }
+    // The Shaders strip: hold one shader (its index, or -1 for None: the crystal over the
+    // picture with no shader, as the project's none.glsl), crossing to it now; null goes back
+    // to taking turns.
+    pin(index) {
+        this.pinned = index;
+        if (index !== null && index !== this.showing) { this.going = index; this.fade = 0; this.barsHeld = 0; }
+    }
     update(bar, bars) {
         const cfg = SETTINGS.deck;
         if (this.lastBar !== null && bar !== this.lastBar) {
             this.barsHeld++;
-            if (this.going === null && this.barsHeld >= cfg.bars_per_shader && this.names.length > 1) {
+            if (this.pinned !== undefined && this.pinned !== null) {
+                // Held: no turns.
+            } else if (this.wantNext && this.going === null && this.names.length > 1) {
+                this.going = (this.showing + 1) % this.names.length; this.fade = 0; this.barsHeld = 0;
+                this.wantNext = false;
+            } else if (this.going === null && this.barsHeld >= cfg.bars_per_shader && this.names.length > 1) {
                 const others = []; for (let i = 0; i < this.names.length; i++) if (i !== this.showing) others.push(i);
                 this.going = choice(others); this.fade = 0; this.barsHeld = 0;
             }
@@ -956,6 +1194,99 @@ class Deck {
         }
     }
     get mix() { return this.going === null ? 0 : ease(Math.min(this.fade, 1)); }
+}
+
+// ---- Which scene shows (brain_ext.py's SceneBrain) ----
+// Picks a scene from the tempo and crossfades to it, starting on a new bar. A tempo reading can
+// wobble, so a new band has to outlast a short wait and a margin past the band's edge, and
+// scenes don't change again right after a change. A drop is the one hard cut: straight to the
+// drop scene, and the usual fade brings the tempo's scene back afterward. While the tempo picks,
+// the shader deck takes a turn every deck_visit_every_bars for deck_visit_bars. A scene key or
+// click holds a scene until another one or Follow tempo (the auto key).
+class SceneBrain {
+    constructor() {
+        this.current = null; this.target = null; this.fadeBars = null; this.wanted = null; this.wantedBars = 0;
+        this.sinceChange = Infinity; this.lastPhase = null; this.dropWasUp = false; this.dropTurn = 0;
+        this.held = null; this.keyWaiting = false; this.keyFade = null; this.keyOnBar = true; this.fadeLength = null;
+        this.visiting = false; this.onSceneBars = 0;
+    }
+    get names() { return SETTINGS.bpm_bands.map((b) => b.name); }
+    deckVisit(choiceIndex, cfg) {
+        const names = this.names, every = cfg.deck_visit_every_bars || 0;
+        if (!every || !names.includes(cfg.deck_scene)) { this.visiting = false; return choiceIndex; }
+        const deck = names.indexOf(cfg.deck_scene), settled = this.fadeBars === null;
+        if (this.visiting) {
+            if (settled && this.current === deck && this.onSceneBars >= (cfg.deck_visit_bars || 32)) this.visiting = false;
+        } else if (settled && this.current === choiceIndex && this.current !== deck && this.onSceneBars >= every) {
+            this.visiting = true;
+        }
+        return this.visiting ? deck : choiceIndex;
+    }
+    // Hold the named scene, or 'auto' to follow the tempo again. Skips the waits, because someone
+    // just asked for it, but still starts on a new bar unless onBar is false.
+    pressKey(name, fadeBars = null, onBar = true) {
+        this.held = name === 'auto' ? null : this.names.indexOf(name);
+        this.visiting = false; this.keyWaiting = true; this.keyFade = fadeBars; this.keyOnBar = onBar;
+    }
+    bandFor(bpm, margin) {
+        const bands = SETTINGS.bpm_bands;
+        if (this.current !== null) {
+            const band = bands[this.current];
+            if (band.min_bpm - margin <= bpm && bpm < band.max_bpm + margin) return this.current;
+        }
+        for (let i = 0; i < bands.length; i++) if (bands[i].min_bpm <= bpm && bpm < bands[i].max_bpm) return i;
+        return this.current !== null ? this.current : 0;
+    }
+    update(dt, bpm, barPhase, drop) {
+        const cfg = SETTINGS.scene_change;
+        const bars = Math.min(dt, MAX_STEP_SEC) * bpm / 60 / SETTINGS.beats_per_bar;
+        const newBar = this.lastPhase !== null && this.lastPhase - barPhase > 0.5;
+        this.lastPhase = barPhase;
+        this.sinceChange += bars;
+        this.onSceneBars = this.fadeBars !== null ? 0 : this.onSceneBars + bars;
+        if (drop && !this.dropWasUp) {   // drops take turns between the scenes on the list
+            const scenes = cfg.drop_scenes;
+            this.current = this.target = this.names.indexOf(scenes[this.dropTurn % scenes.length]);
+            this.dropTurn++; this.visiting = false; this.fadeBars = null; this.wanted = null; this.sinceChange = 0; this.onSceneBars = 0;
+        }
+        this.dropWasUp = drop;
+        let pick = this.held;
+        if (pick === null) {
+            pick = this.bandFor(cfg.override_bpm || bpm, cfg.band_margin_bpm);
+            if (this.current !== null) pick = this.deckVisit(pick, cfg);
+        }
+        if (this.current === null) this.current = this.target = pick;
+        let length = this.fadeLength || cfg.crossfade_bars;
+        if (this.fadeBars !== null) {
+            this.fadeBars += bars;
+            if (this.fadeBars >= length) { this.current = this.target; this.fadeBars = null; this.sinceChange = 0; }
+            this.wanted = null;
+        } else if (pick === this.current) {
+            this.wanted = null; this.keyWaiting = false;
+        } else if (pick !== this.wanted) {
+            this.wanted = pick; this.wantedBars = 0;
+        } else {
+            this.wantedBars += bars;
+        }
+        const waited = this.wantedBars >= cfg.band_hold_bars && this.sinceChange >= cfg.min_bars_between_changes;
+        const now = this.keyWaiting && !this.keyOnBar;
+        if (this.fadeBars === null && this.wanted !== null && (waited || this.keyWaiting) && (newBar || now || !cfg.change_only_on_bar)) {
+            this.target = this.wanted; this.fadeBars = 0;
+            this.fadeLength = this.keyWaiting ? this.keyFade : null;
+            length = this.fadeLength || cfg.crossfade_bars;
+            this.wanted = null; this.keyWaiting = false;
+        }
+        const names = this.names;
+        return {
+            from: names[this.current], to: names[this.target],
+            fade: this.fadeBars === null ? 0 : ease(Math.min(this.fadeBars / length, 1)),
+            held: this.held === null ? null : names[this.held],
+            // What the tempo would pick, for the panel's dashed outline while a scene is held.
+            tempoPick: names[this.bandFor(cfg.override_bpm || bpm, cfg.band_margin_bpm)],
+            // A scene asked for, waiting for the next bar.
+            waiting: this.keyWaiting && this.wanted !== null ? names[this.wanted] : (this.keyWaiting && this.held !== null && this.held !== this.current ? names[this.held] : null),
+        };
+    }
 }
 
 // ---- Drawing ----
@@ -973,9 +1304,19 @@ class PhotoMotion {
         this.stillSec = null; this.distort = 0;
         // The waves' shape: each new picture melts into another one over wave_style_fade_sec.
         this.styleA = 0; this.styleB = 0; this.styleMix = 0; this.pictures = 0;
+        this.pinned = null;   // a shape picked on the Waves switch, kept across pictures; null is Auto
+    }
+    // The Waves switch (photo_deck.py's WaveStyle.pinned): a shape name holds that shape across
+    // pictures, melting into it now; 'auto' gives each new picture another shape again.
+    pinWaves(name) {
+        this.pinned = name === 'auto' ? null : WAVE_SHAPES[name];
+        if (this.pinned === null || this.pinned === this.styleB) return;
+        this.styleA = this.styleMix > 0.5 ? this.styleB : this.styleA;
+        this.styleB = this.pinned; this.styleMix = 0;
     }
     newPicture(cfg) {
         this.stillSec = 0; this.distort = 0;
+        if (this.pinned !== null) { this.pictures++; return; }
         const names = cfg.wave_styles.filter((n) => n in WAVE_SHAPES);
         if (this.pictures++ === 0) { this.styleA = this.styleB = WAVE_SHAPES[choice(names)]; this.styleMix = 0; return; }
         const others = names.map((n) => WAVE_SHAPES[n]).filter((s) => s !== this.styleB);
@@ -1008,11 +1349,11 @@ class PhotoMotion {
             if (this.styleMix >= 1) { this.styleA = this.styleB; this.styleMix = 0; }
         }
     }
-    // The shader's uniforms, wired as photo_deck.tox wires photo_fx (the sliders at 1), except
-    // that the bend and the waves grow with the drive.
-    uniforms(bass, cfg) {
+    // The shader's uniforms, wired as photo_deck.tox wires photo_fx: the Warp and Ripple sliders
+    // scale the bend and the ripple, and the bend and the waves grow with the drive.
+    uniforms(bass, cfg, controls = { warp: 1, ripple: 1 }) {
         const d = this.distort, m = this.drive;
-        const warp = cfg.warp_amount * (cfg.warp_quiet + (1 - cfg.warp_quiet) * m);
+        const warp = cfg.warp_amount * controls.warp * (cfg.warp_quiet + (1 - cfg.warp_quiet) * m);
         const waveBlend = cfg.wave_blend_quiet + (cfg.wave_blend_loud - cfg.wave_blend_quiet) * m;
         return {
             uBass: bass, uTreble: this.treble, uPulse: this.pulse, uBurst: this.burst, uFlow: this.flow,
@@ -1020,7 +1361,7 @@ class PhotoMotion {
             uRingSpeed: cfg.ring_speed, uRingWidth: cfg.ring_width, uRingFade: cfg.ring_fade,
             uWarp: warp * d, uWaveBlend: waveBlend * d, uWaveSize: cfg.wave_size,
             uWaveSpeed: cfg.wave_speed, uCopyZoom: cfg.copy_zoom,
-            uRipple: cfg.ripple_amount * d, uRippleScale: cfg.ripple_scale,
+            uRipple: cfg.ripple_amount * controls.ripple * d, uRippleScale: cfg.ripple_scale,
             uDispersion: cfg.dispersion_amount * d, uZoom: cfg.zoom_pulse_amount * d,
             uGlitch: cfg.glitch_amount, uSlices: cfg.glitch_slices,
             uStyleA: this.styleA, uStyleB: this.styleB, uStyleMix: ease(this.styleMix),
@@ -1086,8 +1427,17 @@ function makeTarget(gl, width, height, mipmaps) {
 }
 
 class Demo {
-    constructor(canvas) {
+    // options.program: make this a Preview of another Demo (the operator panel's Preview
+    // monitor). It shares that Demo's sound (one analysis), takes its beats from it rather than
+    // claiming them from the beat tracker, which hands each beat out once, and shows
+    // `fixedScene` instead of letting the scene brain pick.
+    constructor(canvas, options = {}) {
         this.canvas = canvas;
+        this.program = options.program || null;
+        this.fixedScene = null;
+        this.paused = false;      // a paused Demo draws nothing (Preview with nothing staged)
+        this.beatCount = 0;       // beats this Demo has taken, for a Preview to follow
+        this.seenBeats = 0;
         const gl = canvas.getContext('webgl2', { antialias: false, alpha: false });
         if (!gl) throw new Error('This browser has no WebGL 2, which the demo needs.');
         this.gl = gl;
@@ -1110,14 +1460,27 @@ class Demo {
         this.lensPass = new Pass(gl, C.LENS);
         this.mixPass = new Pass(gl, C.MIX);
         this.scenePasses = { flow: new Pass(gl, C.FLOW), mandala: new Pass(gl, C.MANDALA) };
+        this.scenePasses.grid = this.scenePasses.mandala;   // one shader, scene_grid.glsl, for both
+        this.organicPass = new Pass(gl, C.ORGANIC);
+        this.shardsPass = new Pass(gl, C.SHARDS);
+        this.cellLinesPass = new Pass(gl, C.CELL_LINES);
+        this.blurPass = new Pass(gl, C.BLUR);
+        this.hangingPass = new Pass(gl, C.HANGING);
+        this.skinPass = new Pass(gl, C.SKIN);
+        // Crystal skins (crystal_images in settings.json): off at the start; on, the skin fills
+        // amount of what the crystal refracts, fading over fade_sec.
+        this.skin = null; this.skinSize = [1, 1]; this.skinsOn = false; this.skinMix = 0;
+        // The hanging light (scene_clock.py's HangingLight): asked for, it switches on the next
+        // bar and fades over crossfade_bars.
+        this.hangingOn = false; this.hangingWanted = null; this.hangMix = 0;
+        this.organicFlip = 0;   // which of the two Organic frames is the last one (its trail)
+        this.brain = new SceneBrain();
+        this.sceneState = { from: 'crystal', to: 'crystal', fade: 0, held: null, tempoPick: null, waiting: null };
         this.deckPasses = { oil_slick: new Pass(gl, C.OIL_SLICK), prism_rays: new Pass(gl, C.PRISM_RAYS), kaleidoscope: new Pass(gl, C.KALEIDOSCOPE) };
-        this.sound = new Sound();
+        this.sound = this.program ? this.program.sound : new Sound();
         this.motion = new CrystalMotion();
         this.clock = new SceneClock();
         this.deck = new Deck();
-        this.scene = 'crystal';          // crystal, flow, mandala or deck
-        this.sceneFrom = null;           // the scene being left, while crossfading
-        this.sceneFade = 0;
         this.paint = SETTINGS.mandala.paint_colors.map(hexColor);
         this.image = null; this.imageSize = [1, 1];
         // The colors the scenes read, fading toward the chosen palette or the picture's own
@@ -1127,6 +1490,21 @@ class Demo {
         this.paletteTarget = this.palette.map((c) => c.slice());
         this.imagePalette = null;                               // the open picture's four colors
         this.recolor = 0;   // how far the picture is recolored to the palette: up when a fixed palette is chosen over a picture
+        this.photosOn = true;      // the O key: off, the crystal refracts the built-in picture instead of the photo
+        // The Controls card's sliders (operator_screen.controls), multipliers from 0 to
+        // control_max, 1 as set: Warp and Ripple scale the picture's bend and ripple; Intensity,
+        // Bass, Mids and Treble scale the levels everything reads (audio_bands.py's _control).
+        this.controls = { warp: 1, ripple: 1, intensity: 1, bass: 1, mids: 1, treble: 1 };
+        // The sound scales its levels by Program's sliders; a Preview shares that sound and
+        // mustn't take it over (its own Warp and Ripple still apply to its picture).
+        if (!this.program) this.sound.controls = this.controls;
+        this.blackoutOn = false;   // the B key
+        this.blackout = 0;         // how far the picture has faded to black, 0 to 1, over blackout_fade_sec
+        this.black = gl.createTexture();   // one black pixel, to fade the picture into
+        gl.bindTexture(gl.TEXTURE_2D, this.black);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
         this.resize();
         this.start = performance.now() / 1000;
         this.lastFrame = null;
@@ -1134,14 +1512,18 @@ class Demo {
         this.onFrame = null;
         // The sound is analyzed on its own steady clock, not per drawn frame: the beat tracker
         // wants even readings, and a slow or throttled frame rate would starve it.
-        setInterval(() => this.sound.update(performance.now() / 1000 - this.start), 10);
+        if (!this.program) setInterval(() => this.sound.update(performance.now() / 1000 - this.start), 10);
+        else this.start = this.program.start;
     }
     resize() {
         const gl = this.gl;
         // At most 1920 pixels across, so full screen on a big or high-DPI screen doesn't ask an
         // integrated GPU for four times the pixels; the browser scales the picture up.
         const scale = Math.min(window.devicePixelRatio || 1, 1.5, 1920 / Math.max(this.canvas.clientWidth, 1));
-        const width = Math.round(this.canvas.clientWidth * scale), height = Math.round(this.canvas.clientHeight * scale);
+        let width = Math.round(this.canvas.clientWidth * scale), height = Math.round(this.canvas.clientHeight * scale);
+        // While an output window shows this picture, it renders at that window's size instead
+        // (outputSize, at most 1920 across), and the panel shows it letterboxed.
+        if (this.outputSize) [width, height] = this.outputSize;
         if (width === this.canvas.width && height === this.canvas.height && this.picture) return;
         this.canvas.width = width; this.canvas.height = height;
         this.picture = makeTarget(gl, width, height, true);  // with mipmaps, for the Mandala's paint
@@ -1152,12 +1534,57 @@ class Demo {
         this.sceneB = makeTarget(gl, width, height);
         this.deckA = makeTarget(gl, width, height);
         this.deckB = makeTarget(gl, width, height);
+        this.output = makeTarget(gl, width, height);   // the finished picture, while it fades to black
+        this.sceneOut = makeTarget(gl, width, height); // the scene, while the hanging light draws over it
+        this.refract = makeTarget(gl, width, height);  // what the crystal refracts, with a skin on
+        this.pictureA = makeTarget(gl, width, height);   // the two pictures while one crossfades into the next
+        this.pictureB = makeTarget(gl, width, height);
+        this.organicFrames = [makeTarget(gl, width, height), makeTarget(gl, width, height)];
+        this.shards = makeTarget(gl, width, height, true);   // mipmapped: the lines' glow reads it blurred
+        this.blurA = makeTarget(gl, width, height);
+        this.blurB = makeTarget(gl, width, height);
     }
-    goToScene(name) {
-        if (name === this.scene || !(name === 'crystal' || name in this.scenePasses || name === 'deck')) return false;
-        this.sceneFrom = this.sceneFade > 0 && this.sceneFrom !== null ? this.scene : this.scene;
-        this.scene = name;
-        this.sceneFade = 0;
+    // 1 while a photo is open and the photos are on (photo_numbers_out's has_photos).
+    get hasPhotos() { return this.image && this.photosOn ? 1 : 0; }
+    // B: fade the picture to black, or back. True when it is now going to black.
+    toggleBlackout() { this.blackoutOn = !this.blackoutOn; return this.blackoutOn; }
+    // A crystal skin: the image the crystal refracts instead of the picture. Turns skins on.
+    setSkin(image) {
+        const gl = this.gl;
+        if (!this.skin) this.skin = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, this.skin);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
+        this.skinSize = [image.naturalWidth || image.width, image.naturalHeight || image.height];
+        this.skinsOn = true;
+    }
+    // H: the hanging light on or off, from the next bar. True when it's going on.
+    toggleHanging() {
+        this.hangingWanted = !(this.hangingWanted === null ? this.hangingOn : this.hangingWanted);
+        return this.hangingWanted;
+    }
+    // O: the photo on and off. Off, the crystal refracts the built-in picture. True when on.
+    togglePhotos() { this.photosOn = !this.photosOn; return this.photosOn; }
+    // The scene on screen (the one being left, while a crossfade runs), and the one coming in.
+    get scene() { return this.sceneState.from; }
+    get sceneComing() { const s = this.sceneState; return s.from !== s.to ? s.to : s.waiting; }
+    // Hold a scene: it comes in on the next bar and stays until another one or followTempo().
+    // False if there's no such scene, or it's already held.
+    // now: start the crossfade at once instead of on the next bar (a click straight to Program);
+    // fadeBars: its length (a Take's take_fade_bars), or null for the usual crossfade_bars.
+    goToScene(name, now = false, fadeBars = null) {
+        if (!SETTINGS.bpm_bands.some((b) => b.name === name) || this.brain.held === this.brain.names.indexOf(name)) return false;
+        this.brain.pressKey(name, fadeBars, !now);
+        return true;
+    }
+    // Back to automatic: the tempo picks the scene. False if it already does.
+    followTempo() {
+        if (this.brain.held === null) return false;
+        this.brain.pressKey('auto');
         return true;
     }
     // The shared uniforms the deck's shaders and the scenes read, from this frame's numbers.
@@ -1200,18 +1627,71 @@ class Demo {
         } else if (name === 'mandala') {
             const m = SETTINGS.mandala;
             this.scenePasses.mandala.draw(fb, width, height, Object.assign(shared, {
-                uCells: scene.cells, uShape: 4, uWedges: scene.wedges, uCellsB: scene.cells, uShapeB: 4, uWedgesB: scene.wedgesB,
+                // As the project's mandala node (Nov 15, 2026, read from the running project): one
+                // radial cell (mandala_cells), never opening to the plain crystal, and paint made
+                // from the picture only while a photo is on.
+                uCells: m.cells, uShape: 4, uWedges: scene.wedges, uCellsB: m.cells, uShapeB: 4, uWedgesB: scene.wedgesB,
                 uLookMix: scene.lookMix, uKick: scene.kick, uKickTwist: m.kick_twist, uKickOpen: m.kick_open,
-                uLineWidth: 0.03, uLineDark: 0, uLineShow: 0, uStep: scene.step, uViewTurn: m.view_turn,
+                uLineWidth: SETTINGS.grid.line_width, uLineDark: SETTINGS.grid.line_dark, uLineShow: 0, uStep: scene.step, uViewTurn: m.view_turn,
                 uSparkleGlow: m.sparkle_glow, uFacetView: m.facet_view, uFacetFloor: m.facet_floor, uFacetWander: m.facet_wander,
-                uPlain: scene.plain, uMandala: 1, uPaintZoom: m.paint_zoom, uPaintBands: m.paint_bands, uPaintDrift: m.paint_drift,
-                uPaintLines: m.paint_lines, uPaintPicture: m.paint_picture, uPaintBlur: m.paint_blur, uPaintRich: m.paint_rich,
+                uPlain: 0, uMandala: 1, uPaintZoom: m.paint_zoom, uPaintBands: m.paint_bands, uPaintDrift: m.paint_drift,
+                uPaintLines: m.paint_lines, uPaintPicture: m.paint_picture * this.hasPhotos, uPaintBlur: m.paint_blur, uPaintRich: m.paint_rich,
                 uPaintLift: m.paint_lift, uPaintShards: m.paint_shards,
                 uPaint0: this.paint[0], uPaint1: this.paint[1], uPaint2: this.paint[2], uPaint3: this.paint[3], uPaint4: this.paint[4], uPaint5: this.paint[5],
             }), textures);
+        } else if (name === 'grid') {
+            // The Grid, as the project's grid node wires scene_grid.glsl.
+            const m = SETTINGS.mandala, g = SETTINGS.grid;
+            this.scenePasses.grid.draw(fb, width, height, Object.assign(shared, {
+                uCells: scene.gridCells, uShape: scene.gridShape, uWedges: scene.gridWedges,
+                uCellsB: scene.gridCellsB, uShapeB: scene.gridShapeB, uWedgesB: scene.gridWedgesB, uLookMix: scene.gridLookMix,
+                uKick: scene.kick, uKickTwist: m.kick_twist, uKickOpen: m.kick_open,
+                uLineWidth: g.line_width, uLineDark: g.line_dark, uLineShow: scene.gridLines, uStep: scene.step, uViewTurn: m.view_turn,
+                uSparkleGlow: m.sparkle_glow, uFacetView: m.facet_view, uFacetFloor: m.facet_floor, uFacetWander: m.facet_wander,
+                // The Grid shows the crystal's own picture in its tiles, no marbled paint: the
+                // project's grid node holds uMandala and uPaintPicture at 0 (fixed values; the
+                // expressions left in those parameters are switched off).
+                uPlain: scene.plain, uMandala: 0, uPaintZoom: m.paint_zoom, uPaintBands: m.paint_bands, uPaintDrift: m.paint_drift,
+                uPaintLines: m.paint_lines, uPaintPicture: 0, uPaintBlur: m.paint_blur, uPaintRich: m.paint_rich,
+                uPaintLift: m.paint_lift, uPaintShards: m.paint_shards,
+                uPaint0: this.paint[0], uPaint1: this.paint[1], uPaint2: this.paint[2], uPaint3: this.paint[3], uPaint4: this.paint[4], uPaint5: this.paint[5],
+            }), textures);
+        } else if (name === 'organic') {
+            // Slow paint with long trails: it reads its own last frame, so it always draws into
+            // one of its two frames, then onto the target.
+            const o = SETTINGS.organic, last = this.organicFrames[this.organicFlip], out = this.organicFrames[1 - this.organicFlip];
+            this.organicPass.draw(out.framebuffer, width, height, Object.assign(shared, {
+                uWashScale: scene.organicScale, uWashWarp: scene.organicWarp, uBend: o.bend, uCrystal: o.crystal,
+                uTrail: o.trail, uTrailZoom: o.trail_zoom, uStyleA: scene.organicStyleA, uStyleB: scene.organicStyleB,
+                uStyleMix: scene.organicMix, uInvert: scene.organicInvert, uPicture: o.picture * this.hasPhotos,
+            }), { sIn0: this.crystal.texture, sIn1: last.texture, sIn2: this.picture.texture });
+            this.organicFlip = 1 - this.organicFlip;
+            this.mixPass.draw(fb, width, height, { uMix: 0 }, { uA: out.texture, uB: out.texture });
+        } else if (name === 'shards') {
+            // The pieces, then their lines drawn over them as crystal lit like neon.
+            const s = SETTINGS.shards, cl = scene.shards;
+            this.shardsPass.draw(this.shards.framebuffer, width, height, Object.assign(shared, {
+                uCut: cl.cut, uBurst: scene.burst, uShow: cl.show, uLinesIn: cl.linesIn, uCells: s.cells, uSnapDeg: s.snap_deg,
+                uTurnRange: s.turn_range_deg, uSpread: s.spread, uPictureGain: s.picture_gain, uContrast: s.contrast, uTint: s.tint,
+                uEdgeWidth: s.edge_width, uCrystalShare: cl.crystalShare, uCrystalFill: s.crystal_fill, uCrystalReach: s.crystal_reach,
+                uCellPop: s.cell_pop, uCellSpin: s.cell_spin,
+            }), { sIn0: this.crystal.texture, sIn1: this.picture.texture, sIn2: this.gem.texture });
+            const gl = this.gl;
+            gl.bindTexture(gl.TEXTURE_2D, this.shards.texture);
+            gl.generateMipmap(gl.TEXTURE_2D);
+            // lines_soft: the pieces blurred line_facet_px wide (at the project's 540-pixel height).
+            const sigma = s.line_facet_px * height / s.design_height / 2;
+            this.blurPass.draw(this.blurA.framebuffer, width, height, { uRes: [width, height], uStep: [1 / width, 0], uSigma: sigma }, { sIn0: this.shards.texture });
+            this.blurPass.draw(this.blurB.framebuffer, width, height, { uRes: [width, height], uStep: [0, 1 / height], uSigma: sigma }, { sIn0: this.blurA.texture });
+            this.cellLinesPass.draw(fb, width, height, {
+                uRes: [width, height], uLineRound: s.line_round, uLineFacets: s.line_facets, uLineBend: s.line_bend,
+                uLineSplit: s.line_split, uLineGlint: s.line_glint, uLineEdge: s.line_edge, uLineNeon: s.line_neon,
+                uLineGlow: s.line_glow, uLineFloor: s.line_floor, uLineHue: cl.lineHue, uLineColor: cl.lineColor,
+            }, { sIn0: this.shards.texture, sIn1: this.blurB.texture });
         } else if (name === 'deck') {
             const deck = this.deck;
             const drawShader = (index, into) => {
+                if (index === -1) { this.mixPass.draw(into, width, height, { uMix: 0 }, { uA: this.lens.texture, uB: this.lens.texture }); return; }
                 const shaderName = deck.names[index];
                 this.deckPasses[shaderName].draw(into, width, height, Object.assign({}, shared, this.deckControls(shaderName, shared)), textures);
             };
@@ -1276,9 +1756,22 @@ class Demo {
         // opened from a plain file is "cross-origin" to WebGL and refused.
         if (packed) image.src = 'data:image/png;base64,' + packed.normal;
     }
-    setImage(image) {
+    // A new picture. With one already on screen (and the photos on), the old one stays as
+    // imageOld and the new one crossfades in over crossfade_bars, as the project's deck does;
+    // `fade` false swaps at once.
+    // keepPalette: don't switch the colours to the picture's own (a Take that also brings colours).
+    setImage(image, fade = true, fadeBars = null, keepPalette = false) {
         const gl = this.gl;
-        if (!this.image) this.image = gl.createTexture();
+        if (this.imageOld) gl.deleteTexture(this.imageOld.texture);
+        this.imageOld = null;
+        if (this.image && fade && this.photosOn) {
+            this.imageOld = { texture: this.image, size: this.imageSize };
+            this.imageFade = 0;
+            this.imageFadeBars = fadeBars || SETTINGS.photo.crossfade_bars;
+        } else if (this.image) {
+            gl.deleteTexture(this.image);
+        }
+        this.image = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, this.image);
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
@@ -1290,7 +1783,7 @@ class Demo {
         this.imageSize = [image.naturalWidth || image.width, image.naturalHeight || image.height];
         this.imagePalette = imagePalette(image);
         this.photoMotion.newPicture(SETTINGS.photo);
-        if (SETTINGS.palette_from_photos) this.setPalette('picture');
+        if (SETTINGS.palette_from_photos && !keepPalette) this.setPalette('picture');
     }
     // Choose a palette by name ('ember', 'tide', ...), or 'picture' for the open picture's own
     // colors. The colors on screen fade to it. False if that palette isn't there.
@@ -1323,8 +1816,12 @@ class Demo {
         const step = Math.min(dt, 0.1) / SETTINGS.recolor_fade_sec;
         this.recolor += Math.max(Math.min(want - this.recolor, step), -step);
     }
+    // A drop, for this picture. One fired by the Drop button is for Program alone: Preview (which
+    // shares Program's sound) sits it out, and still follows the drops in the music.
+    dropNow(sound) { return sound.drop > 0 && !(this.program && sound.drops && sound.drops.reason === 'button'); }
     frame() {
-        this.render(performance.now() / 1000 - this.start);
+        if (!this.paused) this.render(performance.now() / 1000 - this.start);
+        else this.lastFrame = null;   // so the first frame back doesn't count the pause as one long step
         requestAnimationFrame(() => this.frame());
     }
     render(now) {
@@ -1335,19 +1832,38 @@ class Demo {
         this.fadePalette(dt);
         const sound = this.sound, cfg = SETTINGS.crystal;
         const beats = sound.beats;
-        const beat = beats.takeBeat();
+        let beat;
+        if (this.program) {
+            beat = this.program.beatCount > this.seenBeats;
+            this.seenBeats = this.program.beatCount;
+        } else {
+            beat = beats.takeBeat();
+            if (beat) this.beatCount++;
+        }
         const values = this.motion.update(dt, beats.bpm, beats.barPhase, sound.levels.bass, sound.levels.mids, sound.levels.treble,
-                                          beat, sound.drop > 0, cfg);
+                                          beat, this.dropNow(sound), cfg);
         const gl = this.gl, width = this.canvas.width, height = this.canvas.height, res = [width, height];
         const rad = Math.PI / 180;
         // The picture bends and waves with the music (photo_fx.glsl), as photos do in the project.
         const bass = Math.max(sound.levels.bass, 0);
-        this.photoMotion.update(dt, beats.bpm, beat, sound.drop > 0, bass, Math.max(sound.levels.mids, 0), Math.max(sound.levels.treble, 0), this.clock.energy, SETTINGS.photo);
-        if (this.image) {
+        this.photoMotion.update(dt, beats.bpm, beat, this.dropNow(sound), bass, Math.max(sound.levels.mids, 0), Math.max(sound.levels.treble, 0), this.clock.energy, SETTINGS.photo);
+        if (this.image && this.photosOn) {
             const r = this.recolor, e = r * r * (3 - 2 * r);
-            this.photoPass.draw(this.picture.framebuffer, width, height, Object.assign(this.photoMotion.uniforms(bass, SETTINGS.photo),
-                { uRes: res, uImageSize: this.imageSize, uRecolor: e,
-                  uColor0: this.palette[0], uColor1: this.palette[1], uColor2: this.palette[2], uColor3: this.palette[3] }), { uPicture: this.image });
+            const photo = (target, texture, size) => this.photoPass.draw(target.framebuffer, width, height,
+                Object.assign(this.photoMotion.uniforms(bass, SETTINGS.photo, this.controls),
+                { uRes: res, uImageSize: size, uRecolor: e,
+                  uColor0: this.palette[0], uColor1: this.palette[1], uColor2: this.palette[2], uColor3: this.palette[3] }), { uPicture: texture });
+            if (this.imageOld) {
+                // The crossfade from the last picture, over crossfade_bars at the tempo.
+                this.imageFade += Math.min(dt, MAX_STEP_SEC) * beats.bpm / 60 / SETTINGS.beats_per_bar / this.imageFadeBars;
+                photo(this.pictureA, this.imageOld.texture, this.imageOld.size);
+                photo(this.pictureB, this.image, this.imageSize);
+                this.mixPass.draw(this.picture.framebuffer, width, height, { uMix: ease(Math.min(this.imageFade, 1)) },
+                                  { uA: this.pictureA.texture, uB: this.pictureB.texture });
+                if (this.imageFade >= 1) { gl.deleteTexture(this.imageOld.texture); this.imageOld = null; }
+            } else {
+                photo(this.picture, this.image, this.imageSize);
+            }
         } else {
             this.picturePass.draw(this.picture.framebuffer, width, height,
                 { uRes: res, uTime: now, uColor0: this.palette[0], uColor1: this.palette[1], uColor2: this.palette[2], uColor3: this.palette[3] }, {});
@@ -1358,10 +1874,19 @@ class Demo {
             uFacetBase: cfg.facet_base, uFacetContrast: cfg.facet_contrast, uGlintGain: cfg.glint_gain,
             uSize: cfg.gem_size, uIor: cfg.ior, uRefraction: cfg.refraction, uDispersion: cfg.dispersion,
             uBreathe: values.breathe, uSparkle: values.sparkle,
-            uShapeA: values.shapeA, uScale: 1, uOffsetX: 0, uOffsetY: 0,
+            uShapeA: values.shapeA, uScale: 1, uOffsetX: values.offsetX || 0, uOffsetY: 0,
             uCameraDistance: cfg.camera_distance, uLens: cfg.camera_lens, uSamples: cfg.render_samples,
             uToSphere: values.toSphere, uSphereSize: cfg.sphere_size,
         };
+        // A crystal skin fills `amount` of what the crystal refracts; the background stays the picture.
+        const skinStep = Math.min(dt, 0.1) / Math.max(SETTINGS.skins.fade_sec, 1e-3);
+        this.skinMix = Math.min(Math.max(this.skinMix + (this.skinsOn && this.skin ? skinStep : -skinStep), 0), 1);
+        let refracted = this.picture.texture;
+        if (this.skinMix > 0 && this.skin) {
+            this.skinPass.draw(this.refract.framebuffer, width, height, { uRes: res, uImageSize: this.skinSize, uMix: ease(this.skinMix) * SETTINGS.skins.amount },
+                               { sIn0: this.picture.texture, sIn1: this.skin });
+            refracted = this.refract.texture;
+        }
         const structure = values.shapeA >= 10;  // the eye or a model: a surface marched into, not facets
         if (structure && (values.shapeA !== 11 || (this.modelDist && this.modelNormal))) {
             this.structurePass.draw(this.gem.framebuffer, width, height, Object.assign(common, {
@@ -1369,7 +1894,7 @@ class Demo {
                 uEyeX: values.eyeX * rad, uEyeY: values.eyeY * rad, uEyeBlink: values.eyeBlink,
                 uStructureSize: cfg.structure_size, uStructureLean: cfg.structure_lean_deg * rad, uStructureEdge: cfg.structure_edge_glow,
                 uModelGrid: cfg.model.grid, uModelSpan: cfg.model.span, uModelTilt: cfg.model_tilt_deg * rad,
-            }), { uPicture: this.picture.texture, uModelDist: this.modelDist || this.picture.texture, uModelNormal: this.modelNormal || this.picture.texture });
+            }), { uPicture: refracted, uModelDist: this.modelDist || this.picture.texture, uModelNormal: this.modelNormal || this.picture.texture });
         } else {
             this.gemPass.draw(this.gem.framebuffer, width, height, Object.assign(common, {
                 // A model still loading stands in as a brilliant.
@@ -1377,7 +1902,7 @@ class Demo {
                 uTilt: (cfg.gem_tilt_deg + values.swayTilt) * rad, uRoll: values.swayRoll * rad, uGemEdge: cfg.gem_edge_glow,
                 uDiscoRows: cfg.disco_rows, uDiscoSize: cfg.disco_size, uDiscoGrout: cfg.disco_grout,
                 uDiscoScatter: cfg.disco_scatter, uDiscoTwinkle: cfg.disco_twinkle, uDiscoBubble: cfg.disco_bubble,
-            }), { uPicture: this.picture.texture });
+            }), { uPicture: refracted });
         }
         this.shatterPass.draw(this.crystal.framebuffer, width, height, {
             uRes: res,
@@ -1394,22 +1919,59 @@ class Demo {
                            { uCrystal: this.crystal.texture, uPicture: this.picture.texture });
         // The scene on top of it all, crossfading when it changes.
         const scene = this.clock.update(dt, beats.bpm, beat, beats.barPhase, values.angle,
-                                        sound.levels.bass, sound.levels.mids, sound.levels.treble, sound.drop > 0);
+                                        sound.levels.bass, sound.levels.mids, sound.levels.treble, this.dropNow(sound));
         // When the music changes section, the crystal melts into its next shape, as in the project
         // (crystal_motion.py reads the scene clock's music_section); it takes effect next frame.
         if (this.lastSection !== undefined && scene.section !== this.lastSection) this.motion.changeShapeNow(cfg);
         this.lastSection = scene.section;
         this.deck.update(scene.bar, Math.min(dt, MAX_STEP_SEC) * beats.bpm / 60 / SETTINGS.beats_per_bar);
-        if (this.sceneFrom !== null) {
-            this.sceneFade += dt / SETTINGS.scenes.crossfade_sec;
-            if (this.sceneFade >= 1) { this.sceneFrom = null; this.sceneFade = 0; }
-        }
-        if (this.sceneFrom === null) {
-            this.drawScene(this.scene, null, width, height, now, values, scene);
+        // Which scene shows: the tempo's, a held one, or the drop's; crossfading over bars.
+        // The hanging light switches on a bar and fades over crossfade_bars.
+        const lightCfg = SETTINGS.light;
+        if (this.hangingWanted !== null && (scene.newBar || !lightCfg.switch_on_bar)) { this.hangingOn = this.hangingWanted; this.hangingWanted = null; }
+        const hangStep = Math.min(dt, MAX_STEP_SEC) * beats.bpm / 60 / SETTINGS.beats_per_bar / Math.max(lightCfg.crossfade_bars, 1e-6);
+        this.hangMix = Math.min(Math.max(this.hangMix + (this.hangingOn ? hangStep : -hangStep), 0), 1);
+        this.motion.hang = ease(this.hangMix);
+        let st = this.sceneState = this.brain.update(dt, beats.bpm, beats.barPhase, this.dropNow(sound));
+        if (this.fixedScene) st = this.sceneState = Object.assign({}, st, { from: this.fixedScene, to: this.fixedScene, fade: 0 });
+        const fading = st.from !== st.to && st.fade > 0;
+        // The blackout fades linearly, so it reads as a fade and never a flash.
+        const fadeStep = Math.min(dt, 0.1) / Math.max(SETTINGS.blackout_fade_sec, 1e-3);
+        this.blackout = Math.min(Math.max(this.blackout + (this.blackoutOn ? fadeStep : -fadeStep), 0), 1);
+        // Straight to the screen, or into `output` first while it fades to black.
+        const into = this.blackout > 0 ? this.output : null;
+        // With the hanging light on, the scene goes into sceneOut first and light_hanging draws
+        // over it (the project's scene_cross, then hanging, then the blackout).
+        const hanging = this.motion.hang > 0.001;
+        const sceneInto = hanging ? this.sceneOut : into;
+        if (this.blackout >= 1) {
+            this.mixPass.draw(null, width, height, { uMix: 1 }, { uA: this.black, uB: this.black });
         } else {
-            this.drawScene(this.sceneFrom, this.sceneA, width, height, now, values, scene);
-            this.drawScene(this.scene, this.sceneB, width, height, now, values, scene);
-            this.mixPass.draw(null, width, height, { uMix: ease(this.sceneFade) }, { uA: this.sceneA.texture, uB: this.sceneB.texture });
+            if (!fading) {
+                this.drawScene(st.from, sceneInto, width, height, now, values, scene);
+            } else {
+                this.drawScene(st.from, this.sceneA, width, height, now, values, scene);
+                this.drawScene(st.to, this.sceneB, width, height, now, values, scene);
+                this.mixPass.draw(sceneInto && sceneInto.framebuffer, width, height, { uMix: st.fade }, { uA: this.sceneA.texture, uB: this.sceneB.texture });
+            }
+            if (hanging) {
+                const h = lightCfg.hanging;
+                // crystal_soft: the crystal blurred caustic_blur image heights wide, for the pool of light.
+                const sigma = h.caustic_blur * height / 3;
+                this.blurPass.draw(this.blurA.framebuffer, width, height, { uRes: res, uStep: [1 / width, 0], uSigma: sigma }, { sIn0: this.crystal.texture });
+                this.blurPass.draw(this.blurB.framebuffer, width, height, { uRes: res, uStep: [0, 1 / height], uSigma: sigma }, { sIn0: this.blurA.texture });
+                // How much of the crystal is on screen in its own place, across the scenes fading
+                // now (scene_clock.py's _crystal_in_place): no pool of light under a kaleidoscope.
+                const share = (name) => { let a = h.caustic_scenes[name] ?? 1; if (name === 'grid') a = Math.max(a, scene.plain); return a; };
+                const causticShow = share(st.from) + (share(st.to) - share(st.from)) * st.fade;
+                this.hangingPass.draw(into && into.framebuffer, width, height, {
+                    uRes: res, uHanging: this.motion.hang, uSparkle: values.sparkle, uFlow: scene.flow * h.caustic_speed,
+                    uDispersion: h.dispersion, uCaustic: h.caustic_strength * causticShow, uCausticScale: h.caustic_scale, uCausticReach: h.caustic_reach,
+                }, { sIn0: this.sceneOut.texture, sIn1: this.crystal.texture, sIn2: this.blurB.texture });
+            }
+        }
+        if (into && this.blackout < 1) {
+            this.mixPass.draw(null, width, height, { uMix: this.blackout }, { uA: this.output.texture, uB: this.black });
         }
         if (this.onFrame) this.onFrame(values, now);
     }

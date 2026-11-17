@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QRTZ output</title>
+<style>
+  /* The venue output: the Program picture alone, filling the window. The panel (index.html)
+     opened this window and plays its picture into the video below; nothing renders here. */
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; color: #9CA0AB; font: 14px/1.5 Inter, system-ui, sans-serif; }
+  video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; }
+  .wait { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+  body.live .wait { display: none; }
+  body.still { cursor: none; }
+</style>
+</head>
+<body>
+<video id="video" autoplay muted playsinline></video>
+<div class="wait" id="wait">Waiting for the QRTZ panel's picture. Keep the panel open.</div>
+<script>
+  // The panel calls window.qrtzShow(stream) once this page has loaded. Double-click toggles full
+  // screen; Esc leaves it. The pointer hides while the mouse is still.
+  const video = document.getElementById('video');
+  window.qrtzShow = (stream) => {
+    video.srcObject = stream;
+    video.play().catch(() => {});
+    document.body.classList.add('live');
+  };
+  document.addEventListener('dblclick', () => {
+    if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => {});
+  });
+  let still = null;
+  document.addEventListener('pointermove', () => {
+    document.body.classList.remove('still');
+    clearTimeout(still);
+    still = setTimeout(() => document.body.classList.add('still'), 2000);
+  });
+  // The panel closing (or reloading) ends the stream; say so instead of showing a frozen frame.
+  video.addEventListener('emptied', () => document.body.classList.remove('live'));
+</script>
+</body>
+</html>
