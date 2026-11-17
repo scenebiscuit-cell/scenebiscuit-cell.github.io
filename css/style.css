@@ -111,11 +111,13 @@ h1, h2, h3 { margin: 0; }
   font-family: var(--font-display); font-weight: 800;
   font-size: clamp(38px, 6.4vw, 92px); line-height: .98; letter-spacing: -0.035em;
 }
-.hl { position: relative; isolation: isolate; display: inline-block; white-space: nowrap; padding: 0 .08em; color: var(--accent); }
-.hl::before {
-  content: ""; position: absolute; left: 0; right: 0; top: .12em; bottom: .02em; z-index: -1;
-  background: var(--hl); border-radius: 4px;
-  transform: scaleX(0); transform-origin: left center;
+/* Highlight behind the key phrase. Painted per line, so it wraps cleanly at any width,
+   and wipes in from the left on load. */
+.hl {
+  color: var(--accent); padding: 0 .08em; border-radius: 4px;
+  background-image: linear-gradient(var(--hl), var(--hl));
+  background-repeat: no-repeat; background-position: 0 75%; background-size: 0% 85%;
+  -webkit-box-decoration-break: clone; box-decoration-break: clone;
   animation: wipe .7s cubic-bezier(.65, .05, .25, 1) .7s forwards;
 }
 .hero-lede { margin-top: 36px; max-width: 620px; font-size: 20px; color: var(--muted); }
@@ -210,6 +212,13 @@ h1, h2, h3 { margin: 0; }
   font-family: var(--font-mono); font-size: 13px; color: var(--muted);
 }
 .card .btn-row { margin-top: 24px; }
+.cards--three .card { flex-basis: 300px; padding: 28px; }
+.step-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--accent); color: var(--on-accent);
+  font-family: var(--font-mono); font-size: 13px; font-weight: 500;
+}
 /* A card with gameplay clips: takes the full row so the clips have room. Each clip's flex-grow
    is its width / height, which makes the two the same height side by side. */
 .card--media { flex-basis: 100%; }
@@ -259,7 +268,7 @@ h1, h2, h3 { margin: 0; }
 
 /* ---------- Motion ---------- */
 @keyframes rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
-@keyframes wipe { to { transform: scaleX(1); } }
+@keyframes wipe { to { background-size: 100% 85%; } }
 @keyframes ping { 0% { transform: scale(1); opacity: .55; } 100% { transform: scale(2.6); opacity: 0; } }
 @keyframes nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
 @keyframes roll { from { transform: translateX(-160px); } to { transform: translateX(calc(100vw + 160px)); } }
@@ -286,7 +295,7 @@ h1, h2, h3 { margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .rise, .js .reveal { opacity: 1; transform: none; animation: none; transition: none; }
-  .hl::before { animation: none; transform: scaleX(1); }
+  .hl { animation: none; background-size: 100% 85%; }
   .dot::after, .btn:hover .swirl { animation: none; }
   .lift:hover, .btn:hover, .theme-btn:hover { transform: none; }
   .tumbleweed { display: none; }
@@ -296,8 +305,6 @@ h1, h2, h3 { margin: 0; }
 @media (max-width: 760px) {
   .nav-links { display: none; }
   /* Let the highlighted phrase wrap on narrow screens; paint the highlight per line */
-  .hl { white-space: normal; background: var(--hl); -webkit-box-decoration-break: clone; box-decoration-break: clone; border-radius: 4px; }
-  .hl::before { display: none; }
   .hero { padding-top: 40px; padding-bottom: 72px; }
   .case { gap: 32px; margin-bottom: 80px; }
   .case--flip .case-media { order: 0; }
@@ -311,3 +318,7 @@ h1, h2, h3 { margin: 0; }
   .card-shot { flex: none; width: 100%; }
   .card-shot--tall { max-width: 360px; }
 }
+
+/* Links inside running text: always underlined so they don't rely on color alone */
+.text-link { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
+.text-link:hover { text-decoration-thickness: 2.5px; }
