@@ -29,8 +29,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=2026-11-17">
-  <script src="js/main.js?v=2026-11-13" defer></script>
+  <link rel="stylesheet" href="css/style.css?v=2026-11-17b">
+  <script src="js/main.js?v=2026-11-17b" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -81,17 +81,17 @@
       </div>
       <div class="cards cards--three">
         <div class="card reveal">
-          <p class="card-status"><span class="step-num" aria-hidden="true">1</span>Process</p>
+          <div class="card-top"><p class="card-status"><span class="step-num" aria-hidden="true">1</span>Process</p><svg class="card-icon icon-magnify" width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 30h32M4 22h32M4 14h32" opacity=".28"/><g class="mag"><circle cx="16" cy="18" r="8"/><path d="M22 24l7 7"/></g></svg></div>
           <h3 class="card-title">Find the bottlenecks</h3>
           <p class="muted">I walk through how work actually moves through your team and map where it stalls. I used Lean Six Sigma to formalize processes for a state compliance program.</p>
         </div>
         <div class="card reveal">
-          <p class="card-status"><span class="step-num" aria-hidden="true">2</span>Data</p>
+          <div class="card-top"><p class="card-status"><span class="step-num" aria-hidden="true">2</span>Data</p><svg class="card-icon icon-bars" width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 34h30" opacity=".35"/><rect class="bar b1" x="8" y="20" width="6" height="14" rx="1.5"/><rect class="bar b2" x="17" y="12" width="6" height="22" rx="1.5"/><rect class="bar b3" x="26" y="6" width="6" height="28" rx="1.5"/></svg></div>
           <h3 class="card-title">Make your data visible</h3>
           <p class="muted">Clear dashboards and reports built from the data you already have, so the problems are easy to see and easy to explain.</p>
         </div>
         <div class="card reveal">
-          <p class="card-status"><span class="step-num" aria-hidden="true">3</span>Systems</p>
+          <div class="card-top"><p class="card-status"><span class="step-num" aria-hidden="true">3</span>Systems</p><svg class="card-icon icon-gears" width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g class="gear g1"><circle cx="14" cy="16" r="4"/><path d="M14 6v3M14 23v3M4 16h3M21 16h3M7 9l2 2M19 21l2 2M7 23l2-2M19 11l2-2"/></g><g class="gear g2"><circle cx="28" cy="28" r="3"/><path d="M28 21v2.5M28 32.5V35M21 28h2.5M32.5 28H35M23 23l1.8 1.8M31.2 31.2L33 33M23 33l1.8-1.8M31.2 24.8L33 23"/></g></svg></div>
           <h3 class="card-title">Build the system together</h3>
           <p class="muted">Automation and AI take the repetitive work. People keep the judgment calls. <a href="#work" class="text-link">Pharos</a> is an example: AI triage, with a person always in the loop for refunds, identity and security.</p>
         </div>
@@ -133,9 +133,9 @@
           <p><strong>What I built:</strong> A support setup for a fictional project-management app, from both sides. Customers get a help chat that answers only from the help articles and cites them, plus a portal to track their requests. Agents get a desk with AI triage, drafted replies and SLA timers.</p>
           <p><strong>The result:</strong> On 36 tickets the AI had never seen, triage picked the right category 89% of the time and the right priority 83%. The misses are in the README too.</p>
           <dl class="stats">
-            <div><dt>category accuracy</dt><dd class="accent">89%</dd></div>
-            <div><dt>priority accuracy</dt><dd>83%</dd></div>
-            <div><dt>unseen, hand-labeled tickets</dt><dd>36</dd></div>
+            <div><dt>category accuracy</dt><dd class="accent" data-count="89" data-suffix="%">89%</dd></div>
+            <div><dt>priority accuracy</dt><dd data-count="83" data-suffix="%">83%</dd></div>
+            <div><dt>unseen, hand-labeled tickets</dt><dd data-count="36">36</dd></div>
           </dl>
           <div class="btn-row btn-row--sm">
             <a href="https://scenebiscuit.com/support-desk-repo-1/" class="btn btn-solid btn-sm" target="_blank" rel="noopener">Live demo<span class="sr-only"> (opens in a new tab)</span></a>
@@ -170,7 +170,7 @@
           <p><strong>What I built:</strong> Two browser tools that read a COA and check it against the rules for Texas, Missouri, Colorado, California and federal hemp. Each result is Clear, Review or Hold, and every finding links to the regulation behind it. When a rule is unclear, the tool flags it for review instead of guessing.</p>
           <p><strong>The result:</strong> 88 automated tests, run on every change. Accessible to WCAG 2.2 AA in light and dark mode.</p>
           <dl class="stats">
-            <div><dt>automated tests passing</dt><dd class="accent">88</dd></div>
+            <div><dt>automated tests passing</dt><dd class="accent" data-count="88">88</dd></div>
             <div><dt>states plus federal hemp</dt><dd>5 + 1</dd></div>
             <div><dt>WCAG 2.2, light and dark</dt><dd>AA</dd></div>
           </dl>
@@ -303,5 +303,26 @@
     <p>Created by Nick Lax · Austin, TX</p>
     <p class="mono">Plain HTML and CSS on GitHub Pages</p>
   </footer>
+
+  <!-- Biscuit: a small horse (for Seabiscuit, the name behind scenebiscuit) that peeks up from the corner and watches the cursor -->
+  <div class="critter" id="critter">
+    <p class="critter-say" id="critter-say" role="status" aria-live="polite"></p>
+    <button type="button" class="critter-btn" id="critter-btn" aria-label="Say hi to Biscuit">
+      <svg class="critter-body" viewBox="0 0 90 92" width="90" height="92" aria-hidden="true">
+        <path d="M25 32 L19 5 L38 22 Z" fill="#8B5A2B" stroke="#17171A" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M65 32 L71 5 L52 22 Z" fill="#8B5A2B" stroke="#17171A" stroke-width="2.5" stroke-linejoin="round"/>
+        <path d="M25 26 L22 12 L32 22 Z" fill="#E9A99B"/><path d="M65 26 L68 12 L58 22 Z" fill="#E9A99B"/>
+        <path d="M21 92 C 16 52, 25 22, 45 20 C 65 22, 74 52, 69 92 Z" fill="#A86B38" stroke="#17171A" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M42 36 C 41 52, 42 66, 45 72 C 48 66, 49 52, 48 36 Z" fill="#F4E9D8"/>
+        <path d="M33 23 C 36 35, 43 36, 45 27 C 47 36, 54 35, 57 23 C 51 17, 39 17, 33 23 Z" fill="#3B2414" stroke="#17171A" stroke-width="2" stroke-linejoin="round"/>
+        <ellipse cx="45" cy="84" rx="17" ry="11" fill="#C98C55" stroke="#17171A" stroke-width="2.5"/>
+        <ellipse cx="39" cy="83" rx="2.6" ry="3.4" fill="#3B2414"/><ellipse cx="51" cy="83" rx="2.6" ry="3.4" fill="#3B2414"/>
+        <g class="critter-eyes">
+          <g class="eye"><circle cx="32" cy="46" r="7.5" fill="#FFFFFF" stroke="#17171A" stroke-width="2.5"/><circle class="pupil" cx="32" cy="46" r="3.4" fill="#17171A"/></g>
+          <g class="eye"><circle cx="58" cy="46" r="7.5" fill="#FFFFFF" stroke="#17171A" stroke-width="2.5"/><circle class="pupil" cx="58" cy="46" r="3.4" fill="#17171A"/></g>
+        </g>
+      </svg>
+    </button>
+  </div>
 </body>
 </html>

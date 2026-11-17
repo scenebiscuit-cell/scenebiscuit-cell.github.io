@@ -38,6 +38,8 @@ Nick Lax's portfolio home page, live since November 3, 2026, at https://scenebis
 - Eggshell/cream page (`#EEE7D8`), cards `#F7F2E7`, near-black ink, one accent: ballpoint blue `#1F3FD8` (`#93A5FF` in dark mode).
 - Bricolage Grotesque for headings, IBM Plex Sans for body, IBM Plex Mono for small labels.
 - No handwriting fonts, no portrait, no art/painting mentions. Small, purposeful motion only: hero fade-up, highlight wipe behind "without losing the human part.", scroll fade-ins, card lift on hover, pulsing status dots, and a tumbleweed that first rolls after 10 idle seconds, then comes back 5 seconds after each roll while the visitor stays idle (any activity resets it to 10).
+- Playful extras (Nov 17, 2026): stats count up once when they scroll into view (screen readers get the final number); the 1-2-3 badges on the How I can help cards pop in one after another; each of those cards has a small icon that acts out the card on hover (magnifier sweeps, bars grow, gears turn); project screenshots tilt slightly toward the mouse; clicking the tumbleweed bounces it off the screen.
+- Biscuit: a small cartoon horse (for Seabiscuit, the meaning behind "scenebiscuit") peeks up from the bottom-right corner after the visitor scrolls past the intro. Its eyes follow the mouse (or the tumbleweed while it rolls), its head leans slightly toward the cursor, it blinks now and then, and clicking it shows a short speech bubble. Hidden under 760px. Nothing loops while someone reads; all motion stops for reduced-motion.
 - Hero buttons each have an icon after the label: looped down arrow (See the work), envelope (Email me), page with down arrow (Download resume).
 
 ## Screenshots
