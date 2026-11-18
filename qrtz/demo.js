@@ -266,6 +266,9 @@ class DropDetector {
         this.musicSince = Infinity; this.quietSince = null; this.armed = false; this.cooldownUntil = -Infinity;
         this.flagUntil = -Infinity; this.lastFired = -Infinity; this.full = 0; this.reason = '';
         this.recentBass = 0; this.hitSince = null; this.peaks = { bass: 0, mids: 0, treble: 0 };
+        // Off while a track with drops marked by hand plays: the marks are that track's drops, and the
+        // detector would also fire where the bass comes back after a breakdown, at the start of a build.
+        this.autoOff = false;
     }
     update(now, levels, rms, cfg, bpm, beatPhase) {
         const dt = this.lastTime === null ? 0 : Math.max(now - this.lastTime, 0);
@@ -307,7 +310,7 @@ class DropDetector {
         const jumped = bassNow >= cfg.drop_jump_min_level
             && bassNow >= cfg.drop_jump_ratio * Math.max(this.jumpBase, cfg.drop_min_bass);
         if ((returned || jumped) && wholeBand && onBeat && now - this.musicSince >= cfg.drop_min_music_sec
-                && now >= this.cooldownUntil) {
+                && now >= this.cooldownUntil && !this.autoOff) {
             this.reason = returned ? 'bass return' : 'bass jump';
             this.fire(now, cfg, bpm);
         }
@@ -507,6 +510,9 @@ class Sound {
         this.drop = 0; this.playing = false; this.bins = null; this.lastTime = null; this.kind = 'none';
         this.markedDrops = []; this.lastTrackTime = null;
     }
+    setMarkedDrops(dropsSec) {
+        this.markedDrops = dropsSec; this.lastTrackTime = null; this.drops.autoOff = dropsSec.length > 0;
+    }
     // Where the playing track is, in seconds, or null. A test sets its own.
     trackTime() { return this.element && !this.element.paused ? this.element.currentTime : null; }
     // Fires a marked drop as the track plays through it. A jump (a seek, the loop going round)
@@ -571,14 +577,15 @@ class Sound {
         if (this.element) { this.element.pause(); this.element = null; }
         try { this.input.disconnect(this.gainNode); } catch (e) { /* wasn't going to the speakers */ }
         this.source = null; this.playing = false;
+        this.setMarkedDrops([]);  // a new source starts with no marks and the detector on
     }
     async playFile(file) { return this.playUrl(URL.createObjectURL(file)); }
     // A track by address: the visitor's own file as an object URL, or the bundled demo track.
-    // dropsSec lists drops marked by hand, in seconds into the track (the bundled track's are
-    // one-bar bass cuts, which the detector's 4-second breakdown rule rightly passes over).
+    // dropsSec lists drops marked by hand, in seconds into the track. With marks, they are the
+    // track's drops and the detector stays off (the Drop button still works).
     async playUrl(url, dropsSec = []) {
         this.ensure(); this.disconnect();
-        this.markedDrops = dropsSec; this.lastTrackTime = null;
+        this.setMarkedDrops(dropsSec);
         const element = new Audio(url);
         element.loop = true;
         this.element = element;
