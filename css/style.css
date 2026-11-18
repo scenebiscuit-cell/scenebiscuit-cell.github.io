@@ -229,6 +229,7 @@ h1, h2, h3 { margin: 0; }
 .card-shot img { display: block; width: 100%; height: auto; border: 1.5px solid var(--line); border-radius: 8px; background: #0A0D0F; }
 .card-video { display: block; width: 100%; height: auto; margin-top: 24px; border: 1.5px solid var(--line); border-radius: 8px; background: #0A0D0F; }
 .card-video + .card-media { margin-top: 16px; }
+.card-media + .btn-row { margin-top: 20px; }
 .card-title { margin-bottom: 10px; font-family: var(--font-display); font-weight: 700; font-size: 28px; letter-spacing: -0.02em; }
 .dot { position: relative; display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
 .dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--accent); animation: ping 1.8s ease-out infinite; }
