@@ -1,7 +1,8 @@
 /* Nick Lax portfolio — small, dependency-free behaviors:
    1. Light/dark toggle (remembered in this browser)
    2. Sections fade in as they scroll into view
-   3. A tumbleweed rolls by after a few idle seconds */
+   3. A tumbleweed rolls by after a few idle seconds
+   4. Video previews marked data-inline-video turn into a player when clicked */
 (function () {
   'use strict';
 
@@ -88,4 +89,29 @@
     if (document.hidden) { clearTimeout(idleTimer); } else { onActivity(); }
   });
   onActivity();
+
+  /* ---------- 4. Click-to-play videos ----------
+     The card shows a still and a play button. Clicking swaps in a <video> with
+     controls and starts it, so the video file only downloads if someone wants it.
+     Without JavaScript the link still opens the video file. */
+  document.querySelectorAll('a[data-inline-video]').forEach(function (link) {
+    link.addEventListener('click', function (event) {
+      event.preventDefault();
+      var poster = link.querySelector('img');
+      var label = link.querySelector('.sr-only');
+      var video = document.createElement('video');
+      video.className = 'card-video';
+      video.src = link.getAttribute('href');
+      video.poster = poster ? poster.getAttribute('src') : '';
+      video.controls = true;
+      video.playsInline = true;
+      video.setAttribute('width', poster ? poster.getAttribute('width') : '1200');
+      video.setAttribute('height', poster ? poster.getAttribute('height') : '675');
+      if (label) { video.setAttribute('aria-label', label.textContent.replace(/^Play /, '')); }
+      link.replaceWith(video);
+      video.focus();
+      var started = video.play();
+      if (started && started.catch) { started.catch(function () { /* blocked: the controls are there */ }); }
+    });
+  });
 })();

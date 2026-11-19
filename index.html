@@ -29,8 +29,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=2026-11-19">
-  <script src="js/main.js?v=2026-11-13" defer></script>
+  <link rel="stylesheet" href="css/style.css?v=2026-11-19b">
+  <script src="js/main.js?v=2026-11-19" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -41,7 +41,7 @@
       <ul class="nav-links">
         <li><a href="#help" class="ul">How I help</a></li>
         <li><a href="#work" class="ul">Work</a></li>
-        <li><a href="#building" class="ul">Building</a></li>
+        <li><a href="#building" class="ul">Side projects</a></li>
         <li><a href="#experience" class="ul">Experience</a></li>
         <li><a href="#contact" class="ul">Contact</a></li>
       </ul>
@@ -183,46 +183,38 @@
       </article>
     </section>
 
-    <!-- Currently building -->
+    <!-- Side projects -->
     <section id="building" class="section wrap" aria-labelledby="building-title">
       <div class="section-head reveal">
-        <p class="section-num">03 — Currently building</p>
-        <h2 id="building-title" class="section-title">On the workbench</h2>
+        <p class="section-num">03 — Side projects</p>
+        <h2 id="building-title" class="section-title">Games and live visuals</h2>
       </div>
       <div class="cards">
-        <div class="card lift reveal">
-          <p class="card-status"><span class="dot" aria-hidden="true"></span>Demo video out · try it in your browser</p>
-          <h3 class="card-title">QRTZ</h3>
-          <p class="muted">Live visuals for DJ sets, where every picture is light through a crystal that moves with the beat, the bass and the drops. It runs as a desktop app with an operator panel laid out like a vision mixer: try a change in Preview, then take it live on the next bar.</p>
-          <p class="muted">The browser demo runs the same engine and panel with nothing to install: play the demo track, or your own, and switch scenes, crystals and colours.</p>
+        <div class="card card--project lift reveal">
           <a class="card-watch" href="https://youtu.be/rB3cTf-EOlw" target="_blank" rel="noopener">
             <img class="card-video" src="img/qrtz-video-poster.webp" width="1200" height="675" loading="lazy" alt="">
             <span class="card-watch-play" aria-hidden="true"></span>
             <span class="card-watch-label">Demo video · 2:40</span>
             <span class="sr-only">Watch the QRTZ demo video on YouTube, 2 minutes 40 seconds: the operator panel, then the show full screen (opens in a new tab)</span>
           </a>
+          <p class="card-status"><span class="dot" aria-hidden="true"></span>Demo video out · try it in your browser</p>
+          <h3 class="card-title">QRTZ</h3>
+          <p class="muted">Live visuals for DJ sets, where every picture is light through a crystal that moves with the beat, the bass and the drops. It runs as a desktop app with an operator panel laid out like a vision mixer. The browser demo runs the same engine with nothing to install: play the demo track or your own, and switch scenes, crystals and colours.</p>
           <div class="btn-row btn-row--sm">
             <a href="qrtz/" class="btn btn-solid btn-sm" target="_blank" rel="noopener">Try the demo<span class="sr-only"> (opens in a new tab)</span></a>
             <a href="https://youtu.be/rB3cTf-EOlw" class="btn btn-sm" target="_blank" rel="noopener">Watch the video<span class="sr-only"> on YouTube (opens in a new tab)</span></a>
           </div>
         </div>
-        <div class="card card--media lift reveal">
-          <p class="card-status"><span class="dot" aria-hidden="true"></span>Free demo on itch.io · in development</p>
+        <div class="card card--project lift reveal">
+          <a class="card-watch" href="video/asset-zero-trailer.mp4" data-inline-video>
+            <img class="card-video" src="img/asset-zero-trailer-poster.webp" width="1200" height="675" loading="lazy" alt="">
+            <span class="card-watch-play" aria-hidden="true"></span>
+            <span class="card-watch-label">Trailer · 0:43</span>
+            <span class="sr-only">Play the ASSET ZERO trailer, 43 seconds, with music: gameplay over a desert road with the cockpit panels on both sides</span>
+          </a>
+          <p class="card-status"><span class="dot dot--still" aria-hidden="true"></span>Free demo on itch.io · paused</p>
           <h3 class="card-title">ASSET ZERO</h3>
-          <p class="muted">A roguelite shoot 'em up in Godot 4, in the spirit of Raptor (1994). You fly a jet made of liquid metal that changes shape mid-fight.</p>
-          <video class="card-video" controls preload="none" playsinline poster="img/asset-zero-trailer-poster.webp" width="1280" height="720" aria-label="ASSET ZERO gameplay trailer, 43 seconds, with music">
-            <source src="video/asset-zero-trailer.mp4" type="video/mp4">
-          </video>
-          <div class="card-media">
-            <picture class="card-shot card-shot--tall">
-              <source media="(prefers-reduced-motion: reduce)" srcset="img/asset-zero-gameplay-still.webp">
-              <img src="img/asset-zero-gameplay.gif" width="360" height="480" loading="lazy" alt="ASSET ZERO gameplay: the jet weaves through pink rounds from a swarm of yellow-ringed Elite drones over a jungle road, then flares gold as Overclock kicks in">
-            </picture>
-            <picture class="card-shot card-shot--wide">
-              <source media="(prefers-reduced-motion: reduce)" srcset="img/asset-zero-fullscreen-still.webp">
-              <img src="img/asset-zero-fullscreen.gif" width="854" height="480" loading="lazy" alt="ASSET ZERO in fullscreen: a desert fight against Elite drones and a drill tower's beam, with status panels on both sides showing armor, weapons, strike charges and the Overclock meter">
-            </picture>
-          </div>
+          <p class="muted">A roguelite shoot 'em up in Godot 4, in the spirit of Raptor (1994). You fly a jet made of liquid metal that changes shape mid-fight. The free demo has one sector, two mini-bosses and a three-phase boss, and plays in a desktop browser.</p>
           <div class="btn-row btn-row--sm">
             <a href="https://scenebiscuit.itch.io/asset-zero" class="btn btn-solid btn-sm" target="_blank" rel="noopener">Play the demo<span class="sr-only"> on itch.io (opens in a new tab)</span></a>
           </div>

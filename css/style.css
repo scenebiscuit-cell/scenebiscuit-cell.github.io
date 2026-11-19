@@ -219,21 +219,15 @@ h1, h2, h3 { margin: 0; }
   background: var(--accent); color: var(--on-accent);
   font-family: var(--font-mono); font-size: 13px; font-weight: 500;
 }
-/* A card with gameplay clips: takes the full row so the clips have room. Each clip's flex-grow
-   is its width / height, which makes the two the same height side by side. */
-.card--media { flex-basis: 100%; }
-.card-media { display: flex; align-items: flex-start; gap: 16px; margin-top: 24px; }
-.card-shot { display: block; min-width: 0; flex: 1 1 0; }
-.card-shot--tall { flex-grow: 0.75; }
-.card-shot--wide { flex-grow: 1.7778; }
-.card-shot img { display: block; width: 100%; height: auto; border: 1.5px solid var(--line); border-radius: 8px; background: #0A0D0F; }
-.card-video { display: block; width: 100%; height: auto; margin-top: 24px; border: 1.5px solid var(--line); border-radius: 8px; background: #0A0D0F; }
-.card-video + .card-media { margin-top: 16px; }
-.card-media + .btn-row { margin-top: 20px; }
-/* A preview that links to a video on YouTube (nothing loads from YouTube until it's clicked) */
-.card-watch { position: relative; display: block; margin-top: 20px; border-radius: 8px; color: #fff; }
-.card-watch .card-video { margin-top: 0; }
-.card-watch + .btn-row { margin-top: 20px; }
+/* Side-project cards: one 16:9 video preview on top, then the text, with the buttons pinned
+   to the bottom so the two cards line up side by side. */
+.card--project { display: flex; flex-direction: column; }
+.card--project .card-watch, .card--project > .card-video { margin: 0 0 22px; }
+.card--project .btn-row { margin-top: auto; padding-top: 24px; }
+.card-video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; border: 1.5px solid var(--line); border-radius: 8px; background: #0A0D0F; }
+/* A preview image that links to a video. Nothing loads until it's clicked: QRTZ opens on YouTube,
+   ASSET ZERO swaps in a player right there (main.js). */
+.card-watch { position: relative; display: block; border-radius: 8px; color: #fff; }
 .card-watch-play {
   position: absolute; left: 50%; top: 50%; width: 76px; height: 76px; margin: -38px 0 0 -38px;
   border-radius: 50%; background: rgba(10, 13, 15, .72); border: 2px solid rgba(255, 255, 255, .85);
@@ -251,6 +245,9 @@ h1, h2, h3 { margin: 0; }
 .card-title { margin-bottom: 10px; font-family: var(--font-display); font-weight: 700; font-size: 28px; letter-spacing: -0.02em; }
 .dot { position: relative; display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
 .dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--accent); animation: ping 1.8s ease-out infinite; }
+/* A paused project: hollow dot, no pulse */
+.dot--still { background: transparent; border: 2px solid var(--muted); }
+.dot--still::after { display: none; }
 
 /* ---------- Experience ---------- */
 .jobs { list-style: none; margin: 0; padding: 0; }
@@ -335,9 +332,8 @@ h1, h2, h3 { margin: 0; }
   .stats { gap: 24px; }
   .stats dd { font-size: 40px; }
   .about-body { font-size: 19px; }
-  .card-media { flex-direction: column; align-items: center; }
-  .card-shot { flex: none; width: 100%; }
-  .card-shot--tall { max-width: 360px; }
+  .card-watch-play { width: 56px; height: 56px; margin: -28px 0 0 -28px; }
+  .card-watch-play::after { left: 21px; top: 15px; border-width: 12px 0 12px 19px; }
 }
 
 /* Links inside running text: always underlined so they don't rely on color alone */

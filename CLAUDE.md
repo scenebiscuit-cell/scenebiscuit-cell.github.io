@@ -7,17 +7,18 @@ Nick Lax's portfolio home page, live since November 3, 2026, at https://scenebis
 2. Work on a branch and open a pull request. Never push to `main`. Merge only when Nick says "merge".
 3. When `css/style.css` or `js/main.js` changes, bump the `?v=YYYY-MM-DD` on their tags in `index.html`.
 4. Keep it accessible: real links and buttons, visible focus, 4.5:1 text contrast in light and dark, tap targets at least 44px tall, and respect `prefers-reduced-motion` for every animation.
-7. Responsive: one breakpoint at 760px (nav collapses, columns stack). Check 320, 390, 768, 1024, 1440 and 1920px for sideways scroll before merging layout changes.
-5. No invented numbers. Every stat on the page must match the project's README (Pharos: 89% / 83% on 36 unseen tickets; COA tools: 88 tests).
-6. Nick is on Windows with PowerShell. Start command blocks with `cd C:\Projects\scenebiscuit-cell.github.io`. One small, testable step at a time, ending with how to check it worked.
+5. Responsive: one breakpoint at 760px (nav collapses, columns stack). Check 320, 390, 768, 1024, 1440 and 1920px for sideways scroll before merging layout changes.
+6. No invented numbers. Every stat on the page must match the project's README (Pharos: 89% / 83% on 36 unseen tickets; COA tools: 88 tests).
+7. Nick is on Windows with PowerShell. Start command blocks with `cd C:\Projects\scenebiscuit-cell.github.io`. One small, testable step at a time, ending with how to check it worked.
 
 ## Files
 | File | What it does |
 |---|---|
 | `index.html` | All page content |
 | `css/style.css` | Layout, light/dark colors, animations |
-| `js/main.js` | Theme toggle (saved in browser storage as `nl-theme`), scroll fade-ins, idle tumbleweed |
-| `img/` | Favicon (`favicon.svg`, `favicon-32.png`, `apple-touch-icon.png`: a white document with a blue check), `tumbleweed.png` (Nick's drawing), project screenshots |
+| `js/main.js` | Theme toggle (saved in browser storage as `nl-theme`), scroll fade-ins, idle tumbleweed, click-to-play video previews (`data-inline-video`) |
+| `img/` | Favicon (`favicon.svg`, `favicon-32.png`, `apple-touch-icon.png`: a white document with a blue check), `tumbleweed.png` (Nick's drawing), project screenshots, video preview images (`*-poster.webp`) |
+| `video/` | `asset-zero-trailer.mp4` (43 s, 1280×720, with music), played in the ASSET ZERO card |
 | `Nick-Lax-Resume.pdf` | Public resume behind the Download resume button |
 | `.nojekyll` | Tells GitHub Pages to serve files as-is |
 | `qrtz/` | The QRTZ browser demo, served at https://scenebiscuit.com/qrtz/. A copy of `web/demo/` from the private qrtz repo: don't edit it here. Change it there, then run `C:\Projects\qrtz\web\demo\tools\publish_to_portfolio.ps1` to copy it over |
@@ -29,7 +30,9 @@ Nick Lax's portfolio home page, live since November 3, 2026, at https://scenebis
 - Lead with support, not compliance. The "more than ten years" is combined across support, cannabis compliance (about five years) and web and motion design.
 - Pharos comes before the cannabis project; cannabis should not be the first thing visitors see.
 - Name Atlassian in summaries, not Loom (a short stint). Loom stays in the Experience list.
-- Keep the Currently building status lines current (ASSET ZERO and QRTZ change often). As of Nov 19, 2026: QRTZ "Demo video out · try it in your browser" (the card describes the desktop app and its browser demo, and links its 2:40 demo video, an unlisted YouTube video at https://youtu.be/rB3cTf-EOlw, from a preview image rather than an embed, so nothing loads from YouTube until a visitor clicks; the crystal-on-the-booth controller is not built, so the card no longer mentions it), ASSET ZERO "In progress · boss fight playable".
+- Section 03 is "Side projects: Games and live visuals" (was "Currently building: On the workbench"; renamed Nov 19, 2026 because ASSET ZERO is paused). The nav link says "Side projects"; the anchor stays `#building`. Keep the status lines current. As of Nov 19, 2026:
+  - QRTZ: "Demo video out · try it in your browser" (pulsing dot). The card describes the desktop app and its browser demo, and links its 2:40 demo video, an unlisted YouTube video at https://youtu.be/rB3cTf-EOlw, from a preview image rather than an embed, so nothing loads from YouTube until a visitor clicks. The crystal-on-the-booth controller is not built, so the card doesn't mention it.
+  - ASSET ZERO: "Free demo on itch.io · paused" (hollow dot, no pulse: `dot--still`). Demo public at https://scenebiscuit.itch.io/asset-zero since Nov 18, 2026; desktop browser only. Switch back to the pulsing dot if work resumes.
 - Contact heading is "Hiring, or need help with a project? Let's chat." and the line names both the roles Nick wants (support operations, customer success, compliance, AI evaluation; Austin or remote) and freelance projects. Update it if that changes.
 - Plain, specific sentences. No filler, no invented claims.
 
@@ -38,6 +41,12 @@ Nick Lax's portfolio home page, live since November 3, 2026, at https://scenebis
 - Bricolage Grotesque for headings, IBM Plex Sans for body, IBM Plex Mono for small labels.
 - No handwriting fonts, no portrait, no art/painting mentions. Small, purposeful motion only: hero fade-up, highlight wipe behind "without losing the human part.", scroll fade-ins, card lift on hover, pulsing status dots, and a tumbleweed that first rolls after 10 idle seconds, then comes back 5 seconds after each roll while the visitor stays idle (any activity resets it to 10).
 - Hero buttons each have an icon after the label: looped down arrow (See the work), envelope (Email me), page with down arrow (Download resume).
+
+## Side-project cards
+- Each card has the same shape: one 16:9 preview on top (`.card-watch`: poster image, play button, length label), then status, title, one paragraph, and the buttons pinned to the bottom so both cards line up.
+- Poster images: 1200×675 WebP in `img/`, named `<project>-video-poster.webp` or `<project>-trailer-poster.webp`.
+- Nothing autoplays and nothing loads until clicked. A YouTube video is a plain link (opens in a new tab). A video hosted here uses `data-inline-video` on the link; `main.js` swaps in a `<video>` with controls when it's clicked.
+- No GIFs. They were 6–8 MB each, and the trailer shows the same footage. If a card needs motion, use a short muted MP4 instead.
 
 ## Screenshots
 - `img/*-light.webp` show in light mode, `img/*-dark.webp` in dark mode. 1200px wide, WebP, under ~50 KB each. Frames crop to 2:1 from the top-left, so the top of each screenshot is what shows.
