@@ -230,6 +230,24 @@ h1, h2, h3 { margin: 0; }
 .card-video { display: block; width: 100%; height: auto; margin-top: 24px; border: 1.5px solid var(--line); border-radius: 8px; background: #0A0D0F; }
 .card-video + .card-media { margin-top: 16px; }
 .card-media + .btn-row { margin-top: 20px; }
+/* A preview that links to a video on YouTube (nothing loads from YouTube until it's clicked) */
+.card-watch { position: relative; display: block; margin-top: 20px; border-radius: 8px; color: #fff; }
+.card-watch .card-video { margin-top: 0; }
+.card-watch + .btn-row { margin-top: 20px; }
+.card-watch-play {
+  position: absolute; left: 50%; top: 50%; width: 76px; height: 76px; margin: -38px 0 0 -38px;
+  border-radius: 50%; background: rgba(10, 13, 15, .72); border: 2px solid rgba(255, 255, 255, .85);
+  transition: transform .2s var(--ease), background .2s;
+}
+.card-watch-play::after {
+  content: ""; position: absolute; left: 29px; top: 22px;
+  border-style: solid; border-width: 16px 0 16px 26px; border-color: transparent transparent transparent #fff;
+}
+.card-watch-label {
+  position: absolute; left: 12px; bottom: 12px; padding: 4px 10px; border-radius: 6px;
+  background: rgba(10, 13, 15, .78); font-family: var(--font-mono); font-size: 13px;
+}
+.card-watch:hover .card-watch-play, .card-watch:focus-visible .card-watch-play { transform: scale(1.08); background: var(--accent); }
 .card-title { margin-bottom: 10px; font-family: var(--font-display); font-weight: 700; font-size: 28px; letter-spacing: -0.02em; }
 .dot { position: relative; display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
 .dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--accent); animation: ping 1.8s ease-out infinite; }
@@ -300,7 +318,7 @@ h1, h2, h3 { margin: 0; }
   .rise, .js .reveal { opacity: 1; transform: none; animation: none; transition: none; }
   .hl { animation: none; background-size: 100% 85%; }
   .dot::after, .btn:hover .swirl { animation: none; }
-  .lift:hover, .btn:hover, .theme-btn:hover { transform: none; }
+  .lift:hover, .btn:hover, .theme-btn:hover, .card-watch:hover .card-watch-play, .card-watch:focus-visible .card-watch-play { transform: none; }
   .tumbleweed { display: none; }
 }
 
