@@ -797,6 +797,7 @@
 <script src="pictures/sky.js"></script>
 <script src="pictures/pattern.js"></script>
 <script src="demo.js"></script>
+<script src="recorder.js"></script>
 <script>
 (function () {
   const { Demo, SETTINGS } = window.QRTZDemo;
@@ -841,7 +842,7 @@
     window.qrtzLink.onState((state) => {
       const was = link;
       link = state;
-      demo.sound.beats.followLink(state.live ? state.bpm : null);
+      if (!demo.recording) demo.sound.beats.followLink(state.live ? state.bpm : null);  // a video follows its own track
       if (state.live && (!was || !was.live)) log('tempo: ' + state.bpm.toFixed(1) + ' BPM from Ableton Link');
       else if (state.live && Math.abs(state.bpm - was.bpm) >= 0.5) log('tempo: Ableton Link changed to ' + state.bpm.toFixed(1) + ' BPM');
       else if (!state.live && was && was.live) log('tempo: Ableton Link gone, back to the beat from the audio');
@@ -982,11 +983,23 @@
   }
   for (const b of document.querySelectorAll('[data-mic]')) b.onclick = startMic;
 
+  // The play/pause button shows what a click does: Play (a triangle) while the track is paused or
+  // stopped, Pause (two bars) while it plays. Set at once on a click or the track's end, and kept
+  // in step on every refresh. toggleAttribute, not .hidden: the Chromium in the desktop app has no
+  // hidden property on SVG.
+  function showTransport() {
+    const paused = demo.sound.paused;
+    $('icon_pause').toggleAttribute('hidden', paused); $('icon_play').toggleAttribute('hidden', !paused);
+    $('playpause').setAttribute('aria-label', paused ? 'Play' : 'Pause');
+    $('playpause').title = paused ? 'Play' : 'Pause';
+  }
   $('playpause').onclick = async () => {
     if (demo.sound.paused) { if (await demo.sound.play()) log('playing: ' + trackName); }
     else { demo.sound.pause(); log('paused'); }
+    showTransport();
   };
-  $('stop').onclick = () => { demo.sound.stop(); log('stopped: ' + trackName + ' is back at the start'); };
+  demo.sound.onEnded = () => { showTransport(); log('finished: ' + trackName + ' (Play starts it again)'); };
+  $('stop').onclick = () => { demo.sound.stop(); showTransport(); log('stopped: ' + trackName + ' is back at the start'); };
   $('drop').onclick = () => {
     demo.sound.ensure();
     demo.sound.pressDrop(performance.now() / 1000 - demo.start);
@@ -1680,7 +1693,8 @@
     const fsChanged = () => {
       const on = !!fsElement();
       wake();
-      $('icon_fs').hidden = on; $('icon_fs_exit').hidden = !on;
+      // toggleAttribute, not .hidden: the Chromium in the desktop app has no hidden property on SVG.
+      $('icon_fs').toggleAttribute('hidden', on); $('icon_fs_exit').toggleAttribute('hidden', !on);
       fsButton.setAttribute('aria-label', on ? 'Exit full screen' : 'Full screen');
       fsButton.title = on ? 'Exit full screen (Esc)' : 'Full screen';
     };
@@ -1838,10 +1852,7 @@
       if (sound.element && source !== 'mic') {
         $('time').textContent = clock(sound.position) + ' / ' + clock(sound.duration);
         $('progress').setAttribute('aria-valuenow', String(Math.round(sound.duration ? 100 * sound.position / sound.duration : 0)));
-        const paused = sound.paused;
-        $('icon_pause').hidden = paused; $('icon_play').hidden = !paused;
-        $('playpause').setAttribute('aria-label', paused ? 'Play' : 'Pause');
-        $('playpause').title = paused ? 'Play' : 'Pause';
+        showTransport();
       }
       $('fps').textContent = Math.round(demo.fps) + ' fps';
       $('fps').classList.toggle('bad', demo.fps < op.fps_alert);
@@ -1922,7 +1933,7 @@
     }
     for (const kind of ['output', 'preview']) {
       const engine = kind === 'output' ? demo : preview;
-      if (!engine) continue;
+      if (!engine || engine.recording) continue;   // the video recorder sets its own size
       const size = largest[kind];
       if (JSON.stringify(engine.outputSize || null) !== JSON.stringify(size)) engine.outputSize = size;
       (kind === 'output' ? stage : $('preview_stage')).classList.toggle('out', !!size);
@@ -1972,6 +1983,81 @@
       line.textContent = info.error ? 'Phone page: off (' + info.error + ')' : 'Phone page: ' + info.address + ' (PIN in ' + info.pinFile + ')';
       $('flags').before(line);
       log(info.error ? 'phone page: could not start (' + info.error + ')' : 'phone page: ' + info.address);
+    });
+  }
+
+  // ---- The video recorder (app only; M16 step 3) ----
+  // The app's QRTZ menu, Record a video..., asks where to save it and sends the recorder settings
+  // (settings.json "recorder"); recorder.js draws Program frame by frame from the demo track and
+  // the app's ffmpeg joins the frames and the track into an MP4. Everything else on the panel
+  // stands still meanwhile.
+  if (window.qrtzRecorder) {
+    const rec = window.qrtzRecorder;
+    let stopAsked = false;
+    rec.onStop(() => { stopAsked = true; });
+    // A cue from settings, done as a click straight to Program would do it.
+    function cue(c, now) {
+      const v = c.value;
+      if (c.do === 'scene') { if (v === 'auto') demo.followTempo(); else demo.goToScene(v, true, c.bars || null); }
+      else if (c.do === 'hanging') demo.hangingWanted = !!v;
+      else if (c.do === 'drop') demo.sound.pressDrop(now);
+      else if (c.do === 'blackout') demo.blackoutOn = !!v;
+      else if (c.do === 'picture') { if (cuePictures[v]) demo.setImage(cuePictures[v], true, c.bars || null); }
+      else if (['shape', 'palette', 'shader', 'waves'].includes(c.do)) applyNow(c.do, v, { quiet: true });
+      else log('video: no such cue, ' + c.do);
+    }
+    // Pictures by name (a demo picture such as Sky, or a file in images/, with or without its
+    // extension), loaded before the recording starts, since a frame can't wait for one.
+    let cuePictures = {};
+    async function pictureNamed(name) {
+      if (folder && !folderEntries.length) await readFolder();
+      const want = String(name).toLowerCase(), bare = (n) => n.toLowerCase().replace(/\.[^.]+$/, '');
+      const entry = deck.find((e) => e.name.toLowerCase() === want || e.id === want) || deck.find((e) => bare(e.name) === bare(want));
+      if (!entry) throw new Error('no picture called ' + name + ' (the names are in the Photos card)');
+      const src = await entry.src();
+      return await new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error('could not open the picture ' + name));
+        image.src = src;
+      });
+    }
+    rec.onStart(async (opts) => {
+      if (demo.recording) return;
+      stopAsked = false;
+      const started = performance.now();
+      log('video: recording ' + opts.lengthSec + ' s of ' + DEMO_TRACK.name + ' from ' + opts.startSec + ' s, at ' + opts.width + 'x' + opts.height + ', ' + opts.fps + ' fps; leave the panel alone until it says done');
+      let lastSaid = 0;
+      try {
+        const trackBytes = await (await fetch(await demoTrack())).arrayBuffer();
+        // The picture the video opens on (recorder.picture; empty keeps Program's), and any a cue names.
+        cuePictures = {};
+        for (const c of opts.cues || []) if (c.do === 'picture') cuePictures[c.value] = await pictureNamed(c.value);
+        if (opts.picture) {
+          const image = await pictureNamed(opts.picture);
+          if (!demo.photosOn) demo.togglePhotos();
+          demo.setImage(image, false);
+          currentImage = image;
+          log('video: on the picture ' + opts.picture);
+        }
+        const done = await window.QRTZRecorder.record(demo, Object.assign({}, opts, { trackBytes, dropsSec: DEMO_TRACK.dropsSec }), {
+          frame: (pixels) => rec.frame(pixels),
+          cue,
+          cancelled: () => stopAsked,
+          progress: (n, total) => {
+            const t = performance.now();
+            if (t - lastSaid < 5000 && n < total) return;
+            lastSaid = t;
+            log('video: ' + Math.round(100 * n / total) + '% (' + n + ' of ' + total + ' frames)');
+          },
+        });
+        const result = await rec.finish();
+        const took = Math.round((performance.now() - started) / 1000);
+        log(result.ok ? 'video: done, ' + done.seconds.toFixed(1) + ' s in ' + took + ' s, saved to ' + result.file : 'video: ffmpeg failed (' + result.message + ')');
+      } catch (err) {
+        rec.abort();
+        log('video: ' + (err.message === 'stopped' ? 'stopped, nothing saved' : 'failed, ' + err.message));
+      }
     });
   }
 

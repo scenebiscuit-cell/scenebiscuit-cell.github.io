@@ -587,7 +587,9 @@ class Sound {
         this.ensure(); this.disconnect();
         this.setMarkedDrops(dropsSec);
         const element = new Audio(url);
-        element.loop = true;
+        // Played once: at the end it stops and goes back to the start, as Stop does, and Play starts it again.
+        element.loop = false;
+        element.addEventListener('ended', () => { element.currentTime = 0; if (this.onEnded) this.onEnded(); });
         this.element = element;
         this.source = this.context.createMediaElementSource(element);
         this.source.connect(this.input);
@@ -1519,7 +1521,9 @@ class Demo {
         this.onFrame = null;
         // The sound is analyzed on its own steady clock, not per drawn frame: the beat tracker
         // wants even readings, and a slow or throttled frame rate would starve it.
-        if (!this.program) setInterval(() => this.sound.update(performance.now() / 1000 - this.start), 10);
+        // While the video recorder (recorder.js) runs, it steps the sound and draws the frames itself.
+        this.recording = false;
+        if (!this.program) setInterval(() => { if (!this.recording) this.sound.update(performance.now() / 1000 - this.start); }, 10);
         else this.start = this.program.start;
     }
     resize() {
@@ -1827,7 +1831,8 @@ class Demo {
     // shares Program's sound) sits it out, and still follows the drops in the music.
     dropNow(sound) { return sound.drop > 0 && !(this.program && sound.drops && sound.drops.reason === 'button'); }
     frame() {
-        if (!this.paused) this.render(performance.now() / 1000 - this.start);
+        if (this.recording) { /* recorder.js draws the frames */ }
+        else if (!this.paused) this.render(performance.now() / 1000 - this.start);
         else this.lastFrame = null;   // so the first frame back doesn't count the pause as one long step
         requestAnimationFrame(() => this.frame());
     }
@@ -1984,5 +1989,5 @@ class Demo {
     }
 }
 
-window.QRTZDemo = { Demo, SETTINGS, Sound, CrystalMotion, SceneClock };
+window.QRTZDemo = { Demo, SETTINGS, Sound, CrystalMotion, SceneClock, SceneBrain };
 })();
