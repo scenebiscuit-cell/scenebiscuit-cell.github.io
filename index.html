@@ -29,8 +29,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=2026-11-20g">
-  <script src="js/main.js?v=2026-11-20g" defer></script>
+  <link rel="stylesheet" href="css/style.css?v=2026-11-20h">
+  <script src="js/main.js?v=2026-11-20h" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -81,17 +81,17 @@
       </div>
       <div class="cards cards--three">
         <div class="card reveal">
-          <p class="card-status"><span class="step-num" aria-hidden="true">1</span>Process</p>
+          <div class="card-top"><p class="card-status"><span class="step-num" aria-hidden="true">1</span>Process</p><svg class="card-icon icon-magnify" width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 30h32M4 22h32M4 14h32" opacity=".28"/><g class="mag"><circle cx="16" cy="18" r="8"/><path d="M22 24l7 7"/></g></svg></div>
           <h3 class="card-title">Find the bottlenecks</h3>
           <p class="muted">I walk through how work actually moves through your team and map where it stalls. I used Lean Six Sigma to formalize processes for a state compliance program.</p>
         </div>
         <div class="card reveal">
-          <p class="card-status"><span class="step-num" aria-hidden="true">2</span>Data</p>
+          <div class="card-top"><p class="card-status"><span class="step-num" aria-hidden="true">2</span>Data</p><svg class="card-icon icon-bars" width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 34h30" opacity=".35"/><rect class="bar b1" x="8" y="20" width="6" height="14" rx="1.5"/><rect class="bar b2" x="17" y="12" width="6" height="22" rx="1.5"/><rect class="bar b3" x="26" y="6" width="6" height="28" rx="1.5"/></svg></div>
           <h3 class="card-title">Make your data visible</h3>
           <p class="muted">Clear dashboards and reports built from the data you already have, so the problems are easy to see and easy to explain.</p>
         </div>
         <div class="card reveal">
-          <p class="card-status"><span class="step-num" aria-hidden="true">3</span>Systems</p>
+          <div class="card-top"><p class="card-status"><span class="step-num" aria-hidden="true">3</span>Systems</p><svg class="card-icon icon-gears" width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g class="gear g1"><circle cx="14" cy="16" r="4"/><path d="M14 6v3M14 23v3M4 16h3M21 16h3M7 9l2 2M19 21l2 2M7 23l2-2M19 11l2-2"/></g><g class="gear g2"><circle cx="28" cy="28" r="3"/><path d="M28 21v2.5M28 32.5V35M21 28h2.5M32.5 28H35M23 23l1.8 1.8M31.2 31.2L33 33M23 33l1.8-1.8M31.2 24.8L33 23"/></g></svg></div>
           <h3 class="card-title">Build the system together</h3>
           <p class="muted">Automation and AI take the repetitive work. People keep the judgment calls. <a href="#work" class="text-link">Pharos</a> is an example: AI triage, with a person always in the loop for refunds, identity and security.</p>
         </div>
@@ -103,14 +103,14 @@
       <div class="section-head section-head--split reveal">
         <div>
           <p class="section-num">02 — Featured work</p>
-          <h2 id="work-title" class="section-title section-title--lg">Two tools, and the numbers behind them</h2>
+          <h2 id="work-title" class="section-title section-title--lg">Two systems I built, and how well they work</h2>
         </div>
-        <p class="section-aside">Both are live and open source. The scores are from tests I'm happy to show you.</p>
+        <p class="section-aside">Both put the three ideas above into practice. They're live, open source, and tested on cases they were never tuned on.</p>
       </div>
 
       <!-- Pharos -->
       <article class="case">
-        <div class="case-media reveal">
+        <div class="case-media reveal from-left">
           <div class="frame lift">
             <div class="frame-bar">
               <span class="frame-dot" aria-hidden="true"></span>
@@ -126,16 +126,16 @@
           <p class="tag-note"><span class="tag-dot" aria-hidden="true"></span>Suspicious-login reports always go to a person, whatever the AI says</p>
         </div>
 
-        <div class="case-text reveal">
+        <div class="case-text reveal from-right">
           <p class="case-kicker">AI support operations</p>
           <h3 class="case-title">Pharos Support Desk</h3>
           <p><strong>The problem:</strong> AI help chats answer confidently even when they're wrong, and nobody can see why a ticket landed where it did.</p>
           <p><strong>What I built:</strong> A support setup for a fictional project-management app, from both sides. Customers get a help chat that answers only from the help articles and cites them, plus a portal to track their requests. Agents get a desk with AI triage, drafted replies and SLA timers.</p>
           <p><strong>The result:</strong> On 36 tickets the AI had never seen, triage picked the right category 89% of the time and the right priority 83%. The misses are in the README too.</p>
           <dl class="stats">
-            <div><dt>category accuracy</dt><dd class="accent">89%</dd></div>
-            <div><dt>priority accuracy</dt><dd>83%</dd></div>
-            <div><dt>unseen, hand-labeled tickets</dt><dd>36</dd></div>
+            <div><dt>category accuracy</dt><dd class="accent" data-count="89" data-suffix="%">89%</dd></div>
+            <div><dt>priority accuracy</dt><dd data-count="83" data-suffix="%">83%</dd></div>
+            <div><dt>unseen, hand-labeled tickets</dt><dd data-count="36">36</dd></div>
           </dl>
           <div class="btn-row btn-row--sm">
             <a href="https://scenebiscuit.com/support-desk-repo-1/" class="btn btn-solid btn-sm" target="_blank" rel="noopener">Live demo<span class="sr-only"> (opens in a new tab)</span></a>
@@ -147,7 +147,7 @@
 
       <!-- COA tools -->
       <article class="case case--flip">
-        <div class="case-media reveal">
+        <div class="case-media reveal from-right">
           <div class="frame lift">
             <div class="frame-bar">
               <span class="frame-dot" aria-hidden="true"></span>
@@ -163,14 +163,14 @@
           <p class="tag-note"><span class="tag-dot" aria-hidden="true"></span>Every finding links to the rule behind it</p>
         </div>
 
-        <div class="case-text reveal">
+        <div class="case-text reveal from-left">
           <p class="case-kicker">Cannabis compliance</p>
           <h3 class="case-title">COA Crosscheck + TCUP COA Checker</h3>
           <p><strong>The problem:</strong> Every lab formats its certificate of analysis differently, so checking one against state limits by hand is slow, and it's easy to miss a number.</p>
           <p><strong>What I built:</strong> Two browser tools that read a COA and check it against the rules for Texas, Missouri, Colorado, California and federal hemp. Each result is Clear, Review or Hold, and every finding links to the regulation behind it. When a rule is unclear, the tool flags it for review instead of guessing.</p>
           <p><strong>The result:</strong> 88 automated tests, run on every change. Accessible to WCAG 2.2 AA in light and dark mode.</p>
           <dl class="stats">
-            <div><dt>automated tests passing</dt><dd class="accent">88</dd></div>
+            <div><dt>automated tests passing</dt><dd class="accent" data-count="88">88</dd></div>
             <div><dt>states plus federal hemp</dt><dd>5 + 1</dd></div>
             <div><dt>WCAG 2.2, light and dark</dt><dd>AA</dd></div>
           </dl>
@@ -234,7 +234,7 @@
       <div class="section-head section-head--split reveal">
         <div>
           <p class="section-num">04 — Experience</p>
-          <h2 id="experience-title" class="section-title">Support, compliance and design</h2>
+          <h2 id="experience-title" class="section-title">Where I learned to spot what slows teams down</h2>
         </div>
         <p class="section-num">The short version. The full resume is the download button at the top.</p>
       </div>
@@ -244,7 +244,7 @@
           <div class="job-body">
             <h3 class="job-role">Project Specialist, Division of Cannabis Regulation</h3>
             <p class="job-org">Missouri Dept. of Health and Senior Services</p>
-            <p class="muted">First hire on a new compliance pilot program. Designed its regulatory workflows and owned chain-of-custody compliance across statewide facility audits in METRC.</p>
+            <p class="muted">First hire on a new compliance pilot program. Designed its regulatory workflows, owned chain-of-custody compliance across statewide facility audits in METRC, and used Lean Six Sigma to formalize the processes.</p>
           </div>
         </li>
         <li class="job reveal">
@@ -252,7 +252,7 @@
           <div class="job-body">
             <h3 class="job-role">Owner &amp; Operations Manager</h3>
             <p class="job-org">The Strand LLC · Tijeras, NM</p>
-            <p class="muted">Founded and licensed a regulated small business, and wrote the safety, compliance and operations SOPs it ran on.</p>
+            <p class="muted">Founded and licensed a regulated small business from the ground up, coordinating architects, contractors and utilities, and wrote the safety, compliance and operations SOPs it ran on.</p>
           </div>
         </li>
         <li class="job reveal">
@@ -260,7 +260,7 @@
           <div class="job-body">
             <h3 class="job-role">Enterprise Support Specialist</h3>
             <p class="job-org">Loom · Austin</p>
-            <p class="muted">Technical support for enterprise customers and rollout plans for large organizations.</p>
+            <p class="muted">Technical support for enterprise customers, and rollout plans that helped large organizations adopt the product across their teams.</p>
           </div>
         </li>
         <li class="job reveal">
@@ -268,15 +268,23 @@
           <div class="job-body">
             <h3 class="job-role">Multimedia Designer &amp; Project Manager</h3>
             <p class="job-org">Nick Lax Designs · Austin</p>
-            <p class="muted">Design and video projects for clients, start to finish, including a 200-plus video pipeline for a live-music YouTube channel.</p>
+            <p class="muted">Design and video projects for clients, from scoping to delivery, including a 200-plus video production pipeline for a live-music YouTube channel.</p>
           </div>
         </li>
         <li class="job reveal">
-          <p class="job-years">2014 – 2017</p>
+          <p class="job-years">2016 – 2017</p>
           <div class="job-body">
-            <h3 class="job-role">Customer Success Advocate, then Product Advocate</h3>
+            <h3 class="job-role">Product Advocate</h3>
             <p class="job-org">Atlassian · Austin</p>
-            <p class="muted">Resolved thousands of customer inquiries by phone, email and chat, helped design the team's training program, and was promoted in 2016.</p>
+            <p class="muted">Focused on HipChat and Confluence. Helped international customers work out whether they fit their business goals, which offerings to use, and how to use them to get there. Brought what they told me back to the product teams as bug reports and feature recommendations.</p>
+          </div>
+        </li>
+        <li class="job reveal">
+          <p class="job-years">2014 – 2016</p>
+          <div class="job-body">
+            <h3 class="job-role">Customer Success Advocate</h3>
+            <p class="job-org">Atlassian · Austin</p>
+            <p class="muted">A generalist across every Atlassian product: explained how billing and licensing worked, answered everything in my scope and routed the rest to the right team. Handled 40 to 60 tickets a day plus phone shifts of up to 40 calls, kept customer satisfaction above 90%, wrote training documents for the Manila support team, and was promoted to Product Advocate.</p>
           </div>
         </li>
       </ol>
@@ -291,8 +299,8 @@
           <h2 id="about-title" class="section-title">Hi, I'm Nick.</h2>
         </div>
         <div class="about-body">
-          <p>I've been an enterprise support specialist at Atlassian, a state cannabis regulator, a small-business owner and a freelance web and motion designer.</p>
-          <p class="muted">I'm not a career developer. I build these tools with Claude Code and test them the way an auditor would, and I'd rather publish a real accuracy score than a demo that only works on the examples it was built from.</p>
+          <p>I've been an enterprise support specialist at Atlassian, a state cannabis regulator, a small-business owner and a freelance web and motion designer. Each job showed me a different way work gets stuck, and how much faster it moves once the problem is easy to see.</p>
+          <p class="muted">I'm not a career developer, and I don't sell big software. I build small tools with Claude Code, test them the way an auditor would, and keep people in charge of the decisions that matter. I'd rather show a real accuracy score than a demo that only works on the examples it was built from.</p>
         </div>
       </div>
     </section>
@@ -315,5 +323,6 @@
     <p>Created by Nick Lax · Austin, TX</p>
     <p class="mono">Plain HTML and CSS on GitHub Pages</p>
   </footer>
+
 </body>
 </html>
