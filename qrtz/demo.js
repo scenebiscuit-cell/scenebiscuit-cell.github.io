@@ -30,19 +30,20 @@ const SETTINGS = {
     },
     crystal: {
         turn_bars: 8, gem_size: 0.54, gem_tilt_deg: 28, ior: 1.55, refraction: 0.45, dispersion: 0.05,
-        bass_breathe: 0.25, bass_pulse: 0.08, pulse_from: 0.35, pulse_floor: 0.05, pulse_rise_sec: 0.03,
+        bass_breathe: 0.15, bass_pulse: 0.05, pulse_from: 0.35, pulse_floor: 0.05, pulse_rise_sec: 0.03,
         pulse_fall_sec: 0.25, pulse_peak_halflife_sec: 30, treble_sparkle: 1.5,
         facet_base: 0.7, facet_contrast: 0.9, gem_edge_glow: 0.0, glint_gain: 1.4, background_dim: 0.45,
-        white_knee: 0.5, white_max: 0.88, halo_shadow: 0.8, beat_pulse: 0.1, beat_kick_release_sec: 0.18,
-        beat_twist_deg: 10, beat_spin_gain: 3, beat_spin_release_sec: 0.3, heavy_spin_gain: 1,
-        sparkle_rise_sec: 0.5, sparkle_fall_sec: 1, sway_deg: 14, sway_bars: 2,
-        move_change_bars: [2, 4, 4, 8], move_glide_bars: 1, move_spin_range: [0.5, 1.7],
+        white_knee: 0.5, white_max: 0.88, halo_shadow: 0.8, beat_pulse: 0.06, beat_kick_release_sec: 0.18,
+        beat_twist_deg: 6, beat_kick_window_sec: 0.12, beat_spin_gain: 1.5, beat_spin_release_sec: 0.3, heavy_spin_gain: 0.5,
+        sparkle_rise_sec: 0.5, sparkle_fall_sec: 1, sway_deg: 9, sway_bars: 2,
+        move_change_bars: [2, 4, 4, 8], move_glide_bars: 1, move_spin_range: [0.6, 1.3],
         move_spin_reverse_chance: 0.2, move_sway_size_range: [0.5, 1.5], move_sway_speed_range: [0.5, 1.5],
-        move_tilt_deg: 12, move_roll_deg: 10, motion_attack_sec: 0.15, motion_release_sec: 1.5,
+        move_tilt_deg: 8, move_roll_deg: 6, motion_attack_sec: 0.15, motion_release_sec: 1.5,
         motion_floor_bass: 0.1, motion_peak_halflife_sec: 60, motion_full_at: 0.6, idle_motion: 0.12,
         idle_spin: 0.25, punch_floor_level: 0.25, punch_from: 0.35, punch_full_at: 0.7,
         shapes: ['brilliant', 'disco', 'model', 'eyeball'],
-        eye_iris: 0.62, eye_pupil: 0.24, eye_look_deg: 26, eye_look_dirs_deg: [-140, -40], eye_look_spread_deg: 12,
+        eye_iris: 0.62, eye_pupil: 0.24, eye_sclera: 0.75, eye_veins: 0.35, eye_iris_color: [0.36, 0.56, 0.6],
+        eye_iris_tint: 0.6, eye_catchlight: 0.9, eye_look_deg: 26, eye_look_dirs_deg: [-140, -40], eye_look_spread_deg: 12,
         eye_hold_sec_range: [2, 5], eye_move_sec: 0.5, eye_blink_close_sec: 0.1, eye_blink_open_sec: 0.22,
         eye_blink_wait_sec_range: [3, 7], eye_double_blink_chance: 0.15, eye_double_blink_gap_sec: 0.2, eye_center_chance: 0.3,
         structure_size: 1.05, structure_edge_glow: 0.0, structure_lean_deg: 10, model_tilt_deg: 12,
@@ -574,6 +575,8 @@ class Sound {
     set muted(value) { if (this.gainNode) this.gainNode.gain.value = value ? 0 : 1; }
     disconnect() {
         if (this.source) { try { this.source.disconnect(); } catch (e) { /* already gone */ } }
+        // A live input (the microphone, the computer's sound) lets go of its device or capture.
+        if (this.stream) { for (const track of this.stream.getTracks()) track.stop(); this.stream = null; }
         if (this.element) { this.element.pause(); this.element = null; }
         try { this.input.disconnect(this.gainNode); } catch (e) { /* wasn't going to the speakers */ }
         this.source = null; this.playing = false;
@@ -622,10 +625,43 @@ class Sound {
     async useMicrophone() {
         this.ensure(); this.disconnect();
         const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+        this.stream = stream;
         this.source = this.context.createMediaStreamSource(stream);
         this.source.connect(this.input);  // not on to the speakers: that would feed back
         await this.context.resume();
         this.playing = true; this.kind = 'microphone';
+    }
+    // The computer's own sound: whatever it is playing (Spotify, YouTube, DJ software), heard
+    // straight from the sound card, not through the air. It comes in through screen sharing,
+    // the one way a page can get it. In the app, main.js answers that request with the whole
+    // computer's sound (Electron's "loopback") and no picker; in Chrome the visitor picks a tab
+    // and ticks "Also share tab audio". Only the sound is kept: the shared picture is stopped
+    // at once and never drawn or saved. onEnded runs if the sharing stops from outside
+    // (Chrome's "Stop sharing" bar).
+    async useSystemAudio(onEnded) {
+        if (!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia)) throw new Error('this browser cannot share its sound');
+        this.ensure(); this.disconnect();
+        const stream = await navigator.mediaDevices.getDisplayMedia({
+            video: true,  // browsers only share sound along with a picture
+            audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+            systemAudio: 'include',
+        });
+        for (const track of stream.getVideoTracks()) track.stop();
+        const audio = stream.getAudioTracks();
+        if (!audio.length) {
+            for (const track of stream.getTracks()) track.stop();
+            throw new Error('no sound came with it (pick a tab and tick "Also share tab audio")');
+        }
+        this.stream = stream;
+        audio[0].addEventListener('ended', () => {
+            if (this.stream !== stream) return;  // already switched to another source
+            this.disconnect();
+            if (onEnded) onEnded();
+        });
+        this.source = this.context.createMediaStreamSource(new MediaStream(audio));
+        this.source.connect(this.input);  // not on to the speakers: it's already playing there
+        await this.context.resume();
+        this.playing = true; this.kind = 'system';
     }
     // One band's RMS over its analyser's window, from the filtered waveform, as the project
     // measures it. (An earlier version averaged the spectrum's bins over the band instead,
@@ -890,8 +926,21 @@ class CrystalMotion {
         const barsPerSec = bpm / 60 / SETTINGS.beats_per_bar;
         const moves = this.moves;
         moves.update(step, barsPerSec, cfg);
+        // How hard the kick drum hits right now (0 to 1, against its recent peak). The beat's
+        // whip, twist and pulse go by it, so a beat found in the mids alone (a snare, a strummed
+        // guitar, in music without a heavy kick) barely moves the crystal, while a real kick
+        // does as before. The kick is read over beat_kick_window_sec after the beat, since the
+        // beat can come a moment before the kick's peak (measured on the demo track: about 0.47
+        // at the beat, 0.9 within 0.15 s). (The project's crystal_motion.py still uses the whole
+        // intensity.)
+        const kickNow = this.bassKick.update(step, Math.max(bass, 0), cfg);
         this.whip *= Math.exp(-step / cfg.beat_spin_release_sec);
-        if (beat) this.whip = Math.max(this.whip, intensity);
+        if (beat) { this.beatKick = 0; this.kickWindow = cfg.beat_kick_window_sec; }
+        if (this.kickWindow > 0) {
+            this.kickWindow -= step;
+            this.beatKick = Math.max(this.beatKick, kickNow);
+            this.whip = Math.max(this.whip, intensity * kickNow);
+        }
         // In the hanging light (this.hang, 0 to 1, set by the Demo) the crystal turns slower.
         const hangCfg = SETTINGS.light.hanging, hang = this.hang || 0;
         const spinSpeed = 360 * barsPerSec / cfg.turn_bars * spin * (1 + (moves.spin - 1) * intensity)
@@ -918,9 +967,9 @@ class CrystalMotion {
             offsetX: Math.sin(swing) * hangCfg.sway_length, hangTilt: swing * 180 / Math.PI,
             eyeX, eyeY, eyeBlink: this.blink.update(step, cfg),
             angle: this.angle, sparkle: this.sparkle, intensity, punch,
-            breathe: Math.max(bass, 0) * cfg.bass_breathe + this.kick * cfg.beat_pulse * punch
-                + this.bassKick.update(step, Math.max(bass, 0), cfg) * cfg.bass_pulse,
-            twist: this.kick * cfg.beat_twist_deg * punch,
+            breathe: Math.max(bass, 0) * cfg.bass_breathe + this.kick * cfg.beat_pulse * punch * (this.beatKick || 0)
+                + kickNow * cfg.bass_pulse,
+            twist: this.kick * cfg.beat_twist_deg * punch * (this.beatKick || 0),
             swayTilt: (Math.sin(sway) * cfg.sway_deg * moves.swaySize + moves.tilt) * motion,
             swayRoll: (Math.cos(sway) * cfg.sway_deg * 0.7 * moves.swaySize + moves.roll) * motion + swing * 180 / Math.PI,
             explode: this.explosion.amount, shardTurn: this.explosion.turn, shardPulse: this.explosion.pulse,
@@ -1903,6 +1952,8 @@ class Demo {
         if (structure && (values.shapeA !== 11 || (this.modelDist && this.modelNormal))) {
             this.structurePass.draw(this.gem.framebuffer, width, height, Object.assign(common, {
                 uEdgeGlow: 0, uEyeIris: cfg.eye_iris, uEyePupil: cfg.eye_pupil,
+                uEyeSclera: cfg.eye_sclera, uEyeVeins: cfg.eye_veins, uEyeIrisColor: cfg.eye_iris_color,
+                uEyeIrisTint: cfg.eye_iris_tint, uEyeCatchlight: cfg.eye_catchlight,
                 uEyeX: values.eyeX * rad, uEyeY: values.eyeY * rad, uEyeBlink: values.eyeBlink,
                 uStructureSize: cfg.structure_size, uStructureLean: cfg.structure_lean_deg * rad, uStructureEdge: cfg.structure_edge_glow,
                 uModelGrid: cfg.model.grid, uModelSpan: cfg.model.span, uModelTilt: cfg.model_tilt_deg * rad,

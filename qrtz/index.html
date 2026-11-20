@@ -239,7 +239,7 @@
   .start h2 { margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; color: var(--muted); }
   .start p { margin: 0; color: var(--text-2); }
   .start .btn.primary { min-height: 56px; font-size: 16px; }
-  .start .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .start .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; }
   .start .small { font-size: 12px; color: var(--muted); }
 
   /* Transport */
@@ -540,7 +540,8 @@
             <button class="btn primary" id="demo_track">Play the demo track</button>
             <div class="pair">
               <button class="btn" data-open="track">Open a track</button>
-              <button class="btn" data-mic>Use the microphone</button>
+              <button class="btn" data-mic>Microphone</button>
+              <button class="btn" data-system>Computer sound</button>
             </div>
             <p class="small">Sound stays in your browser. Nothing is uploaded.</p>
           </div>
@@ -639,6 +640,7 @@
         <button class="btn" id="demo_again">Demo track</button>
         <button class="btn" data-open="track">Open a track</button>
         <button class="btn" data-mic>Microphone</button>
+        <button class="btn" data-system title="Listen to what this computer is playing: Spotify, YouTube, DJ software">Computer sound</button>
       </div>
     </div>
     <section class="log" aria-label="Log">
@@ -685,7 +687,7 @@
 
   <div class="help-topic" data-topic="start">
     <section class="keys-group"><h3>Give it sound</h3><ol>
-      <li>Click <b>Play the demo track</b>, or <b>Open a track</b> to play your own file, or <b>Microphone</b> to listen to the room.</li>
+      <li>Click <b>Play the demo track</b>, or <b>Open a track</b> to play your own file, or <b>Microphone</b> to listen to the room, or <b>Computer sound</b> to listen to whatever this computer is playing (Spotify, YouTube, DJ software). On the website it's <b>Tab sound</b>: pick the tab and tick <i>Also share tab audio</i>.</li>
       <li>In the app with DJ software running, turn on <b>Ableton Link</b> there (Rekordbox, Serato, Traktor, Engine DJ, Live): QRTZ follows its tempo and never changes it.</li>
       <li>The Inputs card shows the BPM and where it comes from. Within a few seconds the crystal turns with the beat, swells with the bass and sparkles with the treble.</li>
     </ol></section>
@@ -926,10 +928,11 @@
     source = kind; trackName = name;
     start.hidden = true;
     stage.classList.remove('standby');
-    $('playpause').disabled = $('stop').disabled = kind === 'mic';
-    $('track_name').textContent = kind === 'mic' ? 'Microphone' : name;
-    $('progress').hidden = kind === 'mic';
-    $('time').textContent = kind === 'mic' ? 'live' : '';
+    const isLive = kind === 'mic' || kind === 'system';
+    $('playpause').disabled = $('stop').disabled = isLive;
+    $('track_name').textContent = name;
+    $('progress').hidden = isLive;
+    $('time').textContent = isLive ? 'live' : '';
   }
   // The drops: bars 41 and 65 at 128 BPM, each after a one-bar bass cut, which the drop detector
   // (like the project's) doesn't count as a breakdown, so they're marked here.
@@ -982,6 +985,34 @@
     } catch (err) { log('no microphone: ' + err.message); }
   }
   for (const b of document.querySelectorAll('[data-mic]')) b.onclick = startMic;
+  // The computer's own sound (demo.js, useSystemAudio). In the app it's the whole computer's
+  // sound; in a browser it's one tab's, chosen in the browser's own share window. Hidden where
+  // the browser can't share sound (phones).
+  const inApp = !!window.qrtzApp;
+  const systemName = inApp ? 'Computer sound' : 'Tab sound';
+  async function startSystem() {
+    try {
+      await demo.sound.useSystemAudio(() => {
+        log('stopped listening to the ' + (inApp ? 'computer' : 'tab'));
+        source = null;
+        $('track_name').textContent = 'No track yet';
+        $('time').textContent = '';
+      });
+      demo.motion.newTrack(false);
+      started('system', systemName);
+      log(inApp ? 'listening to this computer: play music in any app (Spotify, YouTube, DJ software)'
+                : 'listening to the shared tab');
+    } catch (err) {
+      if (err && err.name === 'NotAllowedError') log((inApp ? 'computer' : 'tab') + ' sound: not shared');
+      else log('no ' + (inApp ? 'computer' : 'tab') + ' sound: ' + err.message);
+    }
+  }
+  for (const b of document.querySelectorAll('[data-system]')) {
+    if (!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia)) { b.hidden = true; continue; }
+    b.textContent = systemName;
+    if (!inApp) b.title = 'Listen to a browser tab: Chrome asks which tab; tick "Also share tab audio"';
+    b.onclick = startSystem;
+  }
 
   // The play/pause button shows what a click does: Play (a triangle) while the track is paused or
   // stopped, Pause (two bars) while it plays. Set at once on a click or the track's end, and kept
@@ -1727,7 +1758,7 @@
     const dt = lastFrameAt === null ? 0 : now - lastFrameAt;
     lastFrameAt = now;
     const sound = demo.sound, beats = sound.beats;
-    const live = source !== null && sound.playing && (source === 'mic' || !sound.paused);
+    const live = source !== null && sound.playing && (source === 'mic' || source === 'system' || !sound.paused);
 
     if (demo.modelState !== lastModelState) {
       lastModelState = demo.modelState;
@@ -1820,7 +1851,7 @@
     $('m_level').classList.toggle('on', levelPeak > 0.01);
     for (let i = 0; i < beatSquares.length; i++) beatSquares[i].classList.toggle('on', live && !quiet && beats.locked && i <= beats.beatInBar);
 
-    if (sound.element && source !== 'mic') {
+    if (sound.element && source !== 'mic' && source !== 'system') {
       const fraction = sound.duration ? sound.position / sound.duration : 0;
       $('progress_fill').style.width = (fraction * 100).toFixed(2) + '%';
       $('progress_thumb').style.left = (fraction * 100).toFixed(2) + '%';
@@ -1830,9 +1861,10 @@
       lastText = now;
       const fromLink = beats.source === 'link';
       const locked = (source !== null || fromLink) && beats.locked;
-      if (locked && !wasLocked && !fromLink) log('tempo: ' + Math.round(beats.bpm) + ' BPM from the ' + (source === 'mic' ? 'microphone' : 'track'));
+      const heard = source === 'mic' ? 'microphone' : source === 'system' ? (inApp ? 'computer sound' : 'tab sound') : 'track';
+      if (locked && !wasLocked && !fromLink) log('tempo: ' + Math.round(beats.bpm) + ' BPM from the ' + heard);
       wasLocked = locked;
-      const from = source === 'mic' ? 'microphone' : source === 'demo' ? 'demo track' : 'your track';
+      const from = source === 'demo' ? 'demo track' : source === 'file' ? 'your track' : heard;
       $('chip_wait').hidden = source !== null;
       $('chip_scene').hidden = $('chip_beats').hidden = source === null;
       $('chip_tempo').hidden = source === null && !fromLink;
@@ -1844,12 +1876,12 @@
       bpm.textContent = locked ? Math.round(beats.bpm) : '---';
       bpm.classList.toggle('none', !locked);
       $('bpm_what').textContent = fromLink ? 'BPM · tempo from Ableton Link'
-        : locked ? 'BPM · beat from the ' + (source === 'mic' ? 'microphone' : 'track') + ' (audio)' : 'BPM · no beat yet';
+        : locked ? 'BPM · beat from the ' + heard + ' (audio)' : 'BPM · no beat yet';
       $('link_note').hidden = link === null;
       if (link) $('link_note').textContent = linkWords(link);
       $('gain').hidden = source === null;
       $('gain').textContent = 'gain ×' + sound.autoGain.gain.toFixed(1);
-      if (sound.element && source !== 'mic') {
+      if (sound.element && source !== 'mic' && source !== 'system') {
         $('time').textContent = clock(sound.position) + ' / ' + clock(sound.duration);
         $('progress').setAttribute('aria-valuenow', String(Math.round(sound.duration ? 100 * sound.position / sound.duration : 0)));
         showTransport();
