@@ -16,7 +16,7 @@ Nick Lax's portfolio home page, live since November 3, 2026, at https://scenebis
 |---|---|
 | `index.html` | All page content |
 | `css/style.css` | Layout, light/dark colors, animations |
-| `js/main.js` | Theme toggle (saved in browser storage as `nl-theme`), scroll fade-ins, Biscuit the horse trotting under the menu after the mouse, pop-up video player for thumbnails marked `data-video-dialog` |
+| `js/main.js` | Theme toggle (saved in browser storage as `nl-theme`), scroll fade-ins, pop-up video player for thumbnails marked `data-video-dialog` |
 | `img/` | Favicon (`favicon.svg`, `favicon-32.png`, `apple-touch-icon.png`: a white document with a blue check), project screenshots, video preview images (`*-poster.webp`) |
 | `video/` | `qrtz-demo.mp4` (2:40, 1920×1080, 30 fps) and `asset-zero-trailer.mp4` (43 s, 1920×1080, 60 fps), H.264 with sound, played in the pop-up player |
 | `Nick-Lax-Resume.pdf` | Public resume behind the Download resume button |
@@ -40,7 +40,7 @@ Nick Lax's portfolio home page, live since November 3, 2026, at https://scenebis
 ## Design
 - Eggshell/cream page (`#EEE7D8`), cards `#F7F2E7`, near-black ink, one accent: ballpoint blue `#1F3FD8` (`#93A5FF` in dark mode).
 - Bricolage Grotesque for headings, IBM Plex Sans for body, IBM Plex Mono for small labels.
-- No handwriting fonts, no portrait, no art/painting mentions. Small, purposeful motion only: hero fade-up, highlight wipe behind "without losing the human part.", scroll fade-ins, card lift on hover, pulsing status dots, and Biscuit (a small cartoon horse, for Seabiscuit, the meaning behind "scenebiscuit") who trots along the strip under the menu after the mouse, leaning and bobbing as he goes, looking at the pointer and blinking when he stops; only on computers with a mouse and windows over 760 px, standing still with reduced motion. The idle tumbleweed was removed Nov 20, 2026 (owner: too distracting); its drawing is in Git history.
+- No handwriting fonts, no portrait, no art/painting mentions. Small, purposeful motion only: hero fade-up, highlight wipe behind "without losing the human part.", scroll fade-ins, card lift on hover, and pulsing status dots. Nothing that follows the mouse or wanders across the page: the idle tumbleweed and then Biscuit (a small cartoon horse trotting under the menu after the mouse) were both removed on Nov 20, 2026 as too distracting (owner). Both drawings are in Git history.
 - Playful extras (Nov 17, 2026): stats count up once when they scroll into view (screen readers get the final number); the 1-2-3 badges on the How I can help cards pop in one after another; each of those cards has a small icon that acts out the card on hover (magnifier sweeps, bars grow, gears turn); project screenshots tilt slightly toward the mouse.
 - Scroll motion: grouped items (How I can help cards, Currently building cards, Experience rows) arrive one after another; cards rise with a slight tilt and settle; case-study screenshot and text slide in from their own sides; screenshots drift a few pixels slower than the page. Each item animates once, then hover lifts take over. `main` uses `overflow-x: clip` so the side slides never cause sideways scroll.
 - Hero buttons each have an icon after the label: looped down arrow (See the work), envelope (Email me), page with down arrow (Download resume).
