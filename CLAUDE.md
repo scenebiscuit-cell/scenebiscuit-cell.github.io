@@ -49,7 +49,7 @@ Nick Lax's portfolio home page, live since November 3, 2026, at https://scenebis
 ## Side-project cards
 - Each card has the same shape: status, title, one paragraph, a small video thumbnail (`.card-thumb`: 152px poster with a play button, a title and a length line), and the buttons pinned to the bottom so both cards line up. Videos stay small on the page on purpose.
 - Clicking a thumbnail opens the video in a pop-up player (`<dialog>`, up to 960px wide) built by `main.js`. The player's own full-screen button expands it. Esc, the close button or a click outside closes it and stops the video. Without JavaScript the link opens the MP4.
-- Videos are hosted here in `video/`, not on YouTube: 1280×720 H.264 MP4 with AAC sound, `+faststart`, ideally under ~15 MB each.
+- Videos are hosted here in `video/`, not on YouTube: 1280×720 H.264 MP4 with AAC sound, `+faststart`, ideally under ~15 MB each. `qrtz-demo.mp4` is 23 MB (2:40 at 30 fps, about 1 Mbps, two-pass, from the 1080p60 master in the owner's Videos folder); the kaleidoscope compresses badly, so it is over that size rather than blurry.
 - Poster images: 1200×675 WebP in `img/`, named `<project>-video-poster.webp` or `<project>-trailer-poster.webp`.
 - Nothing autoplays and nothing downloads until clicked.
 - No GIFs. They were 6–8 MB each, and the trailer shows the same footage. If a card needs motion, use a short muted MP4 instead.
