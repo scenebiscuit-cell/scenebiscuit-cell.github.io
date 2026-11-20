@@ -16,9 +16,9 @@ Nick Lax's portfolio home page, live since November 3, 2026, at https://scenebis
 |---|---|
 | `index.html` | All page content |
 | `css/style.css` | Layout, light/dark colors, animations |
-| `js/main.js` | Theme toggle (saved in browser storage as `nl-theme`), scroll fade-ins, idle tumbleweed, click-to-play video previews (`data-inline-video`) |
+| `js/main.js` | Theme toggle (saved in browser storage as `nl-theme`), scroll fade-ins, idle tumbleweed, pop-up video player for thumbnails marked `data-video-dialog` |
 | `img/` | Favicon (`favicon.svg`, `favicon-32.png`, `apple-touch-icon.png`: a white document with a blue check), `tumbleweed.png` (Nick's drawing), project screenshots, video preview images (`*-poster.webp`) |
-| `video/` | `asset-zero-trailer.mp4` (43 s, 1280×720, with music), played in the ASSET ZERO card |
+| `video/` | `qrtz-demo.mp4` (2:40) and `asset-zero-trailer.mp4` (43 s), both 1280×720 H.264 with sound, played in the pop-up player |
 | `Nick-Lax-Resume.pdf` | Public resume behind the Download resume button |
 | `.nojekyll` | Tells GitHub Pages to serve files as-is |
 | `qrtz/` | The QRTZ browser demo, served at https://scenebiscuit.com/qrtz/. A copy of `web/demo/` from the private qrtz repo: don't edit it here. Change it there, then run `C:\Projects\qrtz\web\demo\tools\publish_to_portfolio.ps1` to copy it over |
@@ -31,7 +31,7 @@ Nick Lax's portfolio home page, live since November 3, 2026, at https://scenebis
 - Pharos comes before the cannabis project; cannabis should not be the first thing visitors see.
 - Name Atlassian in summaries, not Loom (a short stint). Loom stays in the Experience list.
 - Section 03 is "Side projects: Games and live visuals" (was "Currently building: On the workbench"; renamed Nov 19, 2026 because ASSET ZERO is paused). The nav link says "Side projects"; the anchor stays `#building`. Keep the status lines current. As of Nov 19, 2026:
-  - QRTZ: "Demo video out · try it in your browser" (pulsing dot). The card describes the desktop app and its browser demo, and links its 2:40 demo video, an unlisted YouTube video at https://youtu.be/rB3cTf-EOlw, from a preview image rather than an embed, so nothing loads from YouTube until a visitor clicks. The crystal-on-the-booth controller is not built, so the card doesn't mention it.
+  - QRTZ: "Demo video out · try it in your browser" (pulsing dot). The card describes the desktop app and its browser demo, and plays its 2:40 demo video from `video/qrtz-demo.mp4` (the same video is unlisted on YouTube at https://youtu.be/rB3cTf-EOlw, but the site no longer links there). The crystal-on-the-booth controller is not built, so the card doesn't mention it.
   - ASSET ZERO: "Free demo on itch.io · paused" (hollow dot, no pulse: `dot--still`). Demo public at https://scenebiscuit.itch.io/asset-zero since Nov 18, 2026; desktop browser only. Switch back to the pulsing dot if work resumes.
 - Contact heading is "Hiring, or need help with a project? Let's chat." and the line names both the roles Nick wants (support operations, customer success, compliance, AI evaluation; Austin or remote) and freelance projects. Update it if that changes.
 - Plain, specific sentences. No filler, no invented claims.
@@ -43,9 +43,11 @@ Nick Lax's portfolio home page, live since November 3, 2026, at https://scenebis
 - Hero buttons each have an icon after the label: looped down arrow (See the work), envelope (Email me), page with down arrow (Download resume).
 
 ## Side-project cards
-- Each card has the same shape: one 16:9 preview on top (`.card-watch`: poster image, play button, length label), then status, title, one paragraph, and the buttons pinned to the bottom so both cards line up.
+- Each card has the same shape: status, title, one paragraph, a small video thumbnail (`.card-thumb`: 152px poster with a play button, a title and a length line), and the buttons pinned to the bottom so both cards line up. Videos stay small on the page on purpose.
+- Clicking a thumbnail opens the video in a pop-up player (`<dialog>`, up to 960px wide) built by `main.js`. The player's own full-screen button expands it. Esc, the close button or a click outside closes it and stops the video. Without JavaScript the link opens the MP4.
+- Videos are hosted here in `video/`, not on YouTube: 1280×720 H.264 MP4 with AAC sound, `+faststart`, ideally under ~15 MB each.
 - Poster images: 1200×675 WebP in `img/`, named `<project>-video-poster.webp` or `<project>-trailer-poster.webp`.
-- Nothing autoplays and nothing loads until clicked. A YouTube video is a plain link (opens in a new tab). A video hosted here uses `data-inline-video` on the link; `main.js` swaps in a `<video>` with controls when it's clicked.
+- Nothing autoplays and nothing downloads until clicked.
 - No GIFs. They were 6–8 MB each, and the trailer shows the same footage. If a card needs motion, use a short muted MP4 instead.
 
 ## Screenshots
