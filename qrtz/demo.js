@@ -635,22 +635,43 @@ class Sound {
     // straight from the sound card, not through the air. It comes in through screen sharing,
     // the one way a page can get it. In the app, main.js answers that request with the whole
     // computer's sound (Electron's "loopback") and no picker; in Chrome the visitor picks a tab
-    // and ticks "Also share tab audio". Only the sound is kept: the shared picture is stopped
-    // at once and never drawn or saved. onEnded runs if the sharing stops from outside
-    // (Chrome's "Stop sharing" bar).
+    // and ticks "Also share tab audio", or (on Windows) picks Entire screen and turns on "Also
+    // share system audio", which brings every app's sound, Spotify's included. Only the sound is
+    // kept: the shared picture is stopped at once and never drawn or saved. onEnded runs if the
+    // sharing stops from outside (Chrome's "Stop sharing" bar). Returns what was shared: 'browser'
+    // (a tab), 'monitor' (a screen, so the whole computer's sound) or 'window'.
     async useSystemAudio(onEnded) {
         if (!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia)) throw new Error('this browser cannot share its sound');
+        // Only Chromium browsers (Chrome, Edge, the app) share sound with a page. Firefox and Safari
+        // share a picture only, so their share window would never bring sound (and Firefox brings
+        // the shared window to the front): say so instead of opening it. userAgentData is Chromium's.
+        if (!navigator.userAgentData) throw new Error("this browser can't share sound with a page (Firefox and Safari can't); open this page in Chrome or Edge, or use the microphone");
         this.ensure(); this.disconnect();
+        // Chrome's hints (other browsers ignore them): open its share window on Entire screen, the
+        // one that brings the whole computer's sound, and leave QRTZ's own tab out of the list.
+        // A controller lets the page ask Chrome not to jump to what was shared (it brings a shared
+        // window or tab to the front otherwise).
+        const controller = typeof CaptureController === 'function' ? new CaptureController() : null;
         const stream = await navigator.mediaDevices.getDisplayMedia({
-            video: true,  // browsers only share sound along with a picture
+            video: { displaySurface: 'monitor' },  // browsers only share sound along with a picture
             audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
             systemAudio: 'include',
+            selfBrowserSurface: 'exclude',
+            ...(controller ? { controller } : {}),
         });
+        const video = stream.getVideoTracks()[0];
+        const surface = (video && video.getSettings && video.getSettings().displaySurface) || '';
+        // Has to come straight after the share, before anything else waits.
+        if (controller && surface !== 'monitor') { try { controller.setFocusBehavior('no-focus-change'); } catch (err) { /* too late or not supported */ } }
         for (const track of stream.getVideoTracks()) track.stop();
         const audio = stream.getAudioTracks();
         if (!audio.length) {
             for (const track of stream.getTracks()) track.stop();
-            throw new Error('no sound came with it (pick a tab and tick "Also share tab audio")');
+            throw new Error(surface === 'monitor'
+                ? 'no sound came with it (turn on "Also share system audio" in the share window)'
+                : surface === 'window'
+                ? 'a window brings no sound (pick Entire screen and turn on "Also share system audio", or a Chrome tab with "Also share tab audio")'
+                : 'no sound came with it (pick Entire screen and turn on "Also share system audio", or a Chrome tab with "Also share tab audio")');
         }
         this.stream = stream;
         audio[0].addEventListener('ended', () => {
@@ -662,6 +683,7 @@ class Sound {
         this.source.connect(this.input);  // not on to the speakers: it's already playing there
         await this.context.resume();
         this.playing = true; this.kind = 'system';
+        return surface;
     }
     // One band's RMS over its analyser's window, from the filtered waveform, as the project
     // measures it. (An earlier version averaged the spectrum's bins over the band instead,
