@@ -500,6 +500,14 @@
     .start .btn.primary { min-height: 40px; font-size: 14px; }
     .start .small { display: none; }
     .rail { grid-area: rail; justify-self: start; max-width: min(100%, calc(var(--pic-h) * 16 / 9)); }
+    /* Room for both: when the space under Program's picture is tall enough (the script measures it
+       and sets data-both and --prev-h), Preview shows there too, smaller, so both pictures are in
+       view like a vision mixer, and the tabs step aside. */
+    .main[data-both] { grid-template-areas: "tabs pick" "pic panel" "rail panel" "prev panel"; }
+    .main[data-both] #preview_stage { grid-area: prev; align-self: start; aspect-ratio: auto;
+                                      height: var(--prev-h); width: min(100%, calc(var(--prev-h) * 16 / 9)); }
+    .main[data-both] #preview_stage, .main[data-both] .stage-box { visibility: visible; }
+    .main[data-both] .view-tabs { visibility: hidden; }
 
     /* The side column: the drop-down, then the card it picks. */
     .panel-pick { grid-area: pick; align-self: end; }
@@ -1578,8 +1586,31 @@
   $('panel_pick').onchange = () => { mainBox.dataset.panel = $('panel_pick').value; remember('panel', $('panel_pick').value); };
   if (recall('view') === 'preview') showView('preview');
   if ([...$('panel_pick').options].some((o) => o.value === recall('panel'))) { $('panel_pick').value = recall('panel'); $('panel_pick').onchange(); }
+  // Room for both pictures: in the two-column smaller window, when the space between the rail under
+  // Program and the sound bar is at least BOTH_MIN_PX tall, Preview shows there (never taller than
+  // Program), and the tabs aren't needed. Checked whenever the window or the sound bar changes size.
+  const BOTH_MIN_PX = 120;
+  const twoColumn = window.matchMedia('(min-width: 700px) and (max-width: 1099px) and (orientation: landscape)');
+  function fitBoth() {
+    let room = 0;
+    if (twoColumn.matches) {
+      room = Math.floor(document.querySelector('.bar').getBoundingClientRect().top
+                        - document.querySelector('.rail').getBoundingClientRect().bottom - 16);
+    }
+    if (room >= BOTH_MIN_PX) {
+      const program = document.querySelector('.stage-box').getBoundingClientRect().height;
+      mainBox.style.setProperty('--prev-h', Math.min(room, program) + 'px');
+      mainBox.dataset.both = '';
+    } else {
+      delete mainBox.dataset.both;
+    }
+  }
+  window.addEventListener('resize', fitBoth);
+  twoColumn.addEventListener('change', fitBoth);
+  new ResizeObserver(fitBoth).observe(document.querySelector('.bar'));
+  requestAnimationFrame(fitBoth);
   $('take_mini').onclick = () => $('take').click();
-  const copyTake = () => { $('take_mini').disabled = $('take').disabled; $('take_mini').textContent = $('take').textContent; };
+  const copyTake =() => { $('take_mini').disabled = $('take').disabled; $('take_mini').textContent = $('take').textContent; };
   new MutationObserver(copyTake).observe($('take'), { attributes: true, childList: true, characterData: true, subtree: true });
   copyTake();
   $('clear').onclick = () => clearStage();
