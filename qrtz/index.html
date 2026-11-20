@@ -451,10 +451,91 @@
     .chips { justify-content: flex-start; }
     /* Before any sound the start card needs more room than a 16:9 strip gives on a phone. */
     .stage.standby { aspect-ratio: auto; min-height: 400px; }
-    .transport .actions { flex: 1 1 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .transport .actions { flex: 1 1 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .transport .actions .btn { padding: 0 6px; }
     .log { flex-direction: column; gap: 6px; }
     .log ol { flex-direction: column; }
+  }
+  /* A smaller window (under 1100 px, where the vision-mixer layout no longer fits): the picture on
+     the left, as big as the window allows, with Program and Preview tabs and a TAKE above it (the
+     other picture keeps running, out of sight, so switching is instant); on the right a side
+     column, an Options drop-down and the card it picks, which scrolls on its own. Under 700 px
+     the side column goes under the picture. Nothing else scrolls, so the picture stays in view. */
+  .compact-only { display: none; }
+  @media (max-width: 1099px) {
+    html, body { height: 100%; overflow: hidden; }
+    .page { max-width: none; height: 100vh; height: 100dvh; padding: 8px 10px; gap: 8px; display: grid;
+            grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; }
+    .compact-only { display: flex; }
+    .top { flex-wrap: nowrap; gap: 10px; min-width: 0; }
+    .wordmark { font-size: 20px; }
+    .brand .sub { display: none; }
+    /* The chips that don't fit fade out at the right and can be swiped into view, not cut off. */
+    .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; justify-content: flex-start; min-width: 0;
+             -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+             mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent); }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip, nav a, nav button { height: 30px; padding: 0 10px; font-size: 12px; }
+    nav { flex: none; }
+
+    /* The picture's height: the window less the header, the sound bar, the tabs and the rail. */
+    .main { --pic-h: calc(100vh - 250px); display: grid; min-height: 0; gap: 8px 10px;
+            grid-template-columns: minmax(0, 1fr) clamp(250px, 32vw, 340px);
+            grid-template-rows: auto auto auto minmax(0, 1fr);
+            grid-template-areas: "tabs pick" "pic panel" "rail panel" ". panel"; }
+    .main > .monitors, .main > .lower { display: contents; }
+    .view-bar { grid-area: tabs; align-items: flex-end; gap: 8px; min-width: 0; justify-self: start; width: min(100%, calc(var(--pic-h) * 16 / 9)); }
+    .view-tabs { display: flex; gap: 4px; flex: 1 1 auto; }
+    .view-tab { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 14px; border-radius: 8px;
+                font: 600 12px/1 var(--sans); letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
+                color: var(--text-2); background: var(--chip); border: 1px solid var(--chip-border); }
+    .view-tab[aria-selected=true] { color: var(--text); background: var(--card); }
+    .view-tab.live[aria-selected=true] { border-color: var(--live-dot); }
+    .view-tab.prev[aria-selected=true] { border-color: var(--ok); }
+    .btn.take.mini { min-height: 32px; padding: 0 18px; font-size: 12px; }
+    #preview_stage, .main > .monitors > .stage-box { grid-area: pic; justify-self: start; width: min(100%, calc(var(--pic-h) * 16 / 9)); }
+    .main[data-view=program] #preview_stage, .main[data-view=preview] .stage-box { visibility: hidden; }
+    .stage-box .stage.standby { aspect-ratio: 16 / 9; min-height: 0; }
+    .start .card { gap: 8px; }
+    .start .btn.primary { min-height: 40px; font-size: 14px; }
+    .start .small { display: none; }
+    .rail { grid-area: rail; justify-self: start; max-width: min(100%, calc(var(--pic-h) * 16 / 9)); }
+
+    /* The side column: the drop-down, then the card it picks. */
+    .panel-pick { grid-area: pick; align-self: end; }
+    .panel-pick select { width: 100%; height: 32px; padding: 0 10px; border-radius: 8px; font: 600 13px var(--sans);
+                         color: var(--text); background: var(--card); border: 1px solid var(--card-border); cursor: pointer; }
+    .c-staged, .c-look, .c-photos, .c-controls, .c-inputs { grid-area: panel; display: none; min-height: 0; overflow-y: auto; padding: 10px; }
+    .main[data-panel=take] .c-staged, .main[data-panel=look] .c-look, .main[data-panel=controls] .c-controls,
+    .main[data-panel=inputs] .c-inputs { display: block; }
+    .main[data-panel=take] .c-staged { display: flex; }
+    .main[data-panel=media] .c-photos { display: flex; flex-direction: column; gap: 6px; }
+    .c-photos .card-head { flex-wrap: wrap; }
+    .c-photos .deck-strip { flex: 1 1 0; min-height: 120px; grid-auto-flow: row; grid-auto-rows: max-content;
+                            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); overflow-x: hidden; overflow-y: auto; }
+    .c-photos .photo-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    /* A narrow column: the lists go two across. */
+    .grid.four, .c-crystal .grid.two, .c-colours .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    /* The sound bar: one row, and only the newest line of the log. */
+    .bar { gap: 6px; }
+    .bar .transport { padding: 6px 8px; gap: 8px; flex-wrap: nowrap; }
+    .bar .track { min-width: 0; }
+    .bar .btn { min-height: 32px; font-size: 12px; padding: 0 10px; }
+    .bar .btn.icon { width: 32px; padding: 0; }
+    .bar .log { padding: 4px 10px; flex-direction: row; align-items: center; }
+    .bar .log ol { flex-direction: row; min-width: 0; overflow: hidden; white-space: nowrap; }
+    .bar .log ol li + li { display: none; }
+  }
+  /* A phone: no room for two columns, so the drop-down and its card go under the picture. */
+  /* Phones, and any upright window (a tablet held upright): one column, the picture across the
+     whole width and the cards under it, so no half of the screen sits empty. */
+  @media (max-width: 699px), (max-width: 1099px) and (orientation: portrait) {
+    .main { --pic-h: 40vh; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto auto auto minmax(0, 1fr);
+            grid-template-areas: "tabs" "pic" "rail" "pick" "panel"; }
+    #preview_stage, .main > .monitors > .stage-box { width: 100%; }
+    .bar .transport { flex-wrap: wrap; }
+    .transport .actions { flex: 1 1 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition: none !important; animation: none !important; }
@@ -482,7 +563,15 @@
   <!-- The panel, laid out like a vision mixer (vMix, ATEM, the studio mode in OBS): Preview on
        the left, Program on the right, and what moves one to the other (TAKE) between them. Under
        them, what to show (Look, then the media browser) and how it moves (Controls, Inputs). -->
-  <div class="main">
+  <div class="main" data-view="program" data-panel="look">
+    <!-- Only in a smaller window: tabs between the two pictures, and a TAKE always in reach. -->
+    <div class="view-bar compact-only">
+      <div class="view-tabs" role="tablist" aria-label="Picture">
+        <button role="tab" class="view-tab live" id="view_program" aria-selected="true" aria-controls="stage"><i class="dot red"></i>Program</button>
+        <button role="tab" class="view-tab prev" id="view_preview" aria-selected="false" aria-controls="preview_stage"><i class="dot green"></i>Preview</button>
+      </div>
+      <button class="btn take mini" id="take_mini" disabled title="TAKE: what's staged goes to Program on the next bar">TAKE</button>
+    </div>
     <div class="monitors">
       <div class="stage preview idle" id="preview_stage">
         <canvas id="preview_canvas"></canvas>
@@ -550,6 +639,16 @@
       </div>
     </div>
 
+    <!-- Only in a smaller window: which card shows under the picture. -->
+    <label class="panel-pick compact-only">
+      <select id="panel_pick" aria-label="Options: which card shows">
+        <option value="look">Look: scene, crystal, colours</option>
+        <option value="media">Media: photos, shaders, textures</option>
+        <option value="controls">Controls: sliders and waves</option>
+        <option value="inputs">Inputs: tempo and meters</option>
+        <option value="take">Staged, TAKE and live now</option>
+      </select>
+    </label>
     <div class="lower">
       <p class="rail" id="rail" aria-live="polite"></p>
       <!-- Look: what the crystal is doing. Three short lists in one panel. -->
@@ -1463,6 +1562,26 @@
     clearStage(true);
   }
   $('take').onclick = take;
+  // The smaller window's tabs, drop-down and TAKE (see the CSS under 1100 px). The choices are
+  // remembered between visits; the mini TAKE presses the real one and copies its state.
+  const mainBox = document.querySelector('.main');
+  const remember = (key, value) => { try { localStorage.setItem('qrtz.' + key, value); } catch (e) { /* private window */ } };
+  const recall = (key) => { try { return localStorage.getItem('qrtz.' + key); } catch (e) { return null; } };
+  function showView(view) {
+    mainBox.dataset.view = view;
+    $('view_program').setAttribute('aria-selected', String(view === 'program'));
+    $('view_preview').setAttribute('aria-selected', String(view === 'preview'));
+    remember('view', view);
+  }
+  $('view_program').onclick = () => showView('program');
+  $('view_preview').onclick = () => showView('preview');
+  $('panel_pick').onchange = () => { mainBox.dataset.panel = $('panel_pick').value; remember('panel', $('panel_pick').value); };
+  if (recall('view') === 'preview') showView('preview');
+  if ([...$('panel_pick').options].some((o) => o.value === recall('panel'))) { $('panel_pick').value = recall('panel'); $('panel_pick').onchange(); }
+  $('take_mini').onclick = () => $('take').click();
+  const copyTake = () => { $('take_mini').disabled = $('take').disabled; $('take_mini').textContent = $('take').textContent; };
+  new MutationObserver(copyTake).observe($('take'), { attributes: true, childList: true, characterData: true, subtree: true });
+  copyTake();
   $('clear').onclick = () => clearStage();
   function setClicks(to) {
     clicksTo = to;
