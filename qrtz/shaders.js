@@ -768,6 +768,11 @@ uniform float uEyePupil;
 uniform float uEyeX;
 uniform float uEyeY;
 uniform float uEyeBlink;
+uniform float uEyeSclera;
+uniform float uEyeVeins;
+uniform vec3 uEyeIrisColor;
+uniform float uEyeIrisTint;
+uniform float uEyeCatchlight;
 uniform float uStructureSize;
 uniform float uStructureLean;
 uniform float uStructureEdge;
@@ -837,21 +842,58 @@ float structure(vec3 p) {
     return mix(shapeDistance(p), length(p) - uSphereSize / uStructureSize, uToSphere);
 }
 
-float eyeCuts(vec3 pos, mat3 toView, inout vec3 normal, out float shine) {
+// Value noise, for the iris's fibres and pits and the veins. The first coordinate wraps every
+// period cells, so a pattern laid around the eye has no seam.
+float eyeHash(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+}
+
+float eyeNoise(vec2 p, float period) {
+    vec2 i = floor(p), f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    float x0 = mod(i.x, period), x1 = mod(i.x + 1.0, period);
+    return mix(mix(eyeHash(vec2(x0, i.y)), eyeHash(vec2(x1, i.y)), f.x),
+               mix(eyeHash(vec2(x0, i.y + 1.0)), eyeHash(vec2(x1, i.y + 1.0)), f.x), f.y);
+}
+
+// The eye's own colours over the picture seen through it: a milky white with faint veins,
+// an iris tinted uEyeIrisColor with fibres, pits, a lighter ring and a dark rim, and a black
+// pupil. The picture still shows through all of it, so it stays light through a crystal.
+vec3 eyeSurface(vec3 picture, vec3 pos) {
     vec3 n = normalize(pos);
     float fromFront = acos(clamp(-n.z, -1.0, 1.0));
-    float around = atan(n.y, n.x);
+    float a = atan(n.y, n.x) / (2.0 * PI) + 0.5;
+    float lum = dot(picture, vec3(0.299, 0.587, 0.114));
+    // The white: milky glass lit by the picture behind it, veins growing toward the back.
+    vec3 sclera = mix(picture, vec3(0.93, 0.9, 0.86) * (0.55 + 0.6 * lum), uEyeSclera);
+    float wander = eyeNoise(vec2(a * 20.0, fromFront * 5.0), 20.0) + 0.5 * eyeNoise(vec2(a * 48.0, fromFront * 11.0 + 4.0), 48.0);
+    float vein = 1.0 - smoothstep(0.0, 0.06, abs(wander - 0.75));
+    vein *= smoothstep(uEyeIris + 0.1, 1.35, fromFront);
+    sclera = mix(sclera, sclera * vec3(1.0, 0.35, 0.3), vein * uEyeVeins);
+    // The iris, from the pupil's edge (0) to the rim (1).
+    float r = fromFront / uEyeIris;
+    float p = uEyePupil / uEyeIris;
+    float t = clamp((r - p) / (1.0 - p), 0.0, 1.0);
+    float fibres = 0.6 * eyeNoise(vec2(a * 160.0, t * 3.0), 160.0) + 0.4 * eyeNoise(vec2(a * 55.0, t * 1.5 + 3.0), 55.0);
+    float pits = smoothstep(0.6, 0.85, eyeNoise(vec2(a * 26.0, t * 5.0 + 7.0), 26.0))
+               * smoothstep(0.12, 0.35, t) * (1.0 - smoothstep(0.7, 0.9, t));
+    vec3 iris = mix(picture, uEyeIrisColor * (0.6 + 0.8 * lum), uEyeIrisTint);
+    iris *= (0.5 + 0.8 * fibres) * (1.0 - 0.55 * pits);
+    float collar = 0.3 + 0.04 * sin(a * 2.0 * PI * 13.0);
+    iris *= 1.0 + 0.4 * exp(-pow((t - collar) / 0.05, 2.0));
+    iris = mix(iris, iris * vec3(1.3, 1.0, 0.65), 0.45 * (1.0 - smoothstep(0.0, 0.3, t)));
+    iris *= mix(1.0, 0.2, smoothstep(0.8, 1.0, t));
+    vec3 front = mix(vec3(0.012), iris, smoothstep(p - 0.03, p + 0.02, r));
+    return mix(sclera, front, 1.0 - smoothstep(0.97, 1.04, r));
+}
+
+float eyeCuts(vec3 pos, mat3 toView, inout vec3 normal, out float shine, out float lid) {
+    vec3 n = normalize(pos);
     vec3 cut = normal;
     float bright = 1.0;
-    float pupil = uEyePupil;
-    if (fromFront < uEyeIris) {
-        float fibers = 0.5 + 0.3 * sin(around * 57.0) * sin(around * 23.0 + 1.3) + 0.2 * sin(around * 131.0);
-        bright = mix(0.7, 1.1, fibers) * mix(1.1, 0.75, smoothstep(pupil, uEyeIris, fromFront));
-        bright *= mix(0.25, 1.0, smoothstep(0.0, 0.1, uEyeIris - fromFront));
-        bright *= smoothstep(pupil - 0.012, pupil + 0.012, fromFront) * 0.98 + 0.02;
-    } else {
-        bright = 0.9;
-    }
+    lid = 0.0;
     shine = 0.0;
     float blink = uEyeBlink * (1.0 - uToSphere);
     if (blink > 0.001) {
@@ -864,6 +906,7 @@ float eyeCuts(vec3 pos, mat3 toView, inout vec3 normal, out float shine) {
         if (pastLid > 0.0) {
             bright = 0.8;
             shine = 0.0;
+            lid = 1.0;
         }
         bright *= mix(0.2, 1.0, smoothstep(0.0, 0.07, abs(pastLid)));
     }
@@ -930,7 +973,9 @@ vec4 shadeStructure(vec2 uv, vec3 ro, vec3 rd, mat3 toView, float aspect, float 
     vec3 pos = start + rd * t;
     vec3 normal = structureNormal(pos);
     float shine = 0.0;
-    float bright = int(uShapeA + 0.5) == SHAPE_EYE ? eyeCuts(pos, toView, normal, shine) : 1.0;
+    float lid = 0.0;
+    bool isEye = int(uShapeA + 0.5) == SHAPE_EYE;
+    float bright = isEye ? eyeCuts(pos, toView, normal, shine, lid) : 1.0;
     vec3 exitDir = structureExit(pos, refract(rd, normal, 1.0 / uIor));
     vec3 outDir = toView * exitDir;
     vec2 shifted = outDir.xy * uRefraction * (1.0 + 4.0 * uBreathe) * vec2(1.0 / aspect, 1.0);
@@ -938,6 +983,8 @@ vec4 shadeStructure(vec2 uv, vec3 ro, vec3 rd, mat3 toView, float aspect, float 
     vec3 color = vec3(texture(uPicture, uv + shifted * (1.0 - spread)).r,
                       texture(uPicture, uv + shifted).g,
                       texture(uPicture, uv + shifted * (1.0 + spread)).b);
+    float eyeOpen = isEye ? (1.0 - lid) * (1.0 - uToSphere) : 0.0;
+    if (isEye) color = mix(color, eyeSurface(color, pos), eyeOpen);
     vec3 viewNormal = toView * normal;
     vec3 lightDir = normalize(vec3(0.35, 0.6, -0.7));
     color *= uFacetBase + uFacetContrast * max(dot(viewNormal, lightDir), 0.0);
@@ -948,6 +995,15 @@ vec4 shadeStructure(vec2 uv, vec3 ro, vec3 rd, mat3 toView, float aspect, float 
     float edgeGlow = uStructureEdge * (1.0 + uGlintGain * uSparkle);
     color += vec3(0.9) * shine;
     color += vec3(0.9, 0.95, 1.0) * min(bright, 1.0) * (edge * edgeGlow + glint * (0.2 + uGlintGain * uSparkle));
+    if (eyeOpen > 0.0) {
+        // The catchlight: a window's reflection on the wet front, fixed on screen while the eye
+        // looks around under it (a sharp core and a soft halo). It never follows the music.
+        vec3 bounce = reflect(toView * rd, viewNormal);
+        vec3 windowDir = normalize(vec3(-0.45, 0.55, -1.0));
+        float facing = max(dot(bounce, windowDir), 0.0);
+        float catchlight = smoothstep(0.991, 0.995, facing) + 0.15 * pow(facing, 40.0);
+        color += vec3(1.0, 0.98, 0.95) * catchlight * uEyeCatchlight * eyeOpen;
+    }
     return vec4(color * cover, cover);
 }
 
