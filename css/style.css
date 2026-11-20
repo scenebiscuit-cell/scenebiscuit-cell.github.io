@@ -219,10 +219,22 @@ h1, h2, h3 { margin: 0; }
   background: var(--accent); color: var(--on-accent);
   font-family: var(--font-mono); font-size: 13px; font-weight: 500;
 }
-/* Side-project cards: text first, then a small video thumbnail, with the buttons pinned
-   to the bottom so the two cards line up side by side. */
+/* Side-project cards: text first, then a small video thumbnail and the buttons, both pinned
+   to the bottom so the two cards' videos and buttons line up side by side (the spare space
+   goes under the shorter text). */
 .card--project { display: flex; flex-direction: column; }
-.card--project .btn-row { margin-top: auto; padding-top: 24px; }
+.card--project .card-thumb { margin-top: auto; }
+.card--project p.muted:last-of-type { margin-bottom: 20px; }   /* the least space above the video */
+.card--project .btn-row { margin-top: 0; padding-top: 24px; }
+/* Where the browser can (all current ones), the project cards share rows: status, title, text,
+   video and buttons each line up across the cards at any width, however the text wraps. */
+@supports (grid-template-rows: subgrid) and selector(:has(*)) {
+@media (min-width: 857px) {   /* side by side: two 380px cards and the gap fit from here */
+  .cards:has(> .card--project) { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(380px, 100%), 1fr)); }
+  .cards:has(> .card--project) > .card--project { display: grid; grid-row: span 5; grid-template-rows: subgrid; row-gap: 0; }
+  .cards:has(> .card--project) .card-thumb { margin-top: 0; }
+}
+}
 
 /* Small video thumbnail. Clicking it opens the video in a pop-up player (main.js);
    without JavaScript it opens the video file. Nothing downloads until it's clicked. */
