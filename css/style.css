@@ -219,17 +219,57 @@ h1, h2, h3 { margin: 0; }
   background: var(--accent); color: var(--on-accent);
   font-family: var(--font-mono); font-size: 13px; font-weight: 500;
 }
-/* A card with gameplay clips: takes the full row so the clips have room. Each clip's flex-grow
-   is its width / height, which makes the two the same height side by side. */
-.card--media { flex-basis: 100%; }
-.card-media { display: flex; align-items: flex-start; gap: 16px; margin-top: 24px; }
-.card-shot { display: block; min-width: 0; flex: 1 1 0; }
-.card-shot--tall { flex-grow: 0.75; }
-.card-shot--wide { flex-grow: 1.7778; }
-.card-shot img { display: block; width: 100%; height: auto; border: 1.5px solid var(--line); border-radius: 8px; background: #0A0D0F; }
+/* Side-project cards: text first, then a small video thumbnail, with the buttons pinned
+   to the bottom so the two cards line up side by side. */
+.card--project { display: flex; flex-direction: column; }
+.card--project .btn-row { margin-top: auto; padding-top: 24px; }
+
+/* Small video thumbnail. Clicking it opens the video in a pop-up player (main.js);
+   without JavaScript it opens the video file. Nothing downloads until it's clicked. */
+.card-thumb {
+  display: flex; align-items: center; gap: 16px; margin-top: 20px; padding: 10px;
+  border: 1.5px solid var(--line); border-radius: 10px; background: var(--bg);
+  text-decoration: none; color: var(--ink);
+  transition: border-color .2s, transform .2s var(--ease);
+}
+.card-thumb:hover { border-color: var(--accent); color: var(--ink); transform: translateY(-2px); }
+.card-thumb-img { position: relative; flex: none; width: 152px; aspect-ratio: 16 / 9; border-radius: 6px; overflow: hidden; background: #0A0D0F; }
+.card-thumb-img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.card-thumb-play {
+  position: absolute; left: 50%; top: 50%; width: 38px; height: 38px; margin: -19px 0 0 -19px;
+  border-radius: 50%; background: rgba(10, 13, 15, .72); border: 1.5px solid rgba(255, 255, 255, .85);
+  transition: background .2s;
+}
+.card-thumb-play::after {
+  content: ""; position: absolute; left: 14px; top: 10px;
+  border-style: solid; border-width: 8px 0 8px 13px; border-color: transparent transparent transparent #fff;
+}
+.card-thumb:hover .card-thumb-play, .card-thumb:focus-visible .card-thumb-play { background: var(--accent); }
+.card-thumb-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.card-thumb-title { font-weight: 600; }
+.card-thumb-meta { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
+
+/* Pop-up video player (built by main.js) */
+.video-dialog {
+  width: min(960px, 92vw); max-height: 92vh; padding: 0; overflow: hidden;
+  border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink);
+}
+.video-dialog::backdrop { background: rgba(10, 10, 14, .72); }
+.video-dialog[open] { animation: pop .25s var(--ease); }
+.video-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 6px 6px 18px; }
+.video-dialog-title { font-family: var(--font-mono); font-size: 14px; color: var(--muted); }
+.video-dialog-close {
+  width: 44px; height: 44px; flex: none; display: flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 50%; background: transparent; color: var(--ink); cursor: pointer;
+}
+.video-dialog-close:hover { background: var(--hl); }
+.video-dialog video { display: block; width: 100%; height: auto; max-height: calc(92vh - 56px); aspect-ratio: 16 / 9; background: #000; }
 .card-title { margin-bottom: 10px; font-family: var(--font-display); font-weight: 700; font-size: 28px; letter-spacing: -0.02em; }
 .dot { position: relative; display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
 .dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--accent); animation: ping 1.8s ease-out infinite; }
+/* A paused project: hollow dot, no pulse */
+.dot--still { background: transparent; border: 2px solid var(--muted); }
+.dot--still::after { display: none; }
 
 /* ---------- Experience ---------- */
 .jobs { list-style: none; margin: 0; padding: 0; }
@@ -273,6 +313,7 @@ h1, h2, h3 { margin: 0; }
 @keyframes nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
 @keyframes roll { from { transform: translateX(-160px); } to { transform: translateX(calc(100vw + 160px)); } }
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pop { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: none; } }
 @keyframes hop { 0%, 100% { transform: translateY(0); } 45% { transform: translateY(-18px); } 70% { transform: translateY(-4px); } }
 
 /* Hero fades up on load */
@@ -313,7 +354,8 @@ main { overflow-x: clip; }
   .frame-body--shot img { transform: none; }
   .hl { animation: none; background-size: 100% 85%; }
   .dot::after, .btn:hover .swirl { animation: none; }
-  .lift:hover, .btn:hover, .theme-btn:hover { transform: none; }
+  .lift:hover, .btn:hover, .theme-btn:hover, .card-thumb:hover { transform: none; }
+  .video-dialog[open] { animation: none; }
   .tumbleweed { display: none; }
 }
 
@@ -330,9 +372,7 @@ main { overflow-x: clip; }
   .stats { gap: 24px; }
   .stats dd { font-size: 40px; }
   .about-body { font-size: 19px; }
-  .card-media { flex-direction: column; align-items: center; }
-  .card-shot { flex: none; width: 100%; }
-  .card-shot--tall { max-width: 360px; }
+  .card-thumb-img { width: 112px; }
 }
 
 /* Links inside running text: always underlined so they don't rely on color alone */
