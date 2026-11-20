@@ -627,9 +627,9 @@
   <!-- The bottom bar: the sound that is playing on the left, the log on the right. -->
   <footer class="bar">
     <div class="transport">
-      <button class="btn icon" id="playpause" aria-label="Pause" title="Pause" disabled>
-        <svg viewBox="0 0 16 16" id="icon_pause"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg>
-        <svg viewBox="0 0 16 16" id="icon_play" hidden><path d="M3 2l11 6-11 6z"/></svg>
+      <button class="btn icon" id="playpause" aria-label="Play" title="Play" disabled>
+        <svg viewBox="0 0 16 16" id="icon_pause" hidden><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg>
+        <svg viewBox="0 0 16 16" id="icon_play"><path d="M3 2l11 6-11 6z"/></svg>
       </button>
       <button class="btn icon" id="stop" aria-label="Stop" title="Stop" disabled><svg viewBox="0 0 16 16"><path d="M3 3h10v10H3z"/></svg></button>
       <div class="track">
@@ -687,7 +687,7 @@
 
   <div class="help-topic" data-topic="start">
     <section class="keys-group"><h3>Give it sound</h3><ol>
-      <li>Click <b>Play the demo track</b>, or <b>Open a track</b> to play your own file, or <b>Microphone</b> to listen to the room, or <b>Computer sound</b> to listen to whatever this computer is playing (Spotify, YouTube, DJ software). On the website it's <b>Tab sound</b>: pick the tab and tick <i>Also share tab audio</i>.</li>
+      <li>Click <b>Play the demo track</b>, or <b>Open a track</b> to play your own file, or <b>Microphone</b> to listen to the room, or <b>Computer sound</b> to listen to whatever this computer is playing (Spotify, YouTube, DJ software). On the website it needs Chrome or Edge (Firefox and Safari can't share sound with a page), and Chrome asks what to share: for Spotify and other apps (Windows), click the screen under <i>Entire screen</i> and turn on <i>Also share system audio</i> (the apps aren't in the list: their sound comes with the screen); for music in another Chrome tab, pick it under <i>Chrome tab</i> and tick <i>Also share tab audio</i>. A <i>Window</i> brings no sound. Only the sound is used; the picture is never shown or saved.</li>
       <li>In the app with DJ software running, turn on <b>Ableton Link</b> there (Rekordbox, Serato, Traktor, Engine DJ, Live): QRTZ follows its tempo and never changes it.</li>
       <li>The Inputs card shows the BPM and where it comes from. Within a few seconds the crystal turns with the beat, swells with the bass and sparkles with the treble.</li>
     </ol></section>
@@ -933,6 +933,7 @@
     $('track_name').textContent = name;
     $('progress').hidden = isLive;
     $('time').textContent = isLive ? 'live' : '';
+    showTransport();  // a live source can't be paused: Play, greyed out
   }
   // The drops: bars 41 and 65 at 128 BPM, each after a one-bar bass cut, which the drop detector
   // (like the project's) doesn't count as a breakdown, so they're marked here.
@@ -986,36 +987,45 @@
   }
   for (const b of document.querySelectorAll('[data-mic]')) b.onclick = startMic;
   // The computer's own sound (demo.js, useSystemAudio). In the app it's the whole computer's
-  // sound; in a browser it's one tab's, chosen in the browser's own share window. Hidden where
-  // the browser can't share sound (phones).
+  // sound; in a browser the visitor picks in the browser's own share window: a tab's sound, or
+  // (Chrome on Windows) the entire screen with the whole computer's sound, Spotify's included.
+  // Hidden where the browser can't share sound (phones).
   const inApp = !!window.qrtzApp;
-  const systemName = inApp ? 'Computer sound' : 'Tab sound';
+  const systemName = 'Computer sound';
   async function startSystem() {
     try {
-      await demo.sound.useSystemAudio(() => {
-        log('stopped listening to the ' + (inApp ? 'computer' : 'tab'));
+      let what = inApp ? 'computer' : 'tab';
+      // Said as Chrome's share window opens, since apps like Spotify aren't in its list.
+      if (!inApp && navigator.userAgentData) log('in the share window: Entire screen, click the screen, turn on "Also share system audio", Share. Spotify and other apps aren’t listed: their sound comes with the screen');
+      const surface = await demo.sound.useSystemAudio(() => {
+        log('stopped listening to the ' + what);
         source = null;
         $('track_name').textContent = 'No track yet';
         $('time').textContent = '';
       });
+      // A shared tab brings only that tab's sound; a shared screen brings the whole computer's.
+      what = !inApp && surface === 'browser' ? 'tab' : 'computer';
       demo.motion.newTrack(false);
       started('system', systemName);
-      log(inApp ? 'listening to this computer: play music in any app (Spotify, YouTube, DJ software)'
-                : 'listening to the shared tab');
+      log(what === 'computer' ? 'listening to this computer: play music in any app (Spotify, YouTube, DJ software)'
+                              : 'listening to the shared tab');
     } catch (err) {
-      if (err && err.name === 'NotAllowedError') log((inApp ? 'computer' : 'tab') + ' sound: not shared');
-      else log('no ' + (inApp ? 'computer' : 'tab') + ' sound: ' + err.message);
+      if (err && err.name === 'NotAllowedError') log('computer sound: not shared');
+      else log('no computer sound: ' + err.message);
     }
   }
   for (const b of document.querySelectorAll('[data-system]')) {
     if (!(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia)) { b.hidden = true; continue; }
     b.textContent = systemName;
-    if (!inApp) b.title = 'Listen to a browser tab: Chrome asks which tab; tick "Also share tab audio"';
+    if (!inApp) b.title = !navigator.userAgentData
+      ? "Listen to music playing on this computer: needs Chrome or Edge (this browser can't share sound with a page)"
+      : 'Listen to music playing on this computer. In the share window Chrome opens: Entire screen with "Also share system audio" on (Spotify and other apps, Windows), or a Chrome tab with "Also share tab audio". A window brings no sound. Only the sound is used.';
     b.onclick = startSystem;
   }
 
   // The play/pause button shows what a click does: Play (a triangle) while the track is paused or
-  // stopped, Pause (two bars) while it plays. Set at once on a click or the track's end, and kept
+  // stopped, or before any track (greyed out, as with the microphone or computer sound), Pause
+  // (two bars) while it plays. Set at once on a click or the track's end, and kept
   // in step on every refresh. toggleAttribute, not .hidden: the Chromium in the desktop app has no
   // hidden property on SVG.
   function showTransport() {
@@ -1591,7 +1601,14 @@
   }
   let lastFixedPalette = 'dusk';  // for P: the palette the photo is recolored in
   function toggleRecolor() {
-    if (!demo.image) { log('recolor: open a picture first'); return; }
+    // P works on Program, like every key. With no picture there (the starting pattern has no
+    // colours of its own, or the picture is only staged in Preview), say what to do.
+    if (!demo.image) {
+      log(pending.picture
+        ? 'recolor: P works on Program, which has no picture yet; TAKE brings in the staged ' + pending.picture.name + ', then P'
+        : 'recolor: pick a picture in Photos first (Sky, Pattern or your own), then P; the starting pattern has no colours of its own');
+      return;
+    }
     const to = demo.paletteName === 'picture' ? lastFixedPalette : 'picture';
     demo.setPalette(to);
     log(to === 'picture' ? 'recolor: off, the photo in its own colours' : 'recolor: the photo in ' + paletteNames[to]);
@@ -1861,7 +1878,7 @@
       lastText = now;
       const fromLink = beats.source === 'link';
       const locked = (source !== null || fromLink) && beats.locked;
-      const heard = source === 'mic' ? 'microphone' : source === 'system' ? (inApp ? 'computer sound' : 'tab sound') : 'track';
+      const heard = source === 'mic' ? 'microphone' : source === 'system' ? 'computer sound' : 'track';
       if (locked && !wasLocked && !fromLink) log('tempo: ' + Math.round(beats.bpm) + ' BPM from the ' + heard);
       wasLocked = locked;
       const from = source === 'demo' ? 'demo track' : source === 'file' ? 'your track' : heard;
