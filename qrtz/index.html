@@ -1504,11 +1504,12 @@
   // A click on a scene, shape, colours, picture, slider or wave shape is staged: Preview shows
   // it, and TAKE brings everything staged into Program together on the next bar, fading over
   // take_fade_bars. With "Clicks go to: Program", or Shift held, a click goes live at once
-  // instead. The keys always act on Program, as in the project. On the website clicks start on
-  // Program (a visitor wants to see things happen); in the app they start on Preview.
+  // instead. The keys always act on Program, as in the project. Clicks start on Preview, in the
+  // app and on the website alike (owner, Nov 20: one standard; both pictures are in view in every
+  // layout but the smallest, so a staged click shows at once); the switch is remembered.
   const pending = { scene: null, shape: null, palette: null, picture: null, waves: null, shader: null, skin: null, controls: {} };
   const KINDS = ['scene', 'shape', 'picture', 'palette', 'waves', 'shader', 'skin'];
-  let clicksTo = localStorage.getItem('qrtz-clicks-to') || (folder ? 'preview' : 'program');
+  let clicksTo = localStorage.getItem('qrtz-clicks-to') || 'preview';
   let takeAt = null;          // the bar a pressed TAKE lands on
   let stagedImage = null;     // the staged picture, loaded, for Preview
   const anyStaged = () => KINDS.some((k) => pending[k]) || Object.keys(pending.controls).length > 0;
