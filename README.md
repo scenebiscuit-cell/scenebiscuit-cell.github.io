@@ -12,9 +12,9 @@ Plain HTML, CSS and JavaScript. No build step, no dependencies. GitHub Pages ser
 |---|---|
 | `index.html` | All the page content |
 | `css/style.css` | Layout, colors (light and dark), animations |
-| `js/main.js` | Light/dark toggle, fade-in on scroll, idle tumbleweed, click-to-play videos |
-| `img/` | Favicon, tumbleweed, project screenshots, video preview images |
-| `video/` | The ASSET ZERO trailer |
+| `js/main.js` | Light/dark toggle, fade-in on scroll, count-up stats, pop-up video player |
+| `img/` | Favicon, project screenshots, video preview images, link-preview image (`og-card.png`) |
+| `video/` | The QRTZ trailer, the longer QRTZ demo video, and the ASSET ZERO trailer |
 | `qrtz/` | The QRTZ browser demo (copied from the qrtz repo; don't edit it here) |
 | `Nick-Lax-Resume.pdf` | The resume behind the "Download resume" button |
 | `.nojekyll` | Tells GitHub Pages to serve the files as-is |

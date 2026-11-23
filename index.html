@@ -9,6 +9,11 @@
   <meta property="og:description" content="I help small teams put AI to work without losing the human part.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://scenebiscuit.com/">
+  <meta property="og:image" content="https://scenebiscuit.com/img/og-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Nick Lax: I help small teams put AI to work without losing the human part.">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="canonical" href="https://scenebiscuit.com/">
   <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="img/favicon-32.png" type="image/png" sizes="32x32">
@@ -29,8 +34,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-  <link rel="stylesheet" href="css/style.css?v=2026-11-20h">
-  <script src="js/main.js?v=2026-11-20h" defer></script>
+  <link rel="stylesheet" href="css/style.css?v=2026-11-23">
+  <script src="js/main.js?v=2026-11-23" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -105,7 +110,7 @@
           <p class="section-num">02 — Featured work</p>
           <h2 id="work-title" class="section-title section-title--lg">Two systems I built, and how well they work</h2>
         </div>
-        <p class="section-aside">Both put the three ideas above into practice. They're live, open source, and tested on cases they were never tuned on.</p>
+        <p class="section-aside">Both put the three ideas above into practice. They're live, the code is public, and each README shows how it was tested and where it still falls short.</p>
       </div>
 
       <!-- Pharos -->
@@ -131,7 +136,7 @@
           <h3 class="case-title">Pharos Support Desk</h3>
           <p><strong>The problem:</strong> AI help chats answer confidently even when they're wrong, and nobody can see why a ticket landed where it did.</p>
           <p><strong>What I built:</strong> A support setup for a fictional project-management app, from both sides. Customers get a help chat that answers only from the help articles and cites them, plus a portal to track their requests. Agents get a desk with AI triage, drafted replies and SLA timers.</p>
-          <p><strong>The result:</strong> On 36 tickets the AI had never seen, triage picked the right category 89% of the time and the right priority 83%. The misses are in the README too.</p>
+          <p><strong>The result:</strong> On 36 hand-labeled tickets set aside for testing, AI triage with a security safety net picked the right category 89% of the time and the right priority 83% (83% and 78% before the safety net was added). The misses are in the README too.</p>
           <dl class="stats">
             <div><dt>category accuracy</dt><dd class="accent" data-count="89" data-suffix="%">89%</dd></div>
             <div><dt>priority accuracy</dt><dd data-count="83" data-suffix="%">83%</dd></div>
@@ -168,11 +173,11 @@
           <h3 class="case-title">COA Crosscheck + TCUP COA Checker</h3>
           <p><strong>The problem:</strong> Every lab formats its certificate of analysis differently, so checking one against state limits by hand is slow, and it's easy to miss a number.</p>
           <p><strong>What I built:</strong> Two browser tools that read a COA and check it against the rules for Texas, Missouri, Colorado, California and federal hemp. Each result is Clear, Review or Hold, and every finding links to the regulation behind it. When a rule is unclear, the tool flags it for review instead of guessing.</p>
-          <p><strong>The result:</strong> 88 automated tests, run on every change. Accessible to WCAG 2.2 AA in light and dark mode.</p>
+          <p><strong>The result:</strong> 113 automated tests, run on every change. Both tools pass an automated WCAG 2.2 AA audit in light and dark mode.</p>
           <dl class="stats">
-            <div><dt>automated tests passing</dt><dd class="accent" data-count="88">88</dd></div>
-            <div><dt>states plus federal hemp</dt><dd>5 + 1</dd></div>
-            <div><dt>WCAG 2.2, light and dark</dt><dd>AA</dd></div>
+            <div><dt>automated tests passing</dt><dd class="accent" data-count="113">113</dd></div>
+            <div><dt>states plus federal hemp</dt><dd>4 + 1</dd></div>
+            <div><dt>WCAG 2.2 audit, light and dark</dt><dd>AA</dd></div>
           </dl>
           <div class="btn-row btn-row--sm">
             <a href="https://scenebiscuit.com/coa-crosscheck/" class="btn btn-solid btn-sm" target="_blank" rel="noopener">COA Crosscheck<span class="sr-only"> (opens in a new tab)</span></a>
@@ -191,21 +196,22 @@
       </div>
       <div class="cards">
         <div class="card card--project lift reveal">
-          <p class="card-status"><span class="dot" aria-hidden="true"></span>Demo video out · try it in your browser</p>
+          <p class="card-status"><span class="dot" aria-hidden="true"></span>Trailer out · try it in your browser</p>
           <h3 class="card-title">QRTZ</h3>
           <p class="muted">Live visuals for DJ sets, where every picture is light through a crystal that moves with the beat, the bass and the drops. It runs as a desktop app with an operator panel laid out like a vision mixer. The browser demo runs the same engine with nothing to install: play the demo track or your own, and switch scenes, crystals and colours.</p>
-          <a class="card-thumb" href="video/qrtz-demo.mp4" data-video-dialog="QRTZ demo video">
+          <a class="card-thumb" href="video/qrtz-trailer.mp4" data-video-dialog="QRTZ trailer">
             <span class="card-thumb-img">
               <img src="img/qrtz-video-poster.webp" width="1200" height="675" loading="lazy" alt="">
               <span class="card-thumb-play" aria-hidden="true"></span>
             </span>
             <span class="card-thumb-text">
-              <span class="card-thumb-title">Watch the demo video</span>
-              <span class="card-thumb-meta">2:40 · the operator panel, then the show</span>
+              <span class="card-thumb-title">Watch the trailer</span>
+              <span class="card-thumb-meta">0:41 · the show and the app, with music</span>
             </span>
           </a>
           <div class="btn-row btn-row--sm">
             <a href="qrtz/" class="btn btn-solid btn-sm" target="_blank" rel="noopener">Try the demo<span class="sr-only"> (opens in a new tab)</span></a>
+            <a href="video/qrtz-demo.mp4" class="btn btn-sm" data-video-dialog="QRTZ demo video" data-poster="img/qrtz-video-poster.webp">Full demo video · 2:40<span class="sr-only">: the operator panel, then the show</span></a>
           </div>
         </div>
         <div class="card card--project lift reveal">
@@ -236,7 +242,7 @@
           <p class="section-num">04 — Experience</p>
           <h2 id="experience-title" class="section-title">Where I learned to spot what slows teams down</h2>
         </div>
-        <p class="section-num">The short version. The full resume is the download button at the top.</p>
+        <p class="section-num">The short version. <a href="Nick-Lax-Resume.pdf" class="text-link" download>Download the full resume</a> (PDF).</p>
       </div>
       <ol class="jobs">
         <li class="job reveal">
@@ -276,7 +282,7 @@
           <div class="job-body">
             <h3 class="job-role">Product Advocate</h3>
             <p class="job-org">Atlassian · Austin</p>
-            <p class="muted">Focused on HipChat and Confluence. Helped international customers work out whether they fit their business goals, which offerings to use, and how to use them to get there. Brought what they told me back to the product teams as bug reports and feature recommendations.</p>
+            <p class="muted">Focused on HipChat and Confluence. Helped international customers work out whether those products fit their business goals, which offerings to use, and how to use them to get there. Brought what they told me back to the product teams as bug reports and feature recommendations.</p>
           </div>
         </li>
         <li class="job reveal">
@@ -299,7 +305,7 @@
           <h2 id="about-title" class="section-title">Hi, I'm Nick.</h2>
         </div>
         <div class="about-body">
-          <p>I've been an enterprise support specialist at Atlassian, a state cannabis regulator, a small-business owner and a freelance web and motion designer. Each job showed me a different way work gets stuck, and how much faster it moves once the problem is easy to see.</p>
+          <p>I've been a customer success and product advocate at Atlassian, a state cannabis regulator, a small-business owner and a freelance web and motion designer. Each job showed me a different way work gets stuck, and how much faster it moves once the problem is easy to see.</p>
           <p class="muted">I'm not a career developer, and I don't sell big software. I build small tools with Claude Code, test them the way an auditor would, and keep people in charge of the decisions that matter. I'd rather show a real accuracy score than a demo that only works on the examples it was built from.</p>
         </div>
       </div>
@@ -321,7 +327,7 @@
 
   <footer class="site-footer wrap">
     <p>Created by Nick Lax · Austin, TX</p>
-    <p class="mono">Plain HTML and CSS on GitHub Pages</p>
+    <p class="mono">Plain HTML, CSS and JavaScript on GitHub Pages</p>
   </footer>
 
 </body>

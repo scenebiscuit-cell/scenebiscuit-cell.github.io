@@ -135,7 +135,7 @@
   }
 
   /* ---------- 5. Pop-up video player ----------
-     A link marked data-video-dialog="Title" opens its video in a small window
+     A link marked data-video-dialog="Title" (a thumbnail or a plain button) opens its video in a small window
      over the page, instead of taking up room in the card. The video only
      downloads when someone clicks. Esc, the close button or a click outside
      closes it and stops the video. Without JavaScript the link opens the file. */
@@ -179,10 +179,11 @@
       event.preventDefault();
       if (!dialog) { buildDialog(); }
       opener = link;
+      // The still shown until the video starts: the thumbnail's own picture, or data-poster on a plain button
       var poster = link.querySelector('img');
       dialogTitle.textContent = link.getAttribute('data-video-dialog');
       dialogVideo.setAttribute('aria-label', link.getAttribute('data-video-dialog'));
-      dialogVideo.poster = poster ? poster.getAttribute('src') : '';
+      dialogVideo.poster = poster ? poster.getAttribute('src') : (link.getAttribute('data-poster') || '');
       dialogVideo.src = link.getAttribute('href');
       dialog.showModal();
       var started = dialogVideo.play();

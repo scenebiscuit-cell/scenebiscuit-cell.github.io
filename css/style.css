@@ -154,7 +154,9 @@ h1, h2, h3 { margin: 0; }
 /* ---------- Case studies ---------- */
 .case { display: flex; flex-wrap: wrap; align-items: center; gap: 56px; margin-bottom: 120px; }
 .case:last-child { margin-bottom: 40px; }
-.case--flip .case-media { order: 2; }
+/* Flipped case: screenshot on the right. row-reverse (not `order`) so that when the two
+   halves stack, at any width, the screenshot still comes first like the case above it. */
+.case--flip { flex-direction: row-reverse; }
 .case-media { flex: 1 1 560px; min-width: 0; }
 .case-text { flex: 1 1 420px; min-width: 0; }
 .case-text > p { margin-bottom: 14px; }
@@ -239,7 +241,7 @@ h1, h2, h3 { margin: 0; }
 /* Small video thumbnail. Clicking it opens the video in a pop-up player (main.js);
    without JavaScript it opens the video file. Nothing downloads until it's clicked. */
 .card-thumb {
-  display: flex; align-items: center; gap: 16px; margin-top: 20px; padding: 10px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 20px; padding: 10px;
   border: 1.5px solid var(--line); border-radius: 10px; background: var(--bg);
   text-decoration: none; color: var(--ink);
   transition: border-color .2s, transform .2s var(--ease);
@@ -257,7 +259,9 @@ h1, h2, h3 { margin: 0; }
   border-style: solid; border-width: 8px 0 8px 13px; border-color: transparent transparent transparent #fff;
 }
 .card-thumb:hover .card-thumb-play, .card-thumb:focus-visible .card-thumb-play { background: var(--accent); }
-.card-thumb-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+/* The text needs about 130px beside the picture; on the narrowest phones it drops underneath
+   instead of squeezing into one word per line. */
+.card-thumb-text { display: flex; flex-direction: column; gap: 2px; flex: 1 1 130px; min-width: 0; }
 .card-thumb-title { font-weight: 600; }
 .card-thumb-meta { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
 
@@ -267,7 +271,7 @@ h1, h2, h3 { margin: 0; }
   border: 1.5px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink);
 }
 .video-dialog::backdrop { background: rgba(10, 10, 14, .72); }
-.video-dialog[open] { animation: pop .25s var(--ease); }
+.video-dialog[open] { animation: dialog-in .25s var(--ease); }
 .video-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 6px 6px 6px 18px; }
 .video-dialog-title { font-family: var(--font-mono); font-size: 14px; color: var(--muted); }
 .video-dialog-close {
@@ -323,7 +327,9 @@ h1, h2, h3 { margin: 0; }
 @keyframes wipe { to { background-size: 100% 85%; } }
 @keyframes ping { 0% { transform: scale(1); opacity: .55; } 100% { transform: scale(2.6); opacity: 0; } }
 @keyframes nudge { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
-@keyframes pop { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: none; } }
+/* The video pop-up's fade-in. Its own name on purpose: it used to share "pop" with the
+   step-number bounce further down, and the later rule won, so the player overshot to 125%. */
+@keyframes dialog-in { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: none; } }
 
 /* Hero fades up on load */
 .rise { opacity: 0; animation: rise .75s var(--ease) forwards; }
@@ -369,7 +375,6 @@ main { overflow-x: clip; }
   /* Let the highlighted phrase wrap on narrow screens; paint the highlight per line */
   .hero { padding-top: 40px; padding-bottom: 72px; }
   .case { gap: 32px; margin-bottom: 80px; }
-  .case--flip .case-media { order: 0; }
   .frame-body { height: 220px; }
   .frame-body--shot { height: auto; }
   .case-title { font-size: 32px; }
@@ -423,4 +428,25 @@ main { overflow-x: clip; }
 @media (prefers-reduced-motion: reduce) {
   .js .cards--three .step-num { transform: none; animation: none !important; }
   .card-icon *, .card:hover .card-icon * { transition: none; animation: none !important; transform: none !important; }
+}
+
+/* ---------- Print / Save as PDF ----------
+   Sections that haven't scrolled into view yet are still hidden on screen. On paper,
+   show everything, with no motion and no dark background. */
+@media print {
+  :root, [data-theme="dark"] {
+    --bg: #FFFFFF; --surface: #FFFFFF; --ink: #17171A; --muted: #55555C; --line: #D8CFBC;
+    --hatch: #E0D7C4; --accent: #1F3FD8; --on-accent: #FFFFFF; --hl: #D9E0FF; color-scheme: light;
+  }
+  *, *::before, *::after { transition: none !important; }   /* switch colors at once, not over .4s */
+  [data-theme="dark"] .shot-dark { display: none !important; }
+  [data-theme="dark"] .shot-light { display: block !important; }
+  .rise, .js .reveal, .js .cards .card.reveal, .js .jobs .job.reveal { opacity: 1 !important; transform: none !important; animation: none !important; transition: none !important; }
+  .js .cards--three .step-num { transform: none !important; animation: none !important; }
+  .hl { animation: none; background-size: 100% 85%; }
+  .frame-body--shot img { transform: none; }
+  .theme-btn, .skip-link, .nav-links { display: none; }
+  /* Browsers don't print backgrounds by default, so white-on-blue would come out blank */
+  .btn-solid, .step-num { background: none; color: var(--ink); border: 1.5px solid var(--ink); }
+  .case, .card, .job { break-inside: avoid; }
 }
