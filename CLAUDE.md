@@ -64,6 +64,7 @@ Nick Lax's portfolio home page, live since November 3, 2026, at https://scenebis
 ## Resume
 - `Nick-Lax-Resume.pdf` is the public version: no phone number, on purpose. Keep it that way when replacing the file. Check with `pdftotext Nick-Lax-Resume.pdf - | grep 903` (should find nothing).
 - Two pages. Header is "Nick Lax" plus Austin, TX · email · portfolio · LinkedIn · GitHub. No job is split across the page break.
+- Look (owner, Nov 23, 2026): one column, Calibri, with the site's blue (`#1F3FD8`) on the name, the section headings and their rules. No background color, columns, icons or graphics, so recruiters' software still reads it. A darker navy was tried and rejected.
 - The resume's numbers must match this page: Pharos 78% keyword rules vs. 89% AI plus safety net on 36 unseen tickets; 113 COA tests; 40–60 tickets a day and phone shifts of up to 40 calls at Atlassian.
 
 ## Ideas for later
